@@ -2,7 +2,7 @@
 
 tl=`pwd`
 
-for category in {base,opt,contrib}; do
+for category in `find * -type d -maxdepth 0 | grep -v CVS`; do
   echo $category >>packages.txt
   for pkg in `ls $category | sort`; do
     cd $tl/$category/$pkg

@@ -1,13 +1,15 @@
 #!/bin/bash
-# $Id: genpkglist,v 1.7 2003/05/25 23:50:02 judd Exp $
+# $Id: genpkglist,v 1.8 2003/10/12 18:41:26 judd Exp $
 
 #
 # genpkglist
 #
 # Generates a text package database for use with the setup script
+# (also used to check for missing packages in the download directory)
 #
 
 pkgfile="`pwd`/packages.txt"
+repodir=$1
 
 rm -f $pkgfile
 for category in `find * -type d -maxdepth 0 | grep -v CVS`; do
@@ -16,7 +18,7 @@ for category in `find * -type d -maxdepth 0 | grep -v CVS`; do
 		cd $pkg
 		if [ -f PKGBUILD ]; then
 			. PKGBUILD
-			if [ -f /home/ftp/current/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
+			if [ -f /home/ftp/$repodir/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
 				echo "$category/$pkgname-$pkgver-$pkgrel.pkg.tar.gz" >>$pkgfile
 			else
 				echo "notice: Missing $pkgname-$pkgver-$pkgrel.pkg.tar.gz in ftp site" >&2

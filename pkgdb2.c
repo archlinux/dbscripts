@@ -1,4 +1,4 @@
-/* $Id: pkgdb2.c,v 1.2 2004/07/01 20:26:27 judd Exp $ */
+/* $Id: pkgdb2.c,v 1.3 2004/07/02 00:17:52 judd Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +28,7 @@ MYSQL_RES *doquery(MYSQL *m, const char* q)
  * returns, and they probably won't be freed by the caller.
  */
 char* addslashes(const char *s) {
-	char slashed[4096];
+	char slashed[8192];
 	char *p;
  
 	slashed[0] = '\0';
@@ -136,6 +136,15 @@ int main(int argc, char **argv)
 		fgets(url, 256, stdin);      trim(url);     if(feof(stdin)) continue;
 		fgets(sources, 4096, stdin); trim(sources); if(feof(stdin)) continue;
 		fgets(deplist, 4096, stdin); trim(deplist); if(feof(stdin)) continue;
+		/* check for overruns */
+		if(strlen(name) > 254 || strlen(ver) >= 254 || strlen(rel) > 254 ||
+				strlen(desc) > 4094 || strlen(cat) >= 254 || strlen(url) > 254 ||
+				strlen(sources) > 4094 || strlen(deplist) > 4094) {
+			fprintf(stderr, "pkgdb2: one or more fields are too long in package '%s'\n", name);
+			fprintf(stderr, "pkgdb2: check the lengths of your strings, most are limited "
+					"to 255 chars, some are 4095\n");
+			return(1);
+		}
 		/* add the node to the list */
 		if(pkglist == NULL) {
 			pkglist = (pkg_t*)malloc(sizeof(pkg_t));

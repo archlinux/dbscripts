@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: genpkglist,v 1.6 2003/05/21 23:07:33 judd Exp $
+# $Id: genpkglist,v 1.7 2003/05/25 23:50:02 judd Exp $
 
 #
 # genpkglist
@@ -9,7 +9,6 @@
 
 pkgfile="`pwd`/packages.txt"
 
-cd /tmp/arch/build
 rm -f $pkgfile
 for category in `find * -type d -maxdepth 0 | grep -v CVS`; do
 	cd $category

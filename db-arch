@@ -1,19 +1,26 @@
 #!/bin/bash
-# $Id: db-arch,v 1.7 2003/05/24 00:25:59 judd Exp $
+# $Id: db-arch,v 1.8 2003/05/25 23:50:02 judd Exp $
 
-echo "==> Updating ABS Tree..." >&2
-cd /tmp
-rm -rf arch
+uid=`id -u`
+TMPDIR="/tmp/archpkg.$uid"
+
+# RedHat's mktemp is broken...
+if [ -d /tmp/archpkg.$uid ]; then
+	echo "==> Removing old temp dir..." >&2
+	rm -rf /tmp/archpkg.$uid || exit 1
+fi
+mkdir /tmp/archpkg.$uid; [ $? -gt 0 ] && exit 1
+
+echo "==> Generating Pacman Database for OFFICIAL..." >&2
+cd $TMPDIR
 CVSROOT=:ext:judd@cvs.archlinux.org:/home/cvs-arch cvs -q export -r CURRENT -f arch/build
+/usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz
+[ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz /home/ftp/current
 
-cd /tmp/arch/build && /arch/pkgdb 1
+cd $TMPDIR/arch/build && /arch/pkgdb 1
 
 echo "==> Generating Text Package List..." >&2
 /arch/genpkglist
 mv packages.txt /home/ftp/current/setup/packages.txt
 
-echo "==> Generating pacsync2 Database for ARCH..." >&2
-/usr/bin/gensync /tmp/arch/build /tmp/current.db.tar.gz
-[ -f /tmp/current.db.tar.gz ] && mv -f /tmp/current.db.tar.gz /home/ftp/current
-
-rm -rf /tmp/arch
+rm -rf $TMPDIR

@@ -1,13 +1,23 @@
 #!/bin/bash
-# $Id: db-unstable,v 1.4 2003/05/24 00:25:59 judd Exp $
+# $Id: db-unstable,v 1.5 2003/05/25 23:50:02 judd Exp $
 
-echo "==> Generating pacsync2 Database for UNSTABLE..." >&2
-cd /tmp
+uid=`id -u`
+TMPDIR="/tmp/archpkg.$uid"
+
+# RedHat's mktemp is broken...
+if [ -d $TMPDIR ]; then
+	echo "==> Removing old temp dir..." >&2
+	rm -rf $TMPDIR || exit 1
+fi
+mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
+
+echo "==> Generating Pacman Database for UNSTABLE..." >&2
+cd $TMPDIR
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r CURRENT unstable
-/usr/bin/gensync /tmp/unstable /tmp/unstable.db.tar.gz
-[ -f /tmp/unstable.db.tar.gz ] && mv -f /tmp/unstable.db.tar.gz /home/ftp/unstable
+/usr/bin/gensync $TMPDIR/unstable $TMPDIR/unstable.db.tar.gz
+[ -f $TMPDIR/unstable.db.tar.gz ] && mv -f $TMPDIR/unstable.db.tar.gz /home/ftp/unstable
 
-cd /tmp/unstable && /arch/pkgdb 3
+cd $TMPDIR/unstable && /arch/pkgdb 3
 
-rm -rf /tmp/unstable
+rm -rf $TMPDIR
 

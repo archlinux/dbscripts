@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-arch,v 1.10 2003/08/16 23:56:46 judd Exp $
+# $Id: db-arch,v 1.11 2003/10/12 18:42:55 judd Exp $
 
 uid=`id -u`
 TMPDIR="/tmp/archpkg.$uid"
@@ -31,7 +31,7 @@ CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r CURRE
 cd $TMPDIR/arch/build && /arch/pkgdb 1
 
 echo "==> Generating Text Package List..." >&2
-/arch/genpkglist
+/arch/genpkglist current
 mv packages.txt /home/ftp/current/setup/packages.txt
 
 rm -rf $TMPDIR

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-unstable,v 1.6 2003/08/16 23:56:46 judd Exp $
+# $Id: db-unstable,v 1.7 2003/10/12 18:42:55 judd Exp $
 
 uid=`id -u`
 TMPDIR="/tmp/archpkg.$uid"
@@ -29,6 +29,9 @@ CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r C
 [ -f $TMPDIR/unstable.db.tar.gz ] && mv -f $TMPDIR/unstable.db.tar.gz /home/ftp/unstable
 
 cd $TMPDIR/unstable && /arch/pkgdb 3
+
+echo "==> Scanning for missing packages..." >&2
+/arch/genpkglist unstable
 
 rm -rf $TMPDIR
 # unlock

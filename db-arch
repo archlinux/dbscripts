@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-arch,v 1.17 2004/07/01 19:41:21 judd Exp $
+# $Id: db-arch,v 1.18 2004/07/03 20:28:11 judd Exp $
 
 uid=`id -u`
 repoid=1
@@ -43,8 +43,8 @@ if [ -d /tmp/.gensync ]; then
 	echo "error: someone else is currently running gensync!"
 	exit 1
 fi
-/usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz /home/ftp/current
-[ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz /home/ftp/current
+/usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz /home/ftp/current/os/i686
+[ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz /home/ftp/current/os/i686
 
 echo "==> Scanning for New/Updated/Deleted packages..." >&2
 cd $TMPDIR/arch/build
@@ -52,6 +52,6 @@ cd $TMPDIR/arch/build
 
 echo "==> Generating Text Package List..." >&2
 /arch/genpkglist current
-mv packages.txt /home/ftp/current/setup/packages.txt
+mv packages.txt /home/ftp/current/os/i686/setup/packages.txt
 
 cleanup

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: genpkglist,v 1.10 2004/03/17 18:14:15 judd Exp $
+# $Id: genpkglist,v 1.11 2004/07/03 20:28:11 judd Exp $
 
 #
 # genpkglist
@@ -18,7 +18,7 @@ for category in `find * -type d -maxdepth 0 | grep -v CVS`; do
 		cd $pkg
 		if [ -f PKGBUILD ]; then
 			. PKGBUILD
-			if [ -f /home/ftp/$repodir/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
+			if [ -f /home/ftp/$repodir/os/i686/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
 				echo "$category/$pkgname-$pkgver-$pkgrel.pkg.tar.gz" >>$pkgfile
 			else
 				echo "notice: Missing $pkgname-$pkgver-$pkgrel.pkg.tar.gz in ftp site" >&2
@@ -29,11 +29,11 @@ for category in `find * -type d -maxdepth 0 | grep -v CVS`; do
 	cd ..
 done
 
-DUPES=`ls -1 /home/ftp/$1 | rev | cut -d- -f 3- | rev | sort | uniq -c | egrep -v '^      1' | awk '{print $2}'`
+DUPES=`ls -1 /home/ftp/$1/os/i686 | rev | cut -d- -f 3- | rev | sort | uniq -c | egrep -v '^      1' | awk '{print $2}'`
 
 if [ -n "$DUPES" ]; then
    echo "Possible Dupes for $1 (please remove old versions)."
    echo "Date         Filename"
-   for dupe in $DUPES; do ls -l /home/ftp/$1/${dupe}* | awk '{print $6" "$7" "$8" "$9}'; done
+   for dupe in $DUPES; do ls -l /home/ftp/$1/os/i686/${dupe}* | awk '{print $6" "$7" "$8" "$9}'; done
 fi
 

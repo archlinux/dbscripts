@@ -1,6 +1,17 @@
 #!/bin/bash
+# $Id: genpkglist,v 1.4 2002/06/26 18:59:49 judd Exp $
 
 tl=`pwd`
+
+cat >packages.txt <<_EOF
+<table>
+ <tr>
+  <th>Package</th>
+  <th>Version</th>
+  <th>Collection</th>
+  <th>Description</th>
+ </tr>
+_EOF
 
 for category in `find * -type d -maxdepth 0 | grep -v CVS`; do
   echo $category >>packages.txt

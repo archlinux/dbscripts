@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-arch,v 1.14 2004/04/01 21:09:13 judd Exp $
+# $Id: db-arch,v 1.15 2004/04/02 00:48:50 judd Exp $
 
 uid=`id -u`
 repoid=1
@@ -29,11 +29,11 @@ trap cleanup SIGINT
 touch /tmp/.repolck.$repoid
 
 # RedHat's mktemp is broken...
-if [ -d /tmp/archpkg.$uid ]; then
+if [ -d $TMPDIR ]; then
 	echo "==> Removing old temp dir..." >&2
-	rm -rf /tmp/archpkg.$uid || exit 1
+	rm -rf $TMPDIR || exit 1
 fi
-mkdir /tmp/archpkg.$uid; [ $? -gt 0 ] && exit 1
+mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
 
 echo "==> Generating Pacman Database for CURRENT..." >&2
 cd $TMPDIR

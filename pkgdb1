@@ -1,0 +1,39 @@
+#!/bin/bash
+# $Id: pkgdb1,v 1.1 2004/07/01 19:41:21 judd Exp $
+
+tl=`pwd`
+
+repoid=$1
+if [ "$repoid" = "" ]; then
+	me=`basename $0`
+	echo "usage: $me <repoid>"
+	exit 1
+fi
+
+cd $tl
+for category in `find . -type d -maxdepth 1 | grep -v CVS | grep -v "^extra" | grep -v "^unstable"`; do
+	category=`echo $category | sed 's|./||'`
+	if [ "$category" = "." ]; then
+		continue
+	fi
+	for pkg in `ls $category | sort`; do
+		cd $tl/$category/$pkg
+		if [ -f PKGBUILD ]; then
+			. PKGBUILD
+			deplist=${depends[@]}
+			sources=${source[@]}
+			echo $pkgname
+			echo $pkgver
+			echo $pkgrel
+			echo $pkgdesc
+			echo $category
+			echo $url
+			echo $sources
+			echo $deplist
+		fi
+		cd $tl
+	done
+done
+
+exit 0
+

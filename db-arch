@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-arch,v 1.16 2004/04/13 02:26:39 judd Exp $
+# $Id: db-arch,v 1.17 2004/07/01 19:41:21 judd Exp $
 
 uid=`id -u`
 repoid=1
@@ -46,7 +46,9 @@ fi
 /usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz /home/ftp/current
 [ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz /home/ftp/current
 
-cd $TMPDIR/arch/build && /arch/pkgdb $repoid
+echo "==> Scanning for New/Updated/Deleted packages..." >&2
+cd $TMPDIR/arch/build
+/arch/pkgdb1 $repoid | /arch/pkgdb2 $repoid
 
 echo "==> Generating Text Package List..." >&2
 /arch/genpkglist current

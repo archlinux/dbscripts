@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-testing,v 1.2 2004/04/13 02:06:49 judd Exp $
+# $Id: db-testing,v 1.3 2004/04/16 18:13:46 judd Exp $
 
 uid=`id -u`
 repoid=4
@@ -38,6 +38,11 @@ mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
 echo "==> Generating Pacman Database for TESTING..." >&2
 cd $TMPDIR
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r TESTING arch
+mv arch/build/* . && rm -rf arch
+CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r TESTING extra
+cp -a extra/* . && rm -rf extra
+CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r TESTING unstable
+cp -a unstable/* . && rm -rf unstable
 # check again
 if [ -d /tmp/.gensync ]; then
 	echo "error: someone else is currently running gensync!"

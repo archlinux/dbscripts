@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-testing,v 1.7 2004/08/17 19:17:36 judd Exp $
+# $Id: db-testing,v 1.8 2004/08/19 23:47:03 judd Exp $
 
 uid=`id -u`
 repoid=4
@@ -39,28 +39,17 @@ echo "==> Generating Pacman Database for TESTING..." >&2
 cd $TMPDIR
 echo "--- CURRENT ---"
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r TESTING arch
-if [ $? -gt 0 ]; then
-	echo "==> CVS export failed!"
-	exit 1
-fi
 mv arch/build/* . && rm -rf arch
 echo "--- EXTRA ---"
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r TESTING extra
-if [ $? -gt 0 ]; then
-	echo "==> CVS export failed!"
-	exit 1
-fi
 cp -a extra/* . && rm -rf extra
 echo "--- UNSTABLE ---"
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r TESTING unstable
-if [ $? -gt 0 ]; then
-	echo "==> CVS export failed!"
-	exit 1
-fi
 cp -a unstable/* . && rm -rf unstable
 # check again
 if [ -d /tmp/.gensync ]; then
 	echo "error: someone else is currently running gensync!"
+	cleanup
 	exit 1
 fi
 /usr/bin/gensync $TMPDIR $TMPDIR/testing.db.tar.gz /home/ftp/testing/os/i686

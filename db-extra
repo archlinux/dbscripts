@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-extra,v 1.7 2004/08/17 19:17:36 judd Exp $
+# $Id: db-extra,v 1.8 2004/08/19 23:47:03 judd Exp $
 
 uid=`id -u`
 repoid=2
@@ -40,11 +40,13 @@ cd $TMPDIR
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r CURRENT extra
 if [ $? -gt 0 ]; then
 	echo "==> CVS export failed!"
+	cleanup
 	exit 1
 fi
 # check again
 if [ -d /tmp/.gensync ]; then
 	echo "error: someone else is currently running gensync!"
+	cleanup
 	exit 1
 fi
 /usr/bin/gensync $TMPDIR/extra $TMPDIR/extra.db.tar.gz /home/ftp/extra/os/i686

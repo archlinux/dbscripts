@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-arch,v 1.19 2004/08/17 19:17:36 judd Exp $
+# $Id: db-arch,v 1.20 2004/08/19 23:47:03 judd Exp $
 
 uid=`id -u`
 repoid=1
@@ -40,11 +40,13 @@ cd $TMPDIR
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r CURRENT arch/build
 if [ $? -gt 0 ]; then
 	echo "==> CVS export failed!"
+	cleanup
 	exit 1
 fi
 # check again
 if [ -d /tmp/.gensync ]; then
 	echo "error: someone else is currently running gensync!"
+	cleanup
 	exit 1
 fi
 /usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz /home/ftp/current/os/i686

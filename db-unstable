@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-unstable,v 1.12 2004/08/17 19:17:36 judd Exp $
+# $Id: db-unstable,v 1.13 2004/08/19 23:47:03 judd Exp $
 
 uid=`id -u`
 repoid=3
@@ -40,11 +40,13 @@ cd $TMPDIR
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r CURRENT unstable
 if [ $? -gt 0 ]; then
 	echo "==> CVS export failed!"
+	cleanup
 	exit 1
 fi
 # check again
 if [ -d /tmp/.gensync ]; then
 	echo "error: someone else is currently running gensync!"
+	cleanup
 	exit 1
 fi
 /usr/bin/gensync $TMPDIR/unstable $TMPDIR/unstable.db.tar.gz /home/ftp/unstable/os/i686

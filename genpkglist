@@ -1,0 +1,15 @@
+#!/bin/bash
+
+tl=`pwd`
+
+for category in {base,opt,contrib}; do
+  echo $category >>packages.txt
+  for pkg in `ls $category`; do
+    cd $tl/$category/$pkg
+    . PKGBUILD
+    cd $tl
+    echo "  $pkgname $pkgver" >>packages.txt
+  done
+  cd $tl
+  echo "" >>packages.txt
+done

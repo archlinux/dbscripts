@@ -1,4 +1,4 @@
-/* $Id: pkgdb2.c,v 1.3 2004/07/02 00:17:52 judd Exp $ */
+/* $Id: pkgdb2.c,v 1.4 2004/07/11 20:45:21 judd Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
 			snprintf(query, sizeof(query), "DELETE FROM packages WHERE id='%d'",
 					ptr->id);
 			doquery(&db, query);
-			snprintf(query, sizeof(query), "DELETE FROM todolist_pkgs WHERE id='%d'",
+			snprintf(query, sizeof(query), "DELETE FROM todolist_pkgs WHERE listid='%d'",
 					ptr->id);
 			doquery(&db, query);
 		}

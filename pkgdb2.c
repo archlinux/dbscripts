@@ -1,4 +1,4 @@
-/* $Id: pkgdb2.c,v 1.1 2004/07/01 19:41:21 judd Exp $ */
+/* $Id: pkgdb2.c,v 1.2 2004/07/01 20:26:27 judd Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -125,17 +125,17 @@ int main(int argc, char **argv)
 	while(!feof(stdin)) {
 		int found = 0;
 		unsigned int catid = 0;
-		char name[256], ver[256], rel[256], desc[256];
+		char name[256], ver[256], rel[256], desc[4096];
 		char cat[256], url[256], sources[4096], deplist[4096];
 		/* get package data from stdin */
-		fgets(name, 256, stdin);     trim(name);   if(feof(stdin)) continue;
-		fgets(ver, 256, stdin);      trim(ver);    if(feof(stdin)) continue;
-		fgets(rel, 256, stdin);      trim(rel);    if(feof(stdin)) continue;
-		fgets(desc, 256, stdin);     trim(desc);   if(feof(stdin)) continue;
-		fgets(cat, 256, stdin);      trim(cat);    if(feof(stdin)) continue;
-		fgets(url, 256, stdin);      trim(url);    if(feof(stdin)) continue;
-		fgets(sources, 4096, stdin); trim(sources);if(feof(stdin)) continue;
-		fgets(deplist, 4096, stdin); trim(deplist);if(feof(stdin)) continue;
+		fgets(name, 256, stdin);     trim(name);    if(feof(stdin)) continue;
+		fgets(ver, 256, stdin);      trim(ver);     if(feof(stdin)) continue;
+		fgets(rel, 256, stdin);      trim(rel);     if(feof(stdin)) continue;
+		fgets(desc, 4096, stdin);    trim(desc);    if(feof(stdin)) continue;
+		fgets(cat, 256, stdin);      trim(cat);     if(feof(stdin)) continue;
+		fgets(url, 256, stdin);      trim(url);     if(feof(stdin)) continue;
+		fgets(sources, 4096, stdin); trim(sources); if(feof(stdin)) continue;
+		fgets(deplist, 4096, stdin); trim(deplist); if(feof(stdin)) continue;
 		/* add the node to the list */
 		if(pkglist == NULL) {
 			pkglist = (pkg_t*)malloc(sizeof(pkg_t));

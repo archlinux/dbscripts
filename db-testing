@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-testing,v 1.8 2004/08/19 23:47:03 judd Exp $
+# $Id: db-testing,v 1.9 2005/02/01 03:00:47 judd Exp $
 
 uid=`id -u`
 repoid=4
@@ -61,5 +61,6 @@ cd $TMPDIR
 
 echo "==> Generating Text Package List..." >&2
 /arch/genpkglist testing
+mv packages.txt /home/ftp/testing/os/i686/packages.txt
 
 cleanup

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-extra,v 1.8 2004/08/19 23:47:03 judd Exp $
+# $Id: db-extra,v 1.9 2005/02/01 03:00:47 judd Exp $
 
 uid=`id -u`
 repoid=2
@@ -58,5 +58,6 @@ cd $TMPDIR/extra
 
 echo "==> Scanning for missing packages..." >&2
 /arch/genpkglist extra
+mv packages.txt /home/ftp/extra/os/i686/packages.txt
 
 cleanup

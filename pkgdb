@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.5 2003/05/26 00:13:44 judd Exp $
+# $Id: pkgdb,v 1.6 2003/05/26 17:10:12 judd Exp $
 
 tl=`pwd`
 
@@ -104,6 +104,7 @@ cat $TMPFILE | ( \
 cd $tl
 for category in `find . -type d -maxdepth 1 | grep -v CVS | grep -v "^unofficial" | grep -v "^unstable"`; do
 	for pkg in `ls $category | sort`; do
+		category=`echo $category | sed 's|.*/||'`
 		cd $tl/$category/$pkg
 		if [ -f .tag ]; then
 			# already processed

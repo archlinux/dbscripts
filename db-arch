@@ -1,9 +1,16 @@
 #!/bin/bash
-# $Id: db-arch,v 1.12 2003/11/25 01:28:26 judd Exp $
+# $Id: db-arch,v 1.13 2004/01/06 02:50:53 judd Exp $
 
 uid=`id -u`
 TMPDIR="/tmp/archpkg.$uid"
 repoid=1
+
+cleanup() {
+	rm -rf $TMPDIR
+	# unlock
+	rm -f /tmp/.repolck.$repoid
+	exit 0
+}
 
 # check for locks
 if [ -f /tmp/.repolck.$repoid ]; then
@@ -16,6 +23,8 @@ if [ -d /tmp/.gensync ]; then
 	exit 1
 fi
 
+# catch ^C breaks
+trap cleanup SIGINT
 # lock
 touch /tmp/.repolck.$repoid
 
@@ -26,18 +35,16 @@ if [ -d /tmp/archpkg.$uid ]; then
 fi
 mkdir /tmp/archpkg.$uid; [ $? -gt 0 ] && exit 1
 
-echo "==> Generating Pacman Database for OFFICIAL..." >&2
+echo "==> Generating Pacman Database for CURRENT..." >&2
 cd $TMPDIR
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r CURRENT -f arch/build
 /usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz /home/ftp/current
 [ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz /home/ftp/current
 
-cd $TMPDIR/arch/build && /arch/pkgdb 1
+cd $TMPDIR/arch/build && /arch/pkgdb $repoid
 
 echo "==> Generating Text Package List..." >&2
 /arch/genpkglist current
 mv packages.txt /home/ftp/current/setup/packages.txt
 
-rm -rf $TMPDIR
-# unlock
-rm -f /tmp/.repolck.$repoid
+cleanup

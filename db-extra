@@ -1,9 +1,16 @@
 #!/bin/bash
-# $Id: db-extra,v 1.3 2003/12/21 03:24:09 judd Exp $
+# $Id: db-extra,v 1.4 2004/01/06 02:50:53 judd Exp $
 
 uid=`id -u`
 TMPDIR="/tmp/archpkg.$uid"
 repoid=2
+
+cleanup() {
+	rm -rf $TMPDIR
+	# unlock
+	rm -f /tmp/.repolck.$repoid
+	exit 0
+}
 
 # check for locks
 if [ -f /tmp/.repolck.$repoid ]; then
@@ -16,6 +23,8 @@ if [ -d /tmp/.gensync ]; then
 	exit 1
 fi
 
+# catch ^C breaks
+trap cleanup SIGINT
 # lock
 touch /tmp/.repolck.$repoid
 
@@ -32,11 +41,9 @@ CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r CURR
 /usr/bin/gensync $TMPDIR/extra $TMPDIR/extra.db.tar.gz /home/ftp/extra
 [ -f $TMPDIR/extra.db.tar.gz ] && mv -f $TMPDIR/extra.db.tar.gz /home/ftp/extra
 
-cd $TMPDIR/extra && /arch/pkgdb 2
+cd $TMPDIR/extra && /arch/pkgdb $repoid
 
 echo "==> Scanning for missing packages..." >&2
 /arch/genpkglist extra
 
-rm -rf $TMPDIR
-# unlock
-rm -f /tmp/.repolck.$repoid
+cleanup

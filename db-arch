@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-arch,v 1.2 2002/11/28 08:33:44 judd Exp $
+# $Id: db-arch,v 1.3 2002/12/19 19:09:28 judd Exp $
 
 echo "==> Updating ABS Tree..." >&2
 cd /usr
@@ -10,8 +10,8 @@ rmdir arch
 echo "==> Rebuilding HTML Package List..." >&2
 cd /usr/abs
 rm -f packages.txt
-/root/bin/htmlpkglist
-mv pkgs_name.html pkgs_cat.html /home/sites/archlinux/htdocs/
+/root/bin/htmlpkglist arch
+mv pkgs_arch_name.html pkgs_arch_cat.html /home/sites/archlinux/htdocs/pkglists
 
 echo "==> Generating Text Package List..." >&2
 /root/bin/genpkglist

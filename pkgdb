@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.3 2003/05/25 23:51:25 judd Exp $
+# $Id: pkgdb,v 1.4 2003/05/25 23:56:21 judd Exp $
 
 tl=`pwd`
 
@@ -11,10 +11,6 @@ repoid=$1
 dbuser='archweb'
 dbname='archweb'
 dbpass='14xuk0Gi'
-
-dbuser='arch'
-dbname='arch'
-dbpass='arch'
 
 if [ "$repoid" = "" ]; then
 	me=`basename $0`

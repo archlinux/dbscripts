@@ -1,11 +1,12 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.9 2003/08/17 00:58:05 judd Exp $
+# $Id: pkgdb,v 1.10 2003/08/18 18:14:53 judd Exp $
 
 tl=`pwd`
 
 # we use this instead of mktemp cuz the RH server's mktemp is broken :(
 uid=`id -u`
-TMPFILE="/tmp/.mysqltmp.$uid"
+TMPFILE="/tmp/.mysqltmp.$uid.1"
+TMPFILE2="/tmp/.mysqltmp.$uid.2"
 
 repoid=$1
 dbuser='archweb'
@@ -70,10 +71,13 @@ process() {
 			# tag it
 			touch .tag
 			category=`pwd | sed "s|$tl/||" | sed 's|/.*$||'`
-			mysql --skip-column-names -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
+			mysql --skip-column-names -u $dbuser -p$dbpass $dbname >$TMPFILE2 <<_EOF
 SELECT id FROM categories WHERE category='$category';
 _EOF
-			categoryid=`cat $TMPFILE | awk '{print $1}'`
+			categoryid=`cat $TMPFILE2 | awk '{print $1}'`
+			if [ "$categoryid" = "" ]; then
+				echo "WARNING: no categoryid found for '$category'" >&2
+			fi
 			cd - &>/dev/null
 			deplist=${depends[@]}
 			deplist=`php -r "echo addslashes(\"$deplist\");"`
@@ -94,9 +98,10 @@ _EOF
 
 echo "==> Updating Package Entries in Database..."
 mysql --skip-column-names -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
-SELECT id,pkgname,pkgver,pkgrel FROM packages WHERE repoid=$repoid
+SELECT id,pkgname,pkgver,pkgrel FROM packages WHERE repoid='$repoid';
 _EOF
 
+echo " -> Scanning for Updated/Deleted packages..."
 cat $TMPFILE | ( \
 	ln='a'
 	while [ "$ln" != "" ]; do
@@ -105,10 +110,21 @@ cat $TMPFILE | ( \
 	done
 )
 
+echo " -> Scanning for New packages..."
 cd $tl
 for category in `find . -type d -maxdepth 1 | grep -v CVS | grep -v "^unofficial" | grep -v "^unstable"`; do
+	category=`echo $category | sed 's|./||'`
+	if [ "$category" = "." ]; then
+		continue
+	fi
+	mysql --skip-column-names -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
+SELECT id FROM categories WHERE category='$category';
+_EOF
+	categoryid=`cat $TMPFILE | awk '{print $1}'`
+	if [ "$categoryid" = "" ]; then
+		echo "WARNING: no categoryid found for '$category'" >&2
+	fi
 	for pkg in `ls $category | sort`; do
-		category=`echo $category | sed 's|.*/||'`
 		cd $tl/$category/$pkg
 		if [ -f .tag ]; then
 			# already processed

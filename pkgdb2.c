@@ -1,4 +1,4 @@
-/* $Id: pkgdb2.c,v 1.4 2004/07/11 20:45:21 judd Exp $ */
+/* $Id: pkgdb2.c,v 1.5 2004/08/03 00:24:55 judd Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -210,9 +210,11 @@ int main(int argc, char **argv)
 					addslashes(desc), addslashes(url), addslashes(sources),
 					addslashes(deplist), ptr->id);
 			doquery(&db, query);
+			/*
 			snprintf(query, sizeof(query), "UPDATE todolist_pkgs SET complete=1 "
 					"WHERE pkgid='%d'", ptr->id);
 			doquery(&db, query);
+			*/
 		}
 	}
 

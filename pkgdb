@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.12 2004/04/01 21:04:14 judd Exp $
+# $Id: pkgdb,v 1.13 2004/05/06 01:39:42 judd Exp $
 
 tl=`pwd`
 
@@ -34,6 +34,9 @@ updatepkg()
 UPDATE packages SET categoryid='$categoryid',pkgname='$pkgname',pkgver='$pkgver',
 pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
 depends='$deplist',needupdate=0,lastupdate=NOW() WHERE id='$id';
+_EOF
+	mysql -u $dbuser -p$dbpass $dbname <<_EOF
+UPDATE todolist_pkgs SET complete=1 WHERE pkgid='$id';
 _EOF
 }
 

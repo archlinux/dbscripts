@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.10 2003/08/18 18:14:53 judd Exp $
+# $Id: pkgdb,v 1.11 2004/02/20 09:20:32 judd Exp $
 
 tl=`pwd`
 
@@ -112,7 +112,7 @@ cat $TMPFILE | ( \
 
 echo " -> Scanning for New packages..."
 cd $tl
-for category in `find . -type d -maxdepth 1 | grep -v CVS | grep -v "^unofficial" | grep -v "^unstable"`; do
+for category in `find . -type d -maxdepth 1 | grep -v CVS | grep -v "^extra" | grep -v "^unstable"`; do
 	category=`echo $category | sed 's|./||'`
 	if [ "$category" = "." ]; then
 		continue

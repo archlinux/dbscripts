@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: genpkglist,v 1.8 2003/10/12 18:41:26 judd Exp $
+# $Id: genpkglist,v 1.9 2003/11/16 03:50:23 judd Exp $
 
 #
 # genpkglist
@@ -28,4 +28,12 @@ for category in `find * -type d -maxdepth 0 | grep -v CVS`; do
 	done
 	cd ..
 done
+
+DUPES=`ls -1 /home/ftp/$1 | rev | cut -d- -f 3- | rev | sort | uniq -c | egrep -v '^      1' | awk '{print $2}'`
+
+if [ -n "$DUPES" ]; then
+   echo "Possible Dupes for $1 (please remove old versions)."
+   echo "Date         Filename"
+   for dupe in $DUPES; do ls -l /home/ftp/$1/$dupe* | awk '{print $6" "$7" "$8" "$9}'; done
+fi
 

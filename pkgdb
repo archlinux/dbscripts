@@ -1,0 +1,70 @@
+#!/bin/bash
+# $Id: pkgdb,v 1.1 2003/05/21 23:07:33 judd Exp $
+
+tl=`pwd`
+TMPFILE=/tmp/.mysqltmp
+repoid=$1
+dbuser='archweb'
+dbname='archweb'
+dbpass='14xuk0Gi'
+
+if [ "$repoid" = "" ]; then
+	me=`basename $0`
+	echo "usage: $me <repoid>"
+	exit 1
+fi
+
+echo "==> Updating Package Entries in Database..."
+
+for category in `find * -type d -maxdepth 0 | grep -v CVS | grep -v "^unofficial" | grep -v "^unstable"`; do
+  for pkg in `ls $category | sort`; do
+    cd $tl/$category/$pkg
+    if [ -f PKGBUILD ]; then
+      . PKGBUILD
+			deplist=${depends[@]}
+			deplist=`php -r "echo addslashes(\"$deplist\");"`
+			sources=${source[@]}
+			sources=`php -r "echo addslashes(\"$sources\");"`
+			pkgname=`php -r "echo addslashes(\"$pkgname\");"`
+			pkgver=`php -r "echo addslashes(\"$pkgver\");"`
+			pkgrel=`php -r "echo addslashes(\"$pkgrel\");"`
+			pkgdesc=`php -r "echo addslashes(\"$pkgdesc\");"`
+			mysql -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
+SELECT id FROM packages WHERE repoid=$repoid AND pkgname='$pkgname';
+_EOF
+			id=`tail -1 $TMPFILE`
+			if [ "$id" != "" ]; then
+				mysql -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
+SELECT pkgver,pkgrel FROM packages WHERE repoid=$repoid AND pkgname='$pkgname';
+_EOF
+				oldver=`tail -1 $TMPFILE | awk '{print $1}'`
+				oldrel=`tail -1 $TMPFILE | awk '{print $2}'`
+				if [ "$oldver" != "$pkgver" -o "$oldrel" != "$pkgrel" ]; then
+					mysql -u $dbuser -p$dbpass $dbname <<_EOF
+UPDATE packages SET category='$category',pkgname='$pkgname',pkgver='$pkgver',
+pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
+depends='$deplist',lastupdate=NOW() WHERE id='$id';
+_EOF
+				else
+					mysql -u $dbuser -p$dbpass $dbname <<_EOF
+UPDATE packages SET category='$category',pkgname='$pkgname',pkgver='$pkgver',
+pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
+depends='$deplist' WHERE id='$id';
+_EOF
+
+				fi							
+			else
+			mysql -u $dbuser -p$dbpass $dbname <<_EOF
+INSERT INTO packages (id,repoid,category,pkgname,pkgver,pkgrel,
+pkgdesc,url,sources,depends,lastupdate) VALUES (NULL,$repoid,
+'$category','$pkgname','$pkgver','$pkgrel','$pkgdesc','$url',
+'$sources','$deplist',NOW());
+_EOF
+			fi
+		fi
+  done
+  cd $tl
+done
+
+rm -f $TMPFILE
+

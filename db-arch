@@ -1,18 +1,20 @@
 #!/bin/bash
-# $Id: db-arch,v 1.4 2003/01/24 19:27:35 judd Exp $
+# $Id: db-arch,v 1.5 2003/05/21 23:07:33 judd Exp $
 
 echo "==> Updating ABS Tree..." >&2
 cd /tmp
+rm -rf arch
 CVSROOT=:ext:judd@cvs.archlinux.org:/home/cvs-arch cvs -q export -r CURRENT -f arch/build
 
 echo "==> Rebuilding HTML Package List..." >&2
 cd /tmp/arch/build
 rm -f packages.txt
-/root/bin/htmlpkglist arch
+/arch/htmlpkglist arch
 mv pkgs_arch_name.html pkgs_arch_cat.html /home/sites/archlinux/htdocs/pkglists
+/arch/pkgdb 1
 
 echo "==> Generating Text Package List..." >&2
-/root/bin/genpkglist
+/arch/genpkglist
 mv packages.txt /home/ftp/current/setup/packages.txt
 
 echo "==> Generating pacsync2 Database for ARCH..." >&2

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-arch,v 1.8 2003/05/25 23:50:02 judd Exp $
+# $Id: db-arch,v 1.9 2003/06/05 00:01:24 judd Exp $
 
 uid=`id -u`
 TMPDIR="/tmp/archpkg.$uid"
@@ -13,7 +13,7 @@ mkdir /tmp/archpkg.$uid; [ $? -gt 0 ] && exit 1
 
 echo "==> Generating Pacman Database for OFFICIAL..." >&2
 cd $TMPDIR
-CVSROOT=:ext:judd@cvs.archlinux.org:/home/cvs-arch cvs -q export -r CURRENT -f arch/build
+CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r CURRENT -f arch/build
 /usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz
 [ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz /home/ftp/current
 

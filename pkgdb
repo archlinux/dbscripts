@@ -1,12 +1,20 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.2 2003/05/23 05:08:57 judd Exp $
+# $Id: pkgdb,v 1.3 2003/05/25 23:51:25 judd Exp $
 
 tl=`pwd`
-TMPFILE=/tmp/.mysqltmp
+
+# we use this instead of mktemp cuz the RH server's mktemp is broken :(
+uid=`id -u`
+TMPFILE="/tmp/.mysqltmp.$uid"
+
 repoid=$1
 dbuser='archweb'
 dbname='archweb'
 dbpass='14xuk0Gi'
+
+dbuser='arch'
+dbname='arch'
+dbpass='arch'
 
 if [ "$repoid" = "" ]; then
 	me=`basename $0`
@@ -14,15 +22,59 @@ if [ "$repoid" = "" ]; then
 	exit 1
 fi
 
-echo "==> Updating Package Entries in Database..."
+deletepkg()
+{
+	echo "Deleting $pkgname"
+	mysql -u $dbuser -p$dbpass $dbname <<_EOF
+DELETE FROM packages WHERE id='$id';
+_EOF
+}
 
-for category in `find * -type d -maxdepth 0 | grep -v CVS | grep -v "^unofficial" | grep -v "^unstable"`; do
-  for pkg in `ls $category | sort`; do
-    cd $tl/$category/$pkg
-    if [ -f PKGBUILD ]; then
+updatepkg()
+{
+	echo "Updating $pkgname"
+	mysql -u $dbuser -p$dbpass $dbname <<_EOF
+UPDATE packages SET category='$category',pkgname='$pkgname',pkgver='$pkgver',
+pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
+depends='$deplist',lastupdate=NOW() WHERE id='$id';
+_EOF
+}
+
+insertpkg()
+{
+	echo "Inserting $pkgname"
+	mysql -u $dbuser -p$dbpass $dbname <<_EOF
+INSERT INTO packages (id,repoid,category,pkgname,pkgver,pkgrel,
+pkgdesc,url,sources,depends,lastupdate) VALUES (NULL,$repoid,
+'$category','$pkgname','$pkgver','$pkgrel','$pkgdesc','$url',
+'$sources','$deplist',NOW());
+_EOF
+}
+
+process() {
+	pkg=$1
+
+	id=`echo $pkg | awk '{print $1}'`
+	pkgname=`echo $pkg | awk '{print $2}'`
+	oldver=`echo $pkg | awk '{print $3}'`
+	oldrel=`echo $pkg | awk '{print $4}'`
+	[ "$pkgname" = "" ] && return;
+	cd $tl
+	pkgdir=`find . -type d -name "$pkgname" -maxdepth 2 -mindepth 1 | head -1`
+	if [ "$pkgdir" = "" ]; then
+		deletepkg
+	else
+		cd $pkgdir
+		if [ ! -f PKGBUILD ]; then
+			echo "WARNING: missing PKGBUILD in `pwd`" >&2
+		else
 			unset depends source deplist sources
 			unset pkgname pkgver pkgrel pkgdesc url
-      . PKGBUILD
+			. PKGBUILD
+			# tag it
+			touch .tag
+			category=`pwd | sed 's|^.*/||g'`			
+			cd - &>/dev/null
 			deplist=${depends[@]}
 			deplist=`php -r "echo addslashes(\"$deplist\");"`
 			sources=${source[@]}
@@ -32,32 +84,52 @@ for category in `find * -type d -maxdepth 0 | grep -v CVS | grep -v "^unofficial
 			pkgrel=`php -r "echo addslashes(\"$pkgrel\");"`
 			pkgdesc=`php -r "echo addslashes(\"$pkgdesc\");"`
 			url=`php -r "echo addslashes(\"$url\");"`
-			mysql -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
-SELECT id,pkgver,pkgrel FROM packages WHERE repoid=$repoid AND pkgname='$pkgname';
+
+			if [ "$oldver" != "$pkgver" -o "$oldrel" != "$pkgrel" ]; then
+				updatepkg
+			fi							
+		fi
+	fi
+}
+
+echo "==> Updating Package Entries in Database..."
+mysql --skip-column-names -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
+SELECT id,pkgname,pkgver,pkgrel FROM packages WHERE repoid=$repoid
 _EOF
-			id=`tail -1 $TMPFILE | awk '{print $1}'`
-			if [ "$id" != "" ]; then
-				oldver=`tail -1 $TMPFILE | awk '{print $2}'`
-				oldrel=`tail -1 $TMPFILE | awk '{print $3}'`
-				if [ "$oldver" != "$pkgver" -o "$oldrel" != "$pkgrel" ]; then
-					mysql -u $dbuser -p$dbpass $dbname <<_EOF
-UPDATE packages SET category='$category',pkgname='$pkgname',pkgver='$pkgver',
-pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
-depends='$deplist',lastupdate=NOW() WHERE id='$id';
-_EOF
-				fi							
-			else
-			mysql -u $dbuser -p$dbpass $dbname <<_EOF
-INSERT INTO packages (id,repoid,category,pkgname,pkgver,pkgrel,
-pkgdesc,url,sources,depends,lastupdate) VALUES (NULL,$repoid,
-'$category','$pkgname','$pkgver','$pkgrel','$pkgdesc','$url',
-'$sources','$deplist',NOW());
-_EOF
+
+cat $TMPFILE | ( \
+	ln='a'
+	while [ "$ln" != "" ]; do
+		read ln
+		process "$ln"
+	done
+)
+
+cd $tl
+for category in `find . -type d -maxdepth 0 | grep -v CVS | grep -v "^unofficial" | grep -v "^unstable"`; do
+	for pkg in `ls $category | sort`; do
+		cd $tl/$category/$pkg
+		if [ -f .tag ]; then
+			# already processed
+			rm -f .tag
+		else
+			if [ -f PKGBUILD ]; then
+				. PKGBUILD
+				deplist=${depends[@]}
+				deplist=`php -r "echo addslashes(\"$deplist\");"`
+				sources=${source[@]}
+				sources=`php -r "echo addslashes(\"$sources\");"`
+				pkgname=`php -r "echo addslashes(\"$pkgname\");"`
+				pkgver=`php -r "echo addslashes(\"$pkgver\");"`
+				pkgrel=`php -r "echo addslashes(\"$pkgrel\");"`
+				pkgdesc=`php -r "echo addslashes(\"$pkgdesc\");"`
+				url=`php -r "echo addslashes(\"$url\");"`
+				insertpkg
 			fi
 		fi
-  done
-  cd $tl
+	done
 done
 
 rm -f $TMPFILE
+exit 0
 

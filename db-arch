@@ -1,8 +1,19 @@
 #!/bin/bash
-# $Id: db-arch,v 1.9 2003/06/05 00:01:24 judd Exp $
+# $Id: db-arch,v 1.10 2003/08/16 23:56:46 judd Exp $
 
 uid=`id -u`
 TMPDIR="/tmp/archpkg.$uid"
+repoid=1
+
+# check for locks
+if [ -f /tmp/.repolck.$repoid ]; then
+	owner=`/bin/ls -l /tmp/.repolck.$repoid | awk '{print $3}'`
+	echo "error: db generation is already in progress (started by $owner)"
+	exit 1
+fi
+
+# lock
+touch /tmp/.repolck.$repoid
 
 # RedHat's mktemp is broken...
 if [ -d /tmp/archpkg.$uid ]; then
@@ -24,3 +35,5 @@ echo "==> Generating Text Package List..." >&2
 mv packages.txt /home/ftp/current/setup/packages.txt
 
 rm -rf $TMPDIR
+# unlock
+rm -f /tmp/.repolck.$repoid

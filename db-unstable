@@ -1,8 +1,19 @@
 #!/bin/bash
-# $Id: db-unstable,v 1.5 2003/05/25 23:50:02 judd Exp $
+# $Id: db-unstable,v 1.6 2003/08/16 23:56:46 judd Exp $
 
 uid=`id -u`
 TMPDIR="/tmp/archpkg.$uid"
+repoid=3
+
+# check for locks
+if [ -f /tmp/.repolck.$repoid ]; then
+        owner=`/bin/ls -l /tmp/.repolck.$repoid | awk '{print $3}'`
+        echo "error: db generation is already in progress (started by $owner)"
+        exit 1
+fi
+
+# lock
+touch /tmp/.repolck.$repoid
 
 # RedHat's mktemp is broken...
 if [ -d $TMPDIR ]; then
@@ -20,4 +31,6 @@ CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r C
 cd $TMPDIR/unstable && /arch/pkgdb 3
 
 rm -rf $TMPDIR
+# unlock
+rm -f /tmp/.repolck.$repoid
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.7 2003/05/26 17:25:59 judd Exp $
+# $Id: pkgdb,v 1.8 2003/08/16 23:56:46 judd Exp $
 
 tl=`pwd`
 
@@ -10,7 +10,7 @@ TMPFILE="/tmp/.mysqltmp.$uid"
 repoid=$1
 dbuser='archweb'
 dbname='archweb'
-dbpass='14xuk0Gi'
+dbpass='YWkrOjqm'
 
 if [ "$repoid" = "" ]; then
 	me=`basename $0`
@@ -30,7 +30,7 @@ updatepkg()
 {
 	echo "Updating $pkgname"
 	mysql -u $dbuser -p$dbpass $dbname <<_EOF
-UPDATE packages SET category='$category',pkgname='$pkgname',pkgver='$pkgver',
+UPDATE packages SET categoryid='$categoryid',pkgname='$pkgname',pkgver='$pkgver',
 pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
 depends='$deplist',lastupdate=NOW() WHERE id='$id';
 _EOF
@@ -40,9 +40,9 @@ insertpkg()
 {
 	echo "Inserting $pkgname"
 	mysql -u $dbuser -p$dbpass $dbname <<_EOF
-INSERT INTO packages (id,repoid,category,pkgname,pkgver,pkgrel,
+INSERT INTO packages (id,repoid,categoryid,pkgname,pkgver,pkgrel,
 pkgdesc,url,sources,depends,lastupdate) VALUES (NULL,$repoid,
-'$category','$pkgname','$pkgver','$pkgrel','$pkgdesc','$url',
+'$categoryid','$pkgname','$pkgver','$pkgrel','$pkgdesc','$url',
 '$sources','$deplist',NOW());
 _EOF
 }
@@ -70,6 +70,10 @@ process() {
 			# tag it
 			touch .tag
 			category=`pwd | sed "s|$tl/||" | sed 's|/.*$||'`
+			mysql --skip-column-names -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
+SELECT id FROM categories WHERE category='$category';
+_EOF
+			categoryid=`cat $TMPFILE | awk '{print $1}'`
 			cd - &>/dev/null
 			deplist=${depends[@]}
 			deplist=`php -r "echo addslashes(\"$deplist\");"`

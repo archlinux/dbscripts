@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.8 2003/08/16 23:56:46 judd Exp $
+# $Id: pkgdb,v 1.9 2003/08/17 00:58:05 judd Exp $
 
 tl=`pwd`
 
@@ -32,7 +32,7 @@ updatepkg()
 	mysql -u $dbuser -p$dbpass $dbname <<_EOF
 UPDATE packages SET categoryid='$categoryid',pkgname='$pkgname',pkgver='$pkgver',
 pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
-depends='$deplist',lastupdate=NOW() WHERE id='$id';
+depends='$deplist',needupdate=0,lastupdate=NOW() WHERE id='$id';
 _EOF
 }
 

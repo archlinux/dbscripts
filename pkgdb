@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.6 2003/05/26 17:10:12 judd Exp $
+# $Id: pkgdb,v 1.7 2003/05/26 17:25:59 judd Exp $
 
 tl=`pwd`
 
@@ -69,7 +69,7 @@ process() {
 			. PKGBUILD
 			# tag it
 			touch .tag
-			category=`pwd | sed 's|^.*/||g'`			
+			category=`pwd | sed "s|$tl/||" | sed 's|/.*$||'`
 			cd - &>/dev/null
 			deplist=${depends[@]}
 			deplist=`php -r "echo addslashes(\"$deplist\");"`

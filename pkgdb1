@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb1,v 1.1 2004/07/01 19:41:21 judd Exp $
+# $Id: pkgdb1,v 1.2 2004/07/02 17:50:32 judd Exp $
 
 tl=`pwd`
 
@@ -19,6 +19,8 @@ for category in `find . -type d -maxdepth 1 | grep -v CVS | grep -v "^extra" | g
 	for pkg in `ls $category | sort`; do
 		cd $tl/$category/$pkg
 		if [ -f PKGBUILD ]; then
+			unset depends source deplist sources
+			unset pkgname pkgver pkgrel pkgdesc url
 			. PKGBUILD
 			deplist=${depends[@]}
 			sources=${source[@]}

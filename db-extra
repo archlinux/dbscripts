@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-extra,v 1.2 2003/12/21 03:23:28 judd Exp $
+# $Id: db-extra,v 1.3 2003/12/21 03:24:09 judd Exp $
 
 uid=`id -u`
 TMPDIR="/tmp/archpkg.$uid"
@@ -26,7 +26,7 @@ if [ -d $TMPDIR ]; then
 fi
 mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
 
-echo "==> Generating Pacman Database for EXTRAL..." >&2
+echo "==> Generating Pacman Database for EXTRA..." >&2
 cd $TMPDIR
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r CURRENT extra
 /usr/bin/gensync $TMPDIR/extra $TMPDIR/extra.db.tar.gz /home/ftp/extra

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.1 2003/05/21 23:07:33 judd Exp $
+# $Id: pkgdb,v 1.2 2003/05/23 05:08:57 judd Exp $
 
 tl=`pwd`
 TMPFILE=/tmp/.mysqltmp
@@ -20,6 +20,8 @@ for category in `find * -type d -maxdepth 0 | grep -v CVS | grep -v "^unofficial
   for pkg in `ls $category | sort`; do
     cd $tl/$category/$pkg
     if [ -f PKGBUILD ]; then
+			unset depends source deplist sources
+			unset pkgname pkgver pkgrel pkgdesc url
       . PKGBUILD
 			deplist=${depends[@]}
 			deplist=`php -r "echo addslashes(\"$deplist\");"`
@@ -29,29 +31,20 @@ for category in `find * -type d -maxdepth 0 | grep -v CVS | grep -v "^unofficial
 			pkgver=`php -r "echo addslashes(\"$pkgver\");"`
 			pkgrel=`php -r "echo addslashes(\"$pkgrel\");"`
 			pkgdesc=`php -r "echo addslashes(\"$pkgdesc\");"`
+			url=`php -r "echo addslashes(\"$url\");"`
 			mysql -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
-SELECT id FROM packages WHERE repoid=$repoid AND pkgname='$pkgname';
+SELECT id,pkgver,pkgrel FROM packages WHERE repoid=$repoid AND pkgname='$pkgname';
 _EOF
-			id=`tail -1 $TMPFILE`
+			id=`tail -1 $TMPFILE | awk '{print $1}'`
 			if [ "$id" != "" ]; then
-				mysql -u $dbuser -p$dbpass $dbname >$TMPFILE <<_EOF
-SELECT pkgver,pkgrel FROM packages WHERE repoid=$repoid AND pkgname='$pkgname';
-_EOF
-				oldver=`tail -1 $TMPFILE | awk '{print $1}'`
-				oldrel=`tail -1 $TMPFILE | awk '{print $2}'`
+				oldver=`tail -1 $TMPFILE | awk '{print $2}'`
+				oldrel=`tail -1 $TMPFILE | awk '{print $3}'`
 				if [ "$oldver" != "$pkgver" -o "$oldrel" != "$pkgrel" ]; then
 					mysql -u $dbuser -p$dbpass $dbname <<_EOF
 UPDATE packages SET category='$category',pkgname='$pkgname',pkgver='$pkgver',
 pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
 depends='$deplist',lastupdate=NOW() WHERE id='$id';
 _EOF
-				else
-					mysql -u $dbuser -p$dbpass $dbname <<_EOF
-UPDATE packages SET category='$category',pkgname='$pkgname',pkgver='$pkgver',
-pkgrel='$pkgrel',pkgdesc='$pkgdesc',url='$url',sources='$sources',
-depends='$deplist' WHERE id='$id';
-_EOF
-
 				fi							
 			else
 			mysql -u $dbuser -p$dbpass $dbname <<_EOF

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-unstable,v 1.2 2003/05/21 23:07:33 judd Exp $
+# $Id: db-unstable,v 1.3 2003/05/23 05:08:57 judd Exp $
 
 echo "==> Generating pacsync2 Database for UNSTABLE..." >&2
 cd /tmp
@@ -7,13 +7,6 @@ CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r C
 /usr/bin/gensync /tmp/unstable /tmp/unstable.db.tar.gz
 [ -f /tmp/unstable.db.tar.gz ] && mv -f /tmp/unstable.db.tar.gz /home/ftp/unstable
 
-echo "==> Rebuilding HTML Package List..." >&2
-cd /tmp/unstable
-rm -f packages.txt
-/arch/htmlpkglist unstable
-cp -f pkgs_unstable_name.html /home/sites/archlinux/htdocs/pkglists
-cp -f pkgs_unstable_cat.html /home/sites/archlinux/htdocs/pkglists
-rm pkgs_unstable_name.html pkgs_unstable_cat.html
 /arch/pkgdb 3
 
 rm -rf /tmp/unstable

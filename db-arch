@@ -1,8 +1,10 @@
 #!/bin/bash
-# $Id: db-arch,v 1.20 2004/08/19 23:47:03 judd Exp $
+# $Id: db-arch,v 1.21 2005/02/25 21:27:44 judd Exp $
 
 uid=`id -u`
 repoid=1
+ftppath="/home/ftp/current/os/i686"
+
 TMPDIR="/tmp/archpkg.$repoid.$uid"
 
 cleanup() {
@@ -49,15 +51,15 @@ if [ -d /tmp/.gensync ]; then
 	cleanup
 	exit 1
 fi
-/usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz /home/ftp/current/os/i686
-[ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz /home/ftp/current/os/i686
+/usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz $ftppath
+[ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz $ftppath
 
 echo "==> Scanning for New/Updated/Deleted packages..." >&2
 cd $TMPDIR/arch/build
-/arch/pkgdb1 $repoid | /arch/pkgdb2 $repoid
+/arch/pkgdb1 $repoid | /arch/pkgdb2 $repoid $ftppath
 
 echo "==> Generating Text Package List..." >&2
 /arch/genpkglist current
-mv packages.txt /home/ftp/current/os/i686/setup/packages.txt
+mv packages.txt $ftppath/setup/packages.txt
 
 cleanup

@@ -1,9 +1,14 @@
-/* $Id: pkgdb2.c,v 1.5 2004/08/03 00:24:55 judd Exp $ */
+/* $Id: pkgdb2.c,v 1.6 2005/02/25 21:27:45 judd Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <mysql.h>
 #include <string.h>
+#include <limits.h>
+
+#define DB_USER "archweb"
+#define DB_NAME "archweb"
+#define DB_PASS "passwords-are-cool"
 
 typedef struct pkg {
 	unsigned int id;
@@ -62,31 +67,73 @@ char* trim(char *str)
 	return str;
 }
 
+/* scan a .pkg.tar.gz file and put all files listed into the database.
+ *
+ * this function is hacky and should be done properly, but this route is
+ * easier than reading the file with libtar.
+ */
+void updatefilelist(MYSQL *db, unsigned long id, char *fn)
+{
+	FILE *fp;
+	char *tmp;
+	char cmd[PATH_MAX];
+	char line[PATH_MAX];
+	char query[PATH_MAX];
+
+	tmp = tempnam("/tmp", "pkgdb");
+	snprintf(cmd, PATH_MAX-1, "/bin/tar tzvf %s | awk '{print $6}' >%s", fn, tmp);
+	system(cmd);
+	fp = fopen(tmp, "r");
+	if(fp == NULL) {
+		fprintf(stderr, "pkgdb2: could not open tempfile: %s\n", tmp);
+		return;
+	}
+	snprintf(query, sizeof(query), "DELETE FROM packages_files WHERE id='%d'", id);
+	doquery(db, query);
+	while(fgets(line, sizeof(line)-1, fp)) {
+		char *fixedfn = addslashes(trim(line));
+		if(!strcmp(fixedfn, ".FILELIST") || !strcmp(fixedfn, ".PKGINFO") || !strcmp(fixedfn, ".INSTALL")) {
+			free(fixedfn);
+			continue;
+		}
+		/* varchars aren't case-sensitive but filesystems are, so we use REPLACE INTO */
+		snprintf(query, sizeof(query), "REPLACE INTO packages_files (id,path) VALUES "
+				"('%d', '%s')", id, fixedfn);
+		free(fixedfn);
+		doquery(db, query);
+	}
+	fclose(fp);
+	unlink(tmp);
+}
+
 int main(int argc, char **argv)
 {
 	MYSQL db;
 	MYSQL_RES *result;
 	MYSQL_ROW row;
 	char query[4096];
+	char fn[PATH_MAX];
+	char ftppath[PATH_MAX];
 	int repoid;
 	pkg_t *dblist = NULL;
 	pkg_t *pkglist = NULL;
 	pkg_t *pkgptr, *ptr;
 
-	if(argc < 2) {
-		printf("usage: pkgdb2 <repoid>\n");
+	if(argc < 3) {
+		printf("usage: pkgdb2 <repoid> <ftp_repo_root>\n");
 		printf("\nWARNING: Do not run this manually! It is intended to be"
 				" run with pkgdb1 only.\n");
 		return(1);
 	}
 	repoid = atoi(argv[1]);
+	strncpy(ftppath, argv[2], PATH_MAX-1);
 
 	if(mysql_init(&db) == NULL) {
 		fprintf(stderr, "could not initialize\n");
 		return(1);
 	}
-	if(mysql_real_connect(&db, "localhost", "archweb", "passwords-are-cool",
-			"archweb", 0, NULL, 0) == NULL) {
+	if(mysql_real_connect(&db, "localhost", DB_USER, DB_PASS, DB_NAME,
+			0, NULL, 0) == NULL) {
 		fprintf(stderr, "failed to connect to database: %s\n", mysql_error(&db));
 		return(1);
 	}
@@ -188,7 +235,8 @@ int main(int argc, char **argv)
 		}
 		if(!found) {
 			/* Insert... */
-			printf("pkgdb2: inserting %s\n", name);
+			unsigned long id;
+			fprintf(stderr, "pkgdb2: inserting %s\n", name);
 			snprintf(query, sizeof(query), "INSERT INTO packages (id,repoid,"
 					"categoryid,pkgname,pkgver,pkgrel,pkgdesc,url,sources,depends,"
 					"lastupdate) VALUES (NULL,'%d','%d','%s','%s','%s','%s',"
@@ -197,10 +245,13 @@ int main(int argc, char **argv)
 					addslashes(desc), addslashes(url), addslashes(sources),
 					addslashes(deplist));
 			doquery(&db, query);
+			id = mysql_insert_id(&db);
+			snprintf(fn, PATH_MAX-1, "%s/%s-%s-%s.pkg.tar.gz", ftppath, name, ver, rel);
+			updatefilelist(&db, id, fn);
 			continue;
 		} else if(strcmp(ptr->ver, ver) || strcmp(ptr->rel, rel)) {		
 			/* ...or Update */
-			printf("pkgdb2: updating %s (%s-%s ==> %s-%s)\n",
+			fprintf(stderr, "pkgdb2: updating %s (%s-%s ==> %s-%s)\n",
 					ptr->name, ptr->ver, ptr->rel, ver, rel);
 			snprintf(query, sizeof(query), "UPDATE packages SET categoryid='%d',"
 					"pkgname='%s',pkgver='%s',pkgrel='%s',pkgdesc='%s',url='%s',"
@@ -210,6 +261,8 @@ int main(int argc, char **argv)
 					addslashes(desc), addslashes(url), addslashes(sources),
 					addslashes(deplist), ptr->id);
 			doquery(&db, query);
+			snprintf(fn, PATH_MAX-1, "%s/%s-%s-%s.pkg.tar.gz", ftppath, name, ver, rel);
+			updatefilelist(&db, ptr->id, fn);
 			/*
 			snprintf(query, sizeof(query), "UPDATE todolist_pkgs SET complete=1 "
 					"WHERE pkgid='%d'", ptr->id);
@@ -218,7 +271,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	/* look for delete packages */
+	/* look for deleted packages */
 	for(ptr = dblist; ptr; ptr = ptr->next) {
 		int found = 0;
 		for(pkgptr = pkglist; pkgptr; pkgptr = pkgptr->next) {
@@ -229,11 +282,14 @@ int main(int argc, char **argv)
 		}
 		if(!found) {
 			/* delete from db */
-			printf("pkgdb2: deleting %s\n", ptr->name);
+			fprintf(stderr, "pkgdb2: deleting %s\n", ptr->name);
 			snprintf(query, sizeof(query), "DELETE FROM packages WHERE id='%d'",
 					ptr->id);
 			doquery(&db, query);
-			snprintf(query, sizeof(query), "DELETE FROM todolist_pkgs WHERE listid='%d'",
+			snprintf(query, sizeof(query), "DELETE FROM packages_files WHERE id='%d'",
+					ptr->id);
+			doquery(&db, query);
+			snprintf(query, sizeof(query), "DELETE FROM todolist_pkgs WHERE pkgid='%d'",
 					ptr->id);
 			doquery(&db, query);
 		}

@@ -1,9 +1,9 @@
 #!/bin/bash
-# $Id: db-extra,v 1.4 2004/01/06 02:50:53 judd Exp $
+# $Id: db-extra,v 1.5 2004/04/01 21:09:13 judd Exp $
 
 uid=`id -u`
-TMPDIR="/tmp/archpkg.$uid"
 repoid=2
+TMPDIR="/tmp/archpkg.$repoid.$uid"
 
 cleanup() {
 	rm -rf $TMPDIR
@@ -38,6 +38,11 @@ mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
 echo "==> Generating Pacman Database for EXTRA..." >&2
 cd $TMPDIR
 CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r CURRENT extra
+# check again
+if [ -d /tmp/.gensync ]; then
+	echo "error: someone else is currently running gensync!"
+	exit 1
+fi
 /usr/bin/gensync $TMPDIR/extra $TMPDIR/extra.db.tar.gz /home/ftp/extra
 [ -f $TMPDIR/extra.db.tar.gz ] && mv -f $TMPDIR/extra.db.tar.gz /home/ftp/extra
 

@@ -1,14 +1,14 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.11 2004/02/20 09:20:32 judd Exp $
+# $Id: pkgdb,v 1.12 2004/04/01 21:04:14 judd Exp $
 
 tl=`pwd`
 
+repoid=$1
 # we use this instead of mktemp cuz the RH server's mktemp is broken :(
 uid=`id -u`
-TMPFILE="/tmp/.mysqltmp.$uid.1"
-TMPFILE2="/tmp/.mysqltmp.$uid.2"
+TMPFILE="/tmp/.mysqltmp.$uid.$repoid.1"
+TMPFILE2="/tmp/.mysqltmp.$uid.$repoid.2"
 
-repoid=$1
 dbuser='archweb'
 dbname='archweb'
 dbpass='YWkrOjqm'

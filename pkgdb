@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.13 2004/05/06 01:39:42 judd Exp $
+# $Id: pkgdb,v 1.14 2004/05/06 02:27:40 judd Exp $
 
 tl=`pwd`
 
@@ -24,6 +24,9 @@ deletepkg()
 	echo "Deleting $pkgname"
 	mysql -u $dbuser -p$dbpass $dbname <<_EOF
 DELETE FROM packages WHERE id='$id';
+_EOF
+	mysql -u $dbuser -p$dbpass $dbname <<_EOF
+DELETE FROM todolist_pkgs WHERE pkgid='$id';
 _EOF
 }
 

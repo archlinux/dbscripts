@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb,v 1.14 2004/05/06 02:27:40 judd Exp $
+# $Id: pkgdb,v 1.15 2005/01/03 08:09:21 judd Exp $
 
 tl=`pwd`
 
@@ -63,7 +63,7 @@ process() {
 	oldrel=`echo $pkg | awk '{print $4}'`
 	[ "$pkgname" = "" ] && return;
 	cd $tl
-	pkgdir=`find . -type d -name "$pkgname" -maxdepth 2 -mindepth 1 | head -1`
+	pkgdir=`find . -maxdepth 2 -mindepth 1 -type d -name "$pkgname" | head -1`
 	if [ "$pkgdir" = "" ]; then
 		deletepkg
 	else
@@ -118,7 +118,7 @@ cat $TMPFILE | ( \
 
 echo " -> Scanning for New packages..."
 cd $tl
-for category in `find . -type d -maxdepth 1 | grep -v CVS | grep -v "^extra" | grep -v "^unstable"`; do
+for category in `find . -maxdepth 1 -type d | grep -v CVS | grep -v "^extra" | grep -v "^unstable"`; do
 	category=`echo $category | sed 's|./||'`
 	if [ "$category" = "." ]; then
 		continue

@@ -1,6 +1,6 @@
-# $Id: db-inc,v 1.1 2005/06/21 03:44:57 judd Exp $
+# $Id: db-inc,v 1.2 2005/06/21 03:47:38 judd Exp $
 
-UID=`id -u`
+[ "$UID" = "" ] && UID=`uid`
 TMPDIR="/tmp/archpkg.$repoid.$UID"
 
 cleanup() {

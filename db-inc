@@ -1,0 +1,59 @@
+# $Id: db-inc,v 1.1 2005/06/21 03:44:57 judd Exp $
+
+UID=`id -u`
+TMPDIR="/tmp/archpkg.$repoid.$UID"
+
+cleanup() {
+	rm -rf $TMPDIR
+	# unlock
+	rm -f /tmp/.repolck.$repoid
+	exit 0
+}
+
+# check for locks
+if [ -f /tmp/.repolck.$repoid ]; then
+	owner=`/bin/ls -l /tmp/.repolck.$repoid | awk '{print $3}'`
+	echo "error: db generation is already in progress (started by $owner)"
+	exit 1
+fi
+
+# catch ^C breaks
+trap cleanup SIGINT
+# lock
+touch /tmp/.repolck.$repoid
+
+# RedHat's mktemp is broken...
+if [ -d $TMPDIR ]; then
+	echo "==> Removing old temp dir..." >&2
+	rm -rf $TMPDIR || exit 1
+fi
+mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
+
+echo "==> Generating Pacman Database for repository '$reponame'..." >&2
+cd $TMPDIR
+CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:$cvspath cvs -q export -r CURRENT $cvsmod
+if [ $? -gt 0 ]; then
+	echo "==> CVS export failed!"
+	cleanup
+	exit 1
+fi
+/usr/bin/gensync $TMPDIR/$cvsmod $TMPDIR/$reponame.db.tar.gz $ftppath
+[ -f $TMPDIR/$reponame.db.tar.gz ] && mv -f $TMPDIR/$reponame.db.tar.gz $ftppath
+
+echo "==> Scanning for New/Updated/Deleted packages..." >&2
+cd $TMPDIR/$cvsmod
+/arch/pkgdb1 $repoid | /arch/pkgdb2 $repoid $ftppath
+
+echo "==> Generating Text Package List..." >&2
+/arch/genpkglist $reponame
+
+# hack -- only Current's packages.txt goes in a "setup" subdir
+if [ "$reponame" = "current" ]; then
+	mv packages.txt $ftppath/setup/packages.txt
+else
+	mv packages.txt $ftppath/packages.txt
+fi
+
+cleanup
+
+# vim: set ft=sh:

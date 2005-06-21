@@ -1,65 +1,14 @@
 #!/bin/bash
-# $Id: db-arch,v 1.21 2005/02/25 21:27:44 judd Exp $
+# $Id: db-arch,v 1.22 2005/06/21 03:44:57 judd Exp $
 
-uid=`id -u`
 repoid=1
+reponame="current"
+
 ftppath="/home/ftp/current/os/i686"
 
-TMPDIR="/tmp/archpkg.$repoid.$uid"
+cvspath="/home/cvs-arch"
+cvsmod="arch/build"
 
-cleanup() {
-	rm -rf $TMPDIR
-	# unlock
-	rm -f /tmp/.repolck.$repoid
-	exit 0
-}
+# call the real script
+. `dirname $0`/db-inc
 
-# check for locks
-if [ -f /tmp/.repolck.$repoid ]; then
-	owner=`/bin/ls -l /tmp/.repolck.$repoid | awk '{print $3}'`
-	echo "error: db generation is already in progress (started by $owner)"
-	exit 1
-fi
-if [ -d /tmp/.gensync ]; then
-	echo "error: someone else is currently running gensync!"
-	exit 1
-fi
-
-# catch ^C breaks
-trap cleanup SIGINT
-# lock
-touch /tmp/.repolck.$repoid
-
-# RedHat's mktemp is broken...
-if [ -d $TMPDIR ]; then
-	echo "==> Removing old temp dir..." >&2
-	rm -rf $TMPDIR || exit 1
-fi
-mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
-
-echo "==> Generating Pacman Database for CURRENT..." >&2
-cd $TMPDIR
-CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r CURRENT arch/build
-if [ $? -gt 0 ]; then
-	echo "==> CVS export failed!"
-	cleanup
-	exit 1
-fi
-# check again
-if [ -d /tmp/.gensync ]; then
-	echo "error: someone else is currently running gensync!"
-	cleanup
-	exit 1
-fi
-/usr/bin/gensync $TMPDIR/arch/build $TMPDIR/current.db.tar.gz $ftppath
-[ -f $TMPDIR/current.db.tar.gz ] && mv -f $TMPDIR/current.db.tar.gz $ftppath
-
-echo "==> Scanning for New/Updated/Deleted packages..." >&2
-cd $TMPDIR/arch/build
-/arch/pkgdb1 $repoid | /arch/pkgdb2 $repoid $ftppath
-
-echo "==> Generating Text Package List..." >&2
-/arch/genpkglist current
-mv packages.txt $ftppath/setup/packages.txt
-
-cleanup

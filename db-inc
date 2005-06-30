@@ -1,7 +1,12 @@
-# $Id: db-inc,v 1.2 2005/06/21 03:47:38 judd Exp $
+# $Id: db-inc,v 1.3 2005/06/30 22:30:36 judd Exp $
 
 [ "$UID" = "" ] && UID=`uid`
 TMPDIR="/tmp/archpkg.$repoid.$UID"
+
+if [ ! `type -p fakeroot` ]; then
+	echo "error: fakeroot is missing"
+	exit 1
+fi
 
 cleanup() {
 	rm -rf $TMPDIR
@@ -37,7 +42,11 @@ if [ $? -gt 0 ]; then
 	cleanup
 	exit 1
 fi
-/usr/bin/gensync $TMPDIR/$cvsmod $TMPDIR/$reponame.db.tar.gz $ftppath
+
+echo "chown -R root.root $TMPDIR/$cvsmod;" \
+	"/usr/bin/gensync $TMPDIR/$cvsmod $TMPDIR/$reponame.db.tar.gz $ftppath" \
+	| fakeroot
+
 [ -f $TMPDIR/$reponame.db.tar.gz ] && mv -f $TMPDIR/$reponame.db.tar.gz $ftppath
 
 echo "==> Scanning for New/Updated/Deleted packages..." >&2
@@ -56,4 +65,4 @@ fi
 
 cleanup
 
-# vim: set ft=sh:
+# vim: set ts=2 noet ft=sh:

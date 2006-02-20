@@ -1,40 +1,57 @@
 #!/bin/bash
-# $Id: pkgdb1,v 1.3 2005/01/03 08:11:19 judd Exp $
+# $Id: pkgdb1,v 1.4 2006/02/20 06:33:40 judd Exp $
 
-tl=`pwd`
+STAGEDIR=`pwd`
 
-repoid=$1
-if [ "$repoid" = "" ]; then
+ABSDIR=$1
+if [ "$ABSDIR" = "" ]; then
 	me=`basename $0`
-	echo "usage: $me <repoid>"
+	echo "usage: $me <abs_dir>" >&2
 	exit 1
 fi
 
-cd $tl
-for category in `find . -maxdepth 1 -type d | grep -v CVS | grep -v "^extra" | grep -v "^unstable"`; do
-	category=`echo $category | sed 's|./||'`
-	if [ "$category" = "." ]; then
+if [ ! "`ls $STAGEDIR/*.pkg.tar.gz 2>/dev/null`" ]; then
+	exit
+fi
+
+cd $STAGEDIR
+for pkgfile in `ls $STAGEDIR/*.pkg.tar.gz`; do
+	tmp=${pkgfile##*/}
+	pkgname=${tmp%-*-*};
+	fullname=${tmp%.pkg.tar.gz}
+	# find the matching PKGBUILD
+	tmpf=$(mktemp /tmp/pkgdb1.XXXXXXXXXX) || exit 1
+	find $ABSDIR -type d -name "$pkgname" >$tmpf
+	if [ "`cat $tmpf | wc -l`" != "1" ]; then
+		echo "WARNING: could not find PKGBUILD for $pkgname, cannot update this entry" >&2
+		rm $tmpf
 		continue
 	fi
-	for pkg in `ls $category | sort`; do
-		cd $tl/$category/$pkg
-		if [ -f PKGBUILD ]; then
-			unset depends source deplist sources
-			unset pkgname pkgver pkgrel pkgdesc url
-			. PKGBUILD
-			deplist=${depends[@]}
-			sources=${source[@]}
-			echo $pkgname
-			echo $pkgver
-			echo $pkgrel
-			echo $pkgdesc
-			echo $category
-			echo $url
-			echo $sources
-			echo $deplist
-		fi
-		cd $tl
-	done
+	pkgbuild="`cat $tmpf`/PKGBUILD"
+	rm $tmpf
+	if [ ! -f $pkgbuild ]; then
+		echo "WARNING: could not find PKGBUILD for $fullname, cannot update this entry" >&2
+		continue
+	fi
+	# pick out the category from the pathname
+	catpath=$(cd `dirname $pkgbuild`/.. && pwd)
+	category=${catpath##*/}
+	# now read the PKGBUILD and output the data for pkgdb2
+  unset pkgname pkgver pkgrel pkgdesc license groups provides md5sums force
+  unset replaces depends conflicts backup source install build makedepends
+  unset options
+	source $pkgbuild || continue
+
+	deplist=${depends[@]}
+	sources=${source[@]}
+	echo $pkgname
+	echo $pkgver
+	echo $pkgrel
+	echo $pkgdesc
+	echo $category
+	echo $url
+	echo $sources
+	echo $deplist
 done
 
 exit 0

@@ -1,68 +1,54 @@
 #!/bin/bash
-# $Id: db-testing,v 1.10 2005/02/25 21:27:44 judd Exp $
+# $Id: db-testing,v 1.11 2006/02/20 06:33:40 judd Exp $
 
-uid=`id -u`
 repoid=4
+reponame="testing"
+
 ftppath="/home/ftp/testing/os/i686"
 
-TMPDIR="/tmp/archpkg.$repoid.$uid"
+cvspath="/home/cvs-arch"
+cvsmod="testing"
 
-cleanup() {
-	rm -rf $TMPDIR
-	# unlock
-	rm -f /tmp/.repolck.$repoid
-	exit 0
+stagedir="$HOME/staging/testing"
+
+testing_cleanup() {
+	rm -rf $testingtmp
 }
 
-# check for locks
+# catch ^C
+trap cleanup SIGINT
+
 if [ -f /tmp/.repolck.$repoid ]; then
 	owner=`/bin/ls -l /tmp/.repolck.$repoid | awk '{print $3}'`
 	echo "error: db generation is already in progress (started by $owner)"
 	exit 1
 fi
-if [ -d /tmp/.gensync ]; then
-	echo "error: someone else is currently running gensync!"
-	exit 1
-fi
-
-# catch ^C breaks
-trap cleanup SIGINT
 # lock
 touch /tmp/.repolck.$repoid
 
-# RedHat's mktemp is broken...
-if [ -d $TMPDIR ]; then
-	echo "==> Removing old temp dir..." >&2
-	rm -rf $TMPDIR || exit 1
+# testing is special, so we have to do the CVS checkout stuff here
+testingtmp=$(mktemp -d /tmp/testtmp-XXXXXX) || exit 1
+cvsdir=$testingtmp/testing
+mkdir $cvsdir
+cd $cvsdir
+
+if [ "`ls $stagedir/add`" -o "`ls $stagedir/del`" ]; then
+	echo "==> Checking out TESTING branches..." >&2
+	echo "--- CURRENT ---"
+	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r TESTING arch
+	mv arch/build/* . && rm -rf arch
+	echo "--- EXTRA ---"
+	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r TESTING extra
+	cp -a extra/* . && rm -rf extra
+	echo "--- UNSTABLE ---"
+	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r TESTING unstable
+	cp -a unstable/* . && rm -rf unstable
 fi
-mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
 
-echo "==> Generating Pacman Database for TESTING..." >&2
-cd $TMPDIR
-echo "--- CURRENT ---"
-CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-arch cvs -q export -r TESTING arch
-mv arch/build/* . && rm -rf arch
-echo "--- EXTRA ---"
-CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r TESTING extra
-cp -a extra/* . && rm -rf extra
-echo "--- UNSTABLE ---"
-CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r TESTING unstable
-cp -a unstable/* . && rm -rf unstable
-# check again
-if [ -d /tmp/.gensync ]; then
-	echo "error: someone else is currently running gensync!"
-	cleanup
-	exit 1
-fi
-/usr/bin/gensync $TMPDIR $TMPDIR/testing.db.tar.gz $ftppath
-[ -f $TMPDIR/testing.db.tar.gz ] && mv -f $TMPDIR/testing.db.tar.gz $ftppath
+# unlock
+rm -f /tmp/.repolck.$repoid
 
-echo "==> Scanning for New/Updated/Deleted packages..." >&2
-cd $TMPDIR
-/arch/pkgdb1 $repoid | /arch/pkgdb2 $repoid $ftppath
+# call the real script
+. `dirname $0`/db-inc
 
-echo "==> Generating Text Package List..." >&2
-/arch/genpkglist testing
-mv packages.txt $ftppath/packages.txt
-
-cleanup
+testing_cleanup

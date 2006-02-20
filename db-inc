@@ -1,10 +1,18 @@
-# $Id: db-inc,v 1.3 2005/06/30 22:30:36 judd Exp $
+# $Id: db-inc,v 1.4 2006/02/20 06:33:40 judd Exp $
 
 [ "$UID" = "" ] && UID=`uid`
 TMPDIR="/tmp/archpkg.$repoid.$UID"
 
+# where are the arch scripts located?
+ARCHDIR="/arch-new"
+
 if [ ! `type -p fakeroot` ]; then
-	echo "error: fakeroot is missing"
+	echo "error: fakeroot is missing" >&2
+	exit 1
+fi
+
+if [ ! -d $stagedir ]; then
+	echo "error: staging directory missing: $stagedir" >&2
 	exit 1
 fi
 
@@ -12,7 +20,17 @@ cleanup() {
 	rm -rf $TMPDIR
 	# unlock
 	rm -f /tmp/.repolck.$repoid
-	exit 0
+	[ "$1" ] && exit $1
+}
+
+ctrl_c() {
+	echo "Interrupted" >&2
+	cleanup 0
+}
+
+die() {
+	echo "$*" >&2
+	cleanup 1
 }
 
 # check for locks
@@ -23,7 +41,7 @@ if [ -f /tmp/.repolck.$repoid ]; then
 fi
 
 # catch ^C breaks
-trap cleanup SIGINT
+trap ctrl_c SIGINT
 # lock
 touch /tmp/.repolck.$repoid
 
@@ -34,33 +52,103 @@ if [ -d $TMPDIR ]; then
 fi
 mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
 
-echo "==> Generating Pacman Database for repository '$reponame'..." >&2
 cd $TMPDIR
-CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:$cvspath cvs -q export -r CURRENT $cvsmod
-if [ $? -gt 0 ]; then
-	echo "==> CVS export failed!"
-	cleanup
-	exit 1
+
+# Checkout the CVS module if we need to
+updatelists=
+if [ "`ls $stagedir/add`" -o "`ls $stagedir/del`" ]; then
+	# if $cvsdir is set, then use that instead of doing our own cvs checkout
+	if [ "$cvsdir" ]; then
+		mv $cvsdir $TMPDIR/$cvsmod
+	else
+		echo "==> Checking out module: $cvsmod"
+		CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:$cvspath cvs -q export -r CURRENT $cvsmod
+		if [ $? -gt 0 ]; then
+			die "==> CVS export failed!"
+		fi
+	fi
+	updatelists=1
+else
+	echo "No files to process"
+	cleanup 0
 fi
 
-echo "chown -R root.root $TMPDIR/$cvsmod;" \
-	"/usr/bin/gensync $TMPDIR/$cvsmod $TMPDIR/$reponame.db.tar.gz $ftppath" \
-	| fakeroot
+# Right-O, now we look through the "add" and "del" subdirectories of
+# $stagedir and process the packages there accordingly -- all packages
+# in the "add" dir are added/updated, all packages in the "del" dir
+# are removed.
+#
+# This means the sync db could actually be unpacked/repacked twice in
+# one db-* invocation, but it's not a huge performance hit.
 
-[ -f $TMPDIR/$reponame.db.tar.gz ] && mv -f $TMPDIR/$reponame.db.tar.gz $ftppath
+if [ "`ls $stagedir/add`" ]; then
+	cd $TMPDIR
+	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
-echo "==> Scanning for New/Updated/Deleted packages..." >&2
-cd $TMPDIR/$cvsmod
-/arch/pkgdb1 $repoid | /arch/pkgdb2 $repoid $ftppath
+	# copy the db file into our working area
+	cp $ftppath/$reponame.db.tar.gz .
 
-echo "==> Generating Text Package List..." >&2
-/arch/genpkglist $reponame
+	cd $stagedir/add
+	# run it thru fakeroot make sure everything is owned by root.root
+	echo "$ARCHDIR/updatesync-many add $TMPDIR/$reponame.db.tar.gz $TMPDIR/$cvsmod" \
+		| fakeroot
 
-# hack -- only Current's packages.txt goes in a "setup" subdir
-if [ "$reponame" = "current" ]; then
-	mv packages.txt $ftppath/setup/packages.txt
-else
-	mv packages.txt $ftppath/packages.txt
+	if [ $? -ne 0 ]; then
+		die "==> Error returned from updatesync-many"
+	fi
+
+	cp $TMPDIR/$reponame.db.tar.gz $ftppath
+
+	echo "==> Scanning for New/Updated packages..." >&2
+	cd $stagedir/add
+	$ARCHDIR/pkgdb1 $TMPDIR/$cvsmod | $ARCHDIR/pkgdb2-add $repoid $stagedir/add
+
+	# move the package files into the ftp directory
+	mv -f $stagedir/add/*.pkg.tar.gz $ftppath
+fi
+	
+if [ "`ls $stagedir/del`" ]; then
+	cd $TMPDIR
+	echo "==> Processing deleted packages for repository '$reponame'..." >&2
+
+	# copy the db file into our working area
+	cp $ftppath/$reponame.db.tar.gz .
+
+	cd $stagedir/del
+	# run it thru fakeroot make sure everything is owned by root.root
+	echo "$ARCHDIR/updatesync-many del $TMPDIR/$reponame.db.tar.gz NOT-USED" \
+		| fakeroot
+
+	if [ $? -ne 0 ]; then
+		die "==> Error returned from updatesync-many"
+	fi
+
+	cp $TMPDIR/$reponame.db.tar.gz $ftppath
+
+	echo "==> Scanning for Deleted packages..." >&2
+	cd $stagedir/del
+	(
+		for i in *.pkg.tar.gz; do
+			pkgname=${i%-*-*}
+			echo $pkgname
+		done
+	) | $ARCHDIR/pkgdb2-del $repoid $stagedir/del
+
+  # remove the package files
+	rm -f $stagedir/del/*.pkg.tar.gz
+fi
+
+if [ "$updatelists" ]; then
+	echo "==> Generating Text Package List..." >&2
+	cd $TMPDIR/$cvsmod
+	$ARCHDIR/genpkglist $reponame
+
+	# hack -- only Current's packages.txt goes in a "setup" subdir
+	if [ "$reponame" = "current" ]; then
+		mv packages.txt $ftppath/setup/packages.txt
+	else
+		mv packages.txt $ftppath/packages.txt
+	fi
 fi
 
 cleanup

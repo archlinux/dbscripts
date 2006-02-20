@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: db-extra,v 1.11 2005/06/21 03:44:57 judd Exp $
+# $Id: db-extra,v 1.12 2006/02/20 06:33:40 judd Exp $
 
 repoid=2
 reponame="extra"
@@ -8,6 +8,8 @@ ftppath="/home/ftp/extra/os/i686"
 
 cvspath="/home/cvs-extra"
 cvsmod="extra"
+
+stagedir="$HOME/staging/extra"
 
 # call the real script
 . `dirname $0`/db-inc

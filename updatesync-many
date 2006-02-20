@@ -1,0 +1,248 @@
+#!/bin/bash
+# 
+#   updatesync-many
+#  
+#   Copyright (c) 2004 by Jason Chu <jason@archlinux.org>
+#   Derived from gensync (c) 2002-2006 Judd Vinet <jvinet@zeroflux.org>
+#  
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+# 
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#  
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, 
+#   USA.
+#
+
+usage() {
+	echo "updatesync-many"
+	echo "usage: $0 <action> <dbfile> <abs_dir>"
+	echo
+	echo "This should probably only be run from the Arch db-generation scripts"
+	echo
+	echo "Caveats:"
+	echo " - Make sure you run it from the staging directory"
+	echo " - Use absolute pathnames for dbfile and abs_dir"
+	echo
+	exit 0
+}
+
+die()
+{
+	echo "updatesync-many: $*" >&2
+	rm -rf $TMPDIR
+	exit 1
+}
+
+msg()
+{
+	echo "updatesync-many: $*" >&2
+}
+
+check_option() {
+	local i
+	for i in ${options[@]}; do
+		local uc=`echo $i | tr [:lower:] [:upper:]`
+		local lc=`echo $i | tr [:upper:] [:lower:]`
+		if [ "$uc" = "$1" -o "$lc" = "$1" ]; then
+			echo $1
+			return
+		fi
+	done
+}
+
+get_md5checksum()
+{
+	md5line=`md5sum $1`
+	[ ! -z "$md5line" ] && pkgmd5sum=${md5line%  *}
+	echo $pkgmd5sum
+}
+
+db_write_entry()
+{
+	unset pkgname pkgver pkgrel pkgdesc license groups provides md5sums force
+	unset replaces depends conflicts backup source install build makedepends
+	unset options
+	source $1 || return 1
+	cd $TMPDIR
+	mkdir $pkgname-$pkgver-$pkgrel || return 1
+	cd $pkgname-$pkgver-$pkgrel
+	# desc
+	: >desc
+	echo "%NAME%" >>desc
+	echo "$pkgname" >>desc
+	echo "" >>desc
+	echo "%VERSION%" >>desc
+	echo "$pkgver-$pkgrel" >>desc
+	echo "" >>desc
+	echo "%DESC%" >>desc
+	echo "$pkgdesc" >>desc
+	echo "" >>desc
+	echo "%CSIZE%" >>desc
+	echo "$csize" >>desc
+	echo "" >>desc
+	if [ ! -z $pkgmd5sum ]; then
+		echo "%MD5SUM%" >>desc
+		echo "$pkgmd5sum" >>desc
+		echo "" >>desc
+	fi
+	if [ ${#groups[*]} -gt 0 ]; then
+		echo "%GROUPS%" >>desc
+		for it in "${groups[@]}"; do
+			echo "$it" >>desc
+		done
+		echo "" >>desc
+	fi
+	if [ ${#replaces[*]} -gt 0 ]; then
+		echo "%REPLACES%" >>desc
+		for it in "${replaces[@]}"; do
+			echo "$it" >>desc
+		done
+		echo "" >>desc
+	fi
+	if [ "$force" = "y" -o "$force" = "Y" -o "`check_option FORCE`" ]; then
+		echo "%FORCE%" >>desc
+		echo "" >>desc
+	fi
+	# depends
+	: >depends
+	if [ ${#depends[*]} -gt 0 ]; then
+		echo "%DEPENDS%" >>depends
+		for it in "${depends[@]}"; do
+		  echo "$it" >>depends
+		done
+		echo "" >>depends
+	fi
+	if [ ${#conflicts[*]} -gt 0 ]; then
+		echo "%CONFLICTS%" >>depends
+		for it in "${conflicts[@]}"; do
+		  echo "$it" >>depends
+		done
+		echo "" >>depends
+	fi
+	if [ ${#provides[*]} -gt 0 ]; then
+		echo "%PROVIDES%" >>depends
+		for it in "${provides[@]}"; do
+		  echo "$it" >>depends
+		done
+		echo "" >>depends
+	fi
+}
+
+delete_entry()
+{
+	# strip to the basename
+	tmp=${1##*/}
+	# grab the pkgname
+	pkgname=${tmp%-*-*}
+	for i in *; do
+		if [ "${i%-*-*}" = "$pkgname" ]; then
+			rm -rf $i
+		fi
+	done
+}
+
+update_entry()
+{
+	pkgfile=$1
+	tmp=${pkgfile##*/}
+	pkgname=${tmp%-*-*};
+	fullname=${tmp%.pkg.tar.gz}
+
+	# find the matching PKGBUILD
+	tmpf=$(mktemp /tmp/updatesync-many.XXXXXXXXXX) || exit 1
+	find $ABSDIR -type d -name "$pkgname" >$tmpf
+	if [ "`cat $tmpf | wc -l`" != "1" ]; then
+		msg "WARNING: could not find PKGBUILD for $pkgname, cannot update this entry"
+		rm $tmpf
+		return
+	fi
+	pkgbuild="`cat $tmpf`/PKGBUILD"
+	rm $tmpf
+	if [ ! -f $pkgbuild ]; then
+		msg "WARNING: could not find PKGBUILD for $fullname, cannot update this entry"
+		return
+	fi
+
+	source $pkgbuild
+	if [ $? -ne 0 ]; then
+		msg "WARNING: PKGBUILD for $fullname has errors, cannot update this entry"
+		return
+	fi
+
+	# all good so far - delete the old entry
+	cd $TMPDIR
+	delete_entry $pkgfile
+
+	csize=`du -b $pkgfile | cut -f1`
+	pkgmd5sum=`get_md5checksum $pkgfile`
+	[ -z $pkgmd5sum ] && die "error generating checksum for $pkgfile"
+
+	db_write_entry $pkgbuild || die "error writing entry for $pkgname"
+	cd - >/dev/null
+}
+
+
+if [ $# -lt 3 ]; then
+	usage
+	exit 1
+fi
+
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+	usage
+	exit 0
+fi
+
+ACTION=$1
+PKGDB=$2
+ABSDIR=$3
+STAGEDIR="`pwd`"
+PKGDIR="`dirname $PKGDB`"
+if [ "$PKGDIR" = "." ]; then
+	PKGDIR=$STAGEDIR
+fi
+
+if [ "$ACTION" != "add" -a "$ACTION" != "del" ]; then
+	usage
+	exit 1
+fi
+
+# Prepare the sync db for modifications
+TMPDIR=$(mktemp -d /tmp/updatesync-many.XXXXXXXXXX) || exit 1
+cd $TMPDIR
+if [ ! -f $PKGDB ]; then
+	die "$PKGDB not found"
+fi
+msg "Unpacking db: $PKGDB"
+tar zxf $PKGDB || die "error unpacking $PKGDB"
+
+# Process packages in the staging directory
+for pkgfile in $STAGEDIR/*.pkg.tar.gz; do
+	tmp=${pkgfile##*/}
+	pkgname=${tmp%-*-*};
+	fullname=${tmp%.pkg.tar.gz}
+	if [ "$ACTION" = "del" ]; then
+		msg "Deleting entry: $pkgname"
+		delete_entry $pkgfile
+	else
+		msg "Updating entry: $pkgname"
+		update_entry $pkgfile
+	fi
+done
+
+# Repackage the DB
+msg "Repacking db: $PKGDB"
+cd $TMPDIR
+tar c * | gzip -9 >$PKGDB || die "error writing to $PKGDB"
+
+cd /
+rm -rf $TMPDIR
+
+exit 0

@@ -1,0 +1,18 @@
+#!/bin/bash
+# $Id: db-arch64,v 1.1 2006/05/05 01:38:33 judd Exp $
+
+repoid=1
+reponame="current"
+arch="x86_64"
+
+ftppath="/home/ftp/current/os/x86_64"
+
+cvspath="/home/cvs-arch"
+cvsmod="arch/build"
+cvstag="CURRENT-64"
+
+stagedir="/home/arch64/staging/arch"
+
+# call the real script
+. `dirname $0`/db-inc
+

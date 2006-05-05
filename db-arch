@@ -1,13 +1,15 @@
 #!/bin/bash
-# $Id: db-arch,v 1.23 2006/02/20 06:33:40 judd Exp $
+# $Id: db-arch,v 1.24 2006/05/05 01:38:33 judd Exp $
 
 repoid=1
 reponame="current"
+arch="i686"
 
 ftppath="/home/ftp/current/os/i686"
 
 cvspath="/home/cvs-arch"
 cvsmod="arch/build"
+cvstag="CURRENT"
 
 stagedir="$HOME/staging/arch"
 

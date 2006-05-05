@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: genpkglist,v 1.13 2006/02/22 07:56:11 judd Exp $
+# $Id: genpkglist,v 1.14 2006/05/05 01:38:33 judd Exp $
 
 #
 # genpkglist
@@ -9,7 +9,7 @@
 #
 
 pkgfile="`pwd`/packages.txt"
-repodir=$1
+ftppath=$1
 
 rm -f $pkgfile
 for category in `find * -maxdepth 0 -type d | grep -v CVS`; do
@@ -18,7 +18,7 @@ for category in `find * -maxdepth 0 -type d | grep -v CVS`; do
 		cd $pkg
 		if [ -f PKGBUILD ]; then
 			. PKGBUILD
-			if [ -f /home/ftp/$repodir/os/i686/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
+			if [ -f $ftppath/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
 				echo "$category/$pkgname-$pkgver-$pkgrel.pkg.tar.gz" >>$pkgfile
 			else
 				echo "notice: Missing $pkgname-$pkgver-$pkgrel.pkg.tar.gz in ftp site" >&2
@@ -29,7 +29,7 @@ for category in `find * -maxdepth 0 -type d | grep -v CVS`; do
 	cd ..
 done
 
-cd /home/ftp/$1/os/i686
+cd $ftppath
 unset DUPES DUPEFILES last
 for pkg in *.pkg.tar.gz; do
 	pkgname=${pkg%-*-*}
@@ -54,7 +54,7 @@ showdupes() {
 }
 
 if [ "$DUPES" ]; then
-	echo "Possible Dupes for $1 (please remove old versions)"
+	echo "Possible Dupes for $ftppath (remove old versions)"
 	echo "Date             Filename"
 	for dupe in $((for d in `echo $DUPES`; do echo $d; done) | sort -u); do
 		showdupes $dupe

@@ -1,0 +1,18 @@
+#!/bin/bash
+# $Id: db-unstable64,v 1.1 2006/05/05 01:38:33 judd Exp $
+
+repoid=3
+reponame="unstable"
+arch="x86_64"
+
+ftppath="/home/ftp/unstable/os/x86_64"
+
+cvspath="/home/cvs-unstable"
+cvsmod="unstable"
+cvstag="CURRENT-64"
+
+stagedir="/home/arch64/staging/unstable"
+
+# call the real script
+. `dirname $0`/db-inc
+

@@ -2,8 +2,8 @@
 # 
 #   updatesync-many
 #  
-#   Copyright (c) 2004 by Jason Chu <jason@archlinux.org>
-#   Derived from gensync (c) 2002-2006 Judd Vinet <jvinet@zeroflux.org>
+#   Copyright (c) 2004-2006 by Jason Chu and Judd Vinet
+#   Contact: <jason@archlinux.org> and <jvinet@zeroflux.org>
 #  
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -189,6 +189,10 @@ update_entry()
 	cd - >/dev/null
 }
 
+if [ ! "`type -p lsof`" ]; then
+	echo "ERROR: lsof is needed to run updatesync-many!"
+	exit 1
+fi
 
 if [ $# -lt 3 ]; then
 	usage
@@ -225,6 +229,14 @@ tar zxf $PKGDB || die "error unpacking $PKGDB"
 
 # Process packages in the staging directory
 for pkgfile in $STAGEDIR/*.pkg.tar.gz; do
+	# Make sure this file isn't currently in use by any processes...
+	# This is our cheap way of (mostly) making sure the file isn't being
+	# uploaded at this very time (and thus incomplete).
+	# Of course, if an upload failed and the scp connection terminated, then
+	# this check will fail us.
+	lsof $pkgfile &>/dev/null
+	[ $? -ne 1 ] && continue
+
 	tmp=${pkgfile##*/}
 	pkgname=${tmp%-*-*};
 	fullname=${tmp%.pkg.tar.gz}

@@ -1,10 +1,10 @@
-# $Id: db-inc,v 1.4 2006/02/20 06:33:40 judd Exp $
+# $Id: db-inc,v 1.5 2006/05/05 01:38:33 judd Exp $
 
 [ "$UID" = "" ] && UID=`uid`
-TMPDIR="/tmp/archpkg.$repoid.$UID"
+TMPDIR="/tmp/archpkg.$arch.$repoid.$UID"
 
 # where are the arch scripts located?
-ARCHDIR="/arch-new"
+ARCHDIR="/arch"
 
 if [ ! `type -p fakeroot` ]; then
 	echo "error: fakeroot is missing" >&2
@@ -19,7 +19,7 @@ fi
 cleanup() {
 	rm -rf $TMPDIR
 	# unlock
-	rm -f /tmp/.repolck.$repoid
+	rm -f /tmp/.repolck.$arch.$repoid
 	[ "$1" ] && exit $1
 }
 
@@ -34,8 +34,8 @@ die() {
 }
 
 # check for locks
-if [ -f /tmp/.repolck.$repoid ]; then
-	owner=`/bin/ls -l /tmp/.repolck.$repoid | awk '{print $3}'`
+if [ -f /tmp/.repolck.$arch.$repoid ]; then
+	owner=`/bin/ls -l /tmp/.repolck.$arch.$repoid | awk '{print $3}'`
 	echo "error: db generation is already in progress (started by $owner)"
 	exit 1
 fi
@@ -43,7 +43,7 @@ fi
 # catch ^C breaks
 trap ctrl_c SIGINT
 # lock
-touch /tmp/.repolck.$repoid
+touch /tmp/.repolck.$arch.$repoid
 
 # RedHat's mktemp is broken...
 if [ -d $TMPDIR ]; then
@@ -61,8 +61,8 @@ if [ "`ls $stagedir/add`" -o "`ls $stagedir/del`" ]; then
 	if [ "$cvsdir" ]; then
 		mv $cvsdir $TMPDIR/$cvsmod
 	else
-		echo "==> Checking out module: $cvsmod"
-		CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:$cvspath cvs -q export -r CURRENT $cvsmod
+		echo "==> Checking out module: $cvsmod ($cvstag)"
+		CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:$cvspath cvs -q export -r $cvstag $cvsmod
 		if [ $? -gt 0 ]; then
 			die "==> CVS export failed!"
 		fi
@@ -81,7 +81,7 @@ fi
 # This means the sync db could actually be unpacked/repacked twice in
 # one db-* invocation, but it's not a huge performance hit.
 
-if [ "`ls $stagedir/add`" ]; then
+if [ -d $stagedir/add -a "`ls $stagedir/add`" ]; then
 	cd $TMPDIR
 	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
@@ -99,15 +99,18 @@ if [ "`ls $stagedir/add`" ]; then
 
 	cp $TMPDIR/$reponame.db.tar.gz $ftppath
 
-	echo "==> Scanning for New/Updated packages..." >&2
-	cd $stagedir/add
-	$ARCHDIR/pkgdb1 $TMPDIR/$cvsmod | $ARCHDIR/pkgdb2-add $repoid $stagedir/add
+	# only for i686 (for now)
+	if [ "$arch" = "i686" ]; then
+		echo "==> Scanning for New/Updated packages..." >&2
+		cd $stagedir/add
+		$ARCHDIR/pkgdb1 $TMPDIR/$cvsmod | $ARCHDIR/pkgdb2-add $repoid $stagedir/add
+	fi
 
 	# move the package files into the ftp directory
 	mv -f $stagedir/add/*.pkg.tar.gz $ftppath
 fi
 	
-if [ "`ls $stagedir/del`" ]; then
+if [ -d $stagedir/del -a "`ls $stagedir/del`" ]; then
 	cd $TMPDIR
 	echo "==> Processing deleted packages for repository '$reponame'..." >&2
 
@@ -125,14 +128,17 @@ if [ "`ls $stagedir/del`" ]; then
 
 	cp $TMPDIR/$reponame.db.tar.gz $ftppath
 
-	echo "==> Scanning for Deleted packages..." >&2
-	cd $stagedir/del
-	(
-		for i in *.pkg.tar.gz; do
-			pkgname=${i%-*-*}
-			echo $pkgname
-		done
-	) | $ARCHDIR/pkgdb2-del $repoid $stagedir/del
+	# only for i686 (for now)
+	if [ "$arch" = "i686" ]; then
+		echo "==> Scanning for Deleted packages..." >&2
+		cd $stagedir/del
+		(
+			for i in *.pkg.tar.gz; do
+				pkgname=${i%-*-*}
+				echo $pkgname
+			done
+		) | $ARCHDIR/pkgdb2-del $repoid $stagedir/del
+	fi
 
   # remove the package files
 	rm -f $stagedir/del/*.pkg.tar.gz
@@ -141,7 +147,7 @@ fi
 if [ "$updatelists" ]; then
 	echo "==> Generating Text Package List..." >&2
 	cd $TMPDIR/$cvsmod
-	$ARCHDIR/genpkglist $reponame
+	$ARCHDIR/genpkglist $ftppath
 
 	# hack -- only Current's packages.txt goes in a "setup" subdir
 	if [ "$reponame" = "current" ]; then

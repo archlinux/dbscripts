@@ -1,4 +1,4 @@
-# $Id: db-inc,v 1.5 2006/05/05 01:38:33 judd Exp $
+# $Id: db-inc,v 1.6 2006/05/07 18:02:42 judd Exp $
 
 [ "$UID" = "" ] && UID=`uid`
 TMPDIR="/tmp/archpkg.$arch.$repoid.$UID"
@@ -56,7 +56,7 @@ cd $TMPDIR
 
 # Checkout the CVS module if we need to
 updatelists=
-if [ "`ls $stagedir/add`" -o "`ls $stagedir/del`" ]; then
+if [ "`ls $stagedir/add 2>/dev/null`" -o "`ls $stagedir/del 2>/dev/null`" ]; then
 	# if $cvsdir is set, then use that instead of doing our own cvs checkout
 	if [ "$cvsdir" ]; then
 		mv $cvsdir $TMPDIR/$cvsmod

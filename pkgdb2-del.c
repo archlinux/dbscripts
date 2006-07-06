@@ -1,4 +1,4 @@
-/* $Id: pkgdb2-del.c,v 1.1 2006/07/06 03:37:01 judd Exp $ */
+/* $Id: pkgdb2-del.c,v 1.2 2006/07/06 03:52:28 judd Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 		}
 		/* get the package id */
 		snprintf(query, sizeof(query), "SELECT id FROM packages WHERE "
-				"repoid='%d' AND pkgname='%s'", repoid, addslashes(name));
+				"repo_id='%d' AND pkgname='%s'", repoid, addslashes(name));
 		result = doquery(&db, query);
 		if(mysql_num_rows(result) == 0) {
 			fprintf(stderr, "pkgdb2-del: %s was not found in repo %d\n", name, repoid);
@@ -126,9 +126,9 @@ int main(int argc, char **argv)
 		fprintf(stderr, "pkgdb2-del: deleting %s (id %d)\n", name, pkgid);
 		snprintf(query, sizeof(query), "DELETE FROM packages WHERE id='%d'", pkgid);
 		doquery(&db, query);
-		snprintf(query, sizeof(query), "DELETE FROM packages_files WHERE id='%d'", pkgid);
+		snprintf(query, sizeof(query), "DELETE FROM packages_files WHERE pkg_id='%d'", pkgid);
 		doquery(&db, query);
-		snprintf(query, sizeof(query), "DELETE FROM todolist_pkgs WHERE pkgid='%d'", pkgid);
+		snprintf(query, sizeof(query), "DELETE FROM todolists_pkgs WHERE pkg_id='%d'", pkgid);
 		doquery(&db, query);
 	}
 	

@@ -1,4 +1,4 @@
-/* $Id: pkgdb2-add.c,v 1.1 2006/07/06 03:37:01 judd Exp $ */
+/* $Id: pkgdb2-add.c,v 1.2 2006/07/06 03:52:28 judd Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +88,7 @@ void updatefilelist(MYSQL *db, unsigned long id, char *fn)
 		fprintf(stderr, "pkgdb2-add: could not open tempfile: %s\n", tmp);
 		return;
 	}
-	snprintf(query, sizeof(query), "DELETE FROM packages_files WHERE id='%d'", id);
+	snprintf(query, sizeof(query), "DELETE FROM packages_files WHERE pkg_id='%d'", id);
 	doquery(db, query);
 	while(fgets(line, sizeof(line)-1, fp)) {
 		char *fixedfn = addslashes(trim(line));
@@ -97,7 +97,7 @@ void updatefilelist(MYSQL *db, unsigned long id, char *fn)
 			continue;
 		}
 		/* varchars aren't case-sensitive but filesystems are, so we use REPLACE INTO */
-		snprintf(query, sizeof(query), "REPLACE INTO packages_files (id,path) VALUES "
+		snprintf(query, sizeof(query), "REPLACE INTO packages_files (pkg_id,path) VALUES "
 				"('%d', '%s')", id, fixedfn);
 		free(fixedfn);
 		doquery(db, query);
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 		return(1);
 	}
 	snprintf(query, sizeof(query), "SELECT id,pkgname,pkgver,pkgrel FROM packages "
-			"WHERE repoid='%d'", repoid);
+			"WHERE repo_id='%d'", repoid);
 	result = doquery(&db, query);
 	while(row = mysql_fetch_row(result)) {
 		int i;
@@ -237,9 +237,9 @@ int main(int argc, char **argv)
 			/* Insert... */
 			unsigned long id;
 			fprintf(stderr, "pkgdb2-add: inserting %s\n", name);
-			snprintf(query, sizeof(query), "INSERT INTO packages (id,repoid,"
-					"categoryid,pkgname,pkgver,pkgrel,pkgdesc,url,sources,depends,"
-					"lastupdate) VALUES (NULL,'%d','%d','%s','%s','%s','%s',"
+			snprintf(query, sizeof(query), "INSERT INTO packages (id,repo_id,"
+					"category_id,pkgname,pkgver,pkgrel,pkgdesc,url,sources,depends,"
+					"last_update) VALUES (NULL,'%d','%d','%s','%s','%s','%s',"
 					"'%s','%s','%s',NOW())",
 					repoid, catid, addslashes(name), addslashes(ver), addslashes(rel),
 					addslashes(desc), addslashes(url), addslashes(sources),
@@ -253,9 +253,9 @@ int main(int argc, char **argv)
 			/* ...or Update */
 			fprintf(stderr, "pkgdb2-add: updating %s (%s-%s ==> %s-%s)\n",
 					ptr->name, ptr->ver, ptr->rel, ver, rel);
-			snprintf(query, sizeof(query), "UPDATE packages SET categoryid='%d',"
+			snprintf(query, sizeof(query), "UPDATE packages SET category_id='%d',"
 					"pkgname='%s',pkgver='%s',pkgrel='%s',pkgdesc='%s',url='%s',"
-					"sources='%s',depends='%s',needupdate=0,lastupdate=NOW() "
+					"sources='%s',depends='%s',needupdate=0,last_update=NOW() "
 					"WHERE id='%d'",
 					catid, addslashes(name), addslashes(ver), addslashes(rel),
 					addslashes(desc), addslashes(url), addslashes(sources),

@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: genpkglist,v 1.15 2007/09/14 16:38:41 thomas Exp $
+# $Id: genpkglist,v 1.16 2007/09/14 22:57:54 thomas Exp $
 
 #
 # genpkglist
@@ -58,7 +58,7 @@ done
 showdupes() {
 	done=
 	for i in *.pkg.tar.gz; do
-		pkgname=${i%-*-*}
+		pkgname=$(getpkgname $i)
 		if [ "$pkgname" = "$1" ]; then
 			ls -l $i | awk '{print $6" "$7" "$8" "$9}'
 			done=1

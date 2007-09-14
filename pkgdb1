@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: pkgdb1,v 1.5 2007/09/14 16:38:41 thomas Exp $
+# $Id: pkgdb1,v 1.6 2007/09/14 23:23:38 thomas Exp $
 
 # Get the package name from the filename
 # hackish, but should work for now
@@ -55,6 +55,7 @@ for pkgfile in `ls $STAGEDIR/*.pkg.tar.gz`; do
 
 	deplist=${depends[@]}
 	sources=${source[@]}
+	echo $fullname
 	echo $pkgname
 	echo $pkgver
 	echo $pkgrel

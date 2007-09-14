@@ -1,4 +1,4 @@
-/* $Id: pkgdb2-add.c,v 1.2 2006/07/06 03:52:28 judd Exp $ */
+/* $Id: pkgdb2-add.c,v 1.3 2007/09/14 23:23:38 thomas Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +88,7 @@ void updatefilelist(MYSQL *db, unsigned long id, char *fn)
 		fprintf(stderr, "pkgdb2-add: could not open tempfile: %s\n", tmp);
 		return;
 	}
-	snprintf(query, sizeof(query), "DELETE FROM packages_files WHERE pkg_id='%d'", id);
+	snprintf(query, sizeof(query), "DELETE FROM packages_files WHERE pkg_id='%lu'", id);
 	doquery(db, query);
 	while(fgets(line, sizeof(line)-1, fp)) {
 		char *fixedfn = addslashes(trim(line));
@@ -98,7 +98,7 @@ void updatefilelist(MYSQL *db, unsigned long id, char *fn)
 		}
 		/* varchars aren't case-sensitive but filesystems are, so we use REPLACE INTO */
 		snprintf(query, sizeof(query), "REPLACE INTO packages_files (pkg_id,path) VALUES "
-				"('%d', '%s')", id, fixedfn);
+				"('%lu', '%s')", id, fixedfn);
 		free(fixedfn);
 		doquery(db, query);
 	}
@@ -174,8 +174,10 @@ int main(int argc, char **argv)
 		unsigned int catid = 0;
 		char name[256], ver[256], rel[256], desc[4096];
 		char cat[256], url[256], sources[4096], deplist[4096];
+                char pkgfile[4096];
 		/* get package data from stdin */
-		fgets(name, 256, stdin);     trim(name);    if(feof(stdin)) continue;
+                fgets(pkgfile, 4096, stdin); trim(pkgfile); if(feof(stdin)) continue;
+                fgets(name, 256, stdin);     trim(name);    if(feof(stdin)) continue;
 		fgets(ver, 256, stdin);      trim(ver);     if(feof(stdin)) continue;
 		fgets(rel, 256, stdin);      trim(rel);     if(feof(stdin)) continue;
 		fgets(desc, 4096, stdin);    trim(desc);    if(feof(stdin)) continue;
@@ -186,7 +188,7 @@ int main(int argc, char **argv)
 		/* check for overruns */
 		if(strlen(name) > 254 || strlen(ver) >= 254 || strlen(rel) > 254 ||
 				strlen(desc) > 4094 || strlen(cat) >= 254 || strlen(url) > 254 ||
-				strlen(sources) > 4094 || strlen(deplist) > 4094) {
+				strlen(sources) > 4094 || strlen(deplist) > 4094 || strlen(pkgfile) > 4094) {
 			fprintf(stderr, "pkgdb2-add: one or more fields are too long in package '%s'\n", name);
 			fprintf(stderr, "pkgdb2-add: check the lengths of your strings, most are limited "
 					"to 255 chars, some are 4095\n");
@@ -246,7 +248,7 @@ int main(int argc, char **argv)
 					addslashes(deplist));
 			doquery(&db, query);
 			id = mysql_insert_id(&db);
-			snprintf(fn, PATH_MAX-1, "%s/%s-%s-%s.pkg.tar.gz", ftppath, name, ver, rel);
+			snprintf(fn, PATH_MAX-1, "%s/%s", ftppath, pkgfile);
 			updatefilelist(&db, id, fn);
 			continue;
 		} else if(strcmp(ptr->ver, ver) || strcmp(ptr->rel, rel)) {		
@@ -261,7 +263,7 @@ int main(int argc, char **argv)
 					addslashes(desc), addslashes(url), addslashes(sources),
 					addslashes(deplist), ptr->id);
 			doquery(&db, query);
-			snprintf(fn, PATH_MAX-1, "%s/%s-%s-%s.pkg.tar.gz", ftppath, name, ver, rel);
+			snprintf(fn, PATH_MAX-1, "%s/%s", ftppath, pkgfile);
 			updatefilelist(&db, ptr->id, fn);
 			/*
 			snprintf(query, sizeof(query), "UPDATE todolist_pkgs SET complete=1 "

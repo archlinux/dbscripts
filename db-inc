@@ -1,4 +1,4 @@
-# $Id: db-inc,v 1.6 2006/05/07 18:02:42 judd Exp $
+# $Id: db-inc,v 1.7 2007/09/14 16:38:41 thomas Exp $
 
 [ "$UID" = "" ] && UID=`uid`
 TMPDIR="/tmp/archpkg.$arch.$repoid.$UID"
@@ -15,6 +15,18 @@ if [ ! -d $stagedir ]; then
 	echo "error: staging directory missing: $stagedir" >&2
 	exit 1
 fi
+
+# Get the package name from the filename
+# hackish, but should work for now
+getpkgname() {
+  local tmp
+
+  tmp=${1##*/}
+  tmp=${tmp%.pkg.tar.gz}
+  tmp=${tmp%-i686}
+  tmp=${tmp%-x86_64}
+  echo ${tmp%-*-*}
+}
 
 cleanup() {
 	rm -rf $TMPDIR
@@ -134,7 +146,7 @@ if [ -d $stagedir/del -a "`ls $stagedir/del`" ]; then
 		cd $stagedir/del
 		(
 			for i in *.pkg.tar.gz; do
-				pkgname=${i%-*-*}
+				pkgname=$(getpkgname $i)
 				echo $pkgname
 			done
 		) | $ARCHDIR/pkgdb2-del $repoid $stagedir/del
@@ -147,7 +159,7 @@ fi
 if [ "$updatelists" ]; then
 	echo "==> Generating Text Package List..." >&2
 	cd $TMPDIR/$cvsmod
-	$ARCHDIR/genpkglist $ftppath
+	$ARCHDIR/genpkglist $ftppath $arch
 
 	# hack -- only Current's packages.txt goes in a "setup" subdir
 	if [ "$reponame" = "current" ]; then

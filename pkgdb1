@@ -1,5 +1,17 @@
 #!/bin/bash
-# $Id: pkgdb1,v 1.4 2006/02/20 06:33:40 judd Exp $
+# $Id: pkgdb1,v 1.5 2007/09/14 16:38:41 thomas Exp $
+
+# Get the package name from the filename
+# hackish, but should work for now
+getpkgname() {
+  local tmp
+
+  tmp=${1##*/}
+  tmp=${tmp%.pkg.tar.gz}
+  tmp=${tmp%-i686}
+  tmp=${tmp%-x86_64}
+  echo ${tmp%-*-*}
+}
 
 STAGEDIR=`pwd`
 
@@ -16,9 +28,8 @@ fi
 
 cd $STAGEDIR
 for pkgfile in `ls $STAGEDIR/*.pkg.tar.gz`; do
-	tmp=${pkgfile##*/}
-	pkgname=${tmp%-*-*};
-	fullname=${tmp%.pkg.tar.gz}
+	pkgname=$(getpkgname $pkgfile);
+	fullname=$(basename $pkgfile)
 	# find the matching PKGBUILD
 	tmpf=$(mktemp /tmp/pkgdb1.XXXXXXXXXX) || exit 1
 	find $ABSDIR -type d -name "$pkgname" >$tmpf

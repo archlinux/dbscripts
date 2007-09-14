@@ -1,4 +1,5 @@
 #!/bin/bash
+# $Id: updatesync-many,v 1.3 2007/09/14 16:38:41 thomas Exp $
 # 
 #   updatesync-many
 #  
@@ -46,6 +47,18 @@ msg()
 	echo "updatesync-many: $*" >&2
 }
 
+# Get the package name from the filename
+# hackish, but should work for now
+getpkgname() {
+  local tmp
+
+  tmp=${1##*/}
+  tmp=${tmp%.pkg.tar.gz}
+  tmp=${tmp%-i686}
+  tmp=${tmp%-x86_64}
+  echo ${tmp%-*-*}
+}
+
 check_option() {
 	local i
 	for i in ${options[@]}; do
@@ -76,6 +89,9 @@ db_write_entry()
 	cd $pkgname-$pkgver-$pkgrel
 	# desc
 	: >desc
+	echo "%FILENAME%" >>desc
+	echo "$2" >>desc
+	echo "" >>desc
 	echo "%NAME%" >>desc
 	echo "$pkgname" >>desc
 	echo "" >>desc
@@ -138,10 +154,8 @@ db_write_entry()
 
 delete_entry()
 {
-	# strip to the basename
-	tmp=${1##*/}
 	# grab the pkgname
-	pkgname=${tmp%-*-*}
+	pkgname=$(getpkgname $1)
 	for i in *; do
 		if [ "${i%-*-*}" = "$pkgname" ]; then
 			rm -rf $i
@@ -152,9 +166,8 @@ delete_entry()
 update_entry()
 {
 	pkgfile=$1
-	tmp=${pkgfile##*/}
-	pkgname=${tmp%-*-*};
-	fullname=${tmp%.pkg.tar.gz}
+	pkgname=$(getpkgname ${pkgfile})
+	fullname=$(basename ${pkgfile})
 
 	# find the matching PKGBUILD
 	tmpf=$(mktemp /tmp/updatesync-many.XXXXXXXXXX) || exit 1
@@ -185,7 +198,7 @@ update_entry()
 	pkgmd5sum=`get_md5checksum $pkgfile`
 	[ -z $pkgmd5sum ] && die "error generating checksum for $pkgfile"
 
-	db_write_entry $pkgbuild || die "error writing entry for $pkgname"
+	db_write_entry ${pkgbuild} ${fullname} || die "error writing entry for $pkgname"
 	cd - >/dev/null
 }
 
@@ -237,9 +250,7 @@ for pkgfile in $STAGEDIR/*.pkg.tar.gz; do
 	lsof $pkgfile &>/dev/null
 	[ $? -ne 1 ] && continue
 
-	tmp=${pkgfile##*/}
-	pkgname=${tmp%-*-*};
-	fullname=${tmp%.pkg.tar.gz}
+	pkgname=$(getpkgname ${pkgfile})
 	if [ "$ACTION" = "del" ]; then
 		msg "Deleting entry: $pkgname"
 		delete_entry $pkgfile

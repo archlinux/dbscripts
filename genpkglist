@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: genpkglist,v 1.14 2006/05/05 01:38:33 judd Exp $
+# $Id: genpkglist,v 1.15 2007/09/14 16:38:41 thomas Exp $
 
 #
 # genpkglist
@@ -8,8 +8,21 @@
 # (also used to check for missing packages in the download directory)
 #
 
+# Get the package name from the filename
+# hackish, but should work for now
+getpkgname() {
+  local tmp
+
+  tmp=${1##*/}
+  tmp=${tmp%.pkg.tar.gz}
+  tmp=${tmp%-i686}
+  tmp=${tmp%-x86_64}
+  echo ${tmp%-*-*}
+}
+
 pkgfile="`pwd`/packages.txt"
 ftppath=$1
+dbarch=$2
 
 rm -f $pkgfile
 for category in `find * -maxdepth 0 -type d | grep -v CVS`; do
@@ -20,8 +33,10 @@ for category in `find * -maxdepth 0 -type d | grep -v CVS`; do
 			. PKGBUILD
 			if [ -f $ftppath/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
 				echo "$category/$pkgname-$pkgver-$pkgrel.pkg.tar.gz" >>$pkgfile
+			elif [ -f $ftppath/$pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz ]; then
+				echo "$category/$pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz" >>$pkgfile
 			else
-				echo "notice: Missing $pkgname-$pkgver-$pkgrel.pkg.tar.gz in ftp site" >&2
+				echo "notice: Missing $pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz in ftp site" >&2
 			fi
 		fi
 		cd ..
@@ -32,7 +47,7 @@ done
 cd $ftppath
 unset DUPES DUPEFILES last
 for pkg in *.pkg.tar.gz; do
-	pkgname=${pkg%-*-*}
+	pkgname=$(getpkgname $pkg)
 	if [ "$last" = "$pkgname" ]; then
 		DUPES="$DUPES $pkgname"
 		DUPEFILES="$DUPEFILES $pkg"

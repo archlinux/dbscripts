@@ -1,17 +1,20 @@
 #!/bin/bash
-# $Id: db-testing,v 1.14 2007/09/16 11:43:14 thomas Exp $
+# $Id: db-testing64,v 1.1 2007/09/16 11:43:14 thomas Exp $
+
+export CARCH=x86_64
 
 repoid=4
 reponame="testing"
-arch="i686"
+arch="x86_64"
 
-ftppath="/home/ftp/testing/os/i686"
+ftppath="/home/ftp/testing/os/x86_64"
 
 cvspath="/home/cvs-arch"
 cvsmod="testing"
-cvstag="TESTING"
+cvstag="TESTING-64"
 
-stagedir="$HOME/staging/testing"
+#stagedir="/home/arch64/staging/testing"
+stagedir="$HOME/staging/testing64"
 
 testing_cleanup() {
 	rm -rf $testingtmp
@@ -35,15 +38,15 @@ mkdir $cvsdir
 cd $cvsdir
 
 if [ "`ls $stagedir/add`" -o "`ls $stagedir/del`" ]; then
-	echo "==> Checking out TESTING branches..." >&2
+	echo "==> Checking out TESTING-64 branches..." >&2
 	echo "--- CORE ---"
-	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-core cvs -q export -r TESTING core
+	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-core cvs -q export -r TESTING-64 core
 	cp -a core/* . && rm -rf core
 	echo "--- EXTRA ---"
-	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r TESTING extra
+	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r TESTING-64 extra
 	cp -a extra/* . && rm -rf extra
 	echo "--- UNSTABLE ---"
-	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r TESTING unstable
+	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r TESTING-64 unstable
 	cp -a unstable/* . && rm -rf unstable
 fi
 

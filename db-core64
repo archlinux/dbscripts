@@ -1,0 +1,20 @@
+#!/bin/bash
+
+export CARCH=x86_64
+
+repoid=5
+reponame="core"
+arch="x86_64"
+
+ftppath="/home/ftp/core/os/x86_64"
+
+cvspath="/home/cvs-core"
+cvsmod="core"
+cvstag="CURRENT-64"
+
+#stagedir="/home/arch64/staging/extra"
+stagedir="$HOME/staging/core64"
+
+# call the real script
+. `dirname $0`/db-inc
+

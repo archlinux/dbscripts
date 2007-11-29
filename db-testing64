@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id: db-testing64,v 1.1 2007/09/16 11:43:14 thomas Exp $
 
 export CARCH=x86_64
 

@@ -1,5 +1,3 @@
-/* $Id: pkgdb2.c,v 1.6 2005/02/25 21:27:45 judd Exp $ */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <mysql.h>

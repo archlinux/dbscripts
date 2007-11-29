@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id: db-arch,v 1.24 2006/05/05 01:38:33 judd Exp $
 
 repoid=1
 reponame="current"

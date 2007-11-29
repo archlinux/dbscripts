@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id: db-testing,v 1.14 2007/09/16 11:43:14 thomas Exp $
 
 repoid=4
 reponame="testing"

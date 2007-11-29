@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id: db-extra,v 1.13 2006/05/05 01:38:33 judd Exp $
 
 repoid=2
 reponame="extra"

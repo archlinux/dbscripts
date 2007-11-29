@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id: db-unstable,v 1.18 2006/05/05 01:38:33 judd Exp $
 
 repoid=3
 reponame="unstable"

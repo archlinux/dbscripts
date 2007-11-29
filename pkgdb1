@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id: pkgdb1,v 1.6 2007/09/14 23:23:38 thomas Exp $
 
 # Get the package name from the filename
 # hackish, but should work for now

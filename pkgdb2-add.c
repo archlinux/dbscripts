@@ -1,5 +1,3 @@
-/* $Id: pkgdb2-add.c,v 1.3 2007/09/14 23:23:38 thomas Exp $ */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <mysql.h>

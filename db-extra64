@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export CARCH=x86_64
+
 repoid=2
 reponame="extra"
 arch="x86_64"
@@ -10,7 +12,8 @@ cvspath="/home/cvs-extra"
 cvsmod="extra"
 cvstag="CURRENT-64"
 
-stagedir="/home/arch64/staging/extra"
+#stagedir="/home/arch64/staging/extra"
+stagedir="$HOME/staging/extra64"
 
 # call the real script
 . `dirname $0`/db-inc

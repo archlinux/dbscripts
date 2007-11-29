@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export CARCH=x86_64
+
 repoid=3
 reponame="unstable"
 arch="x86_64"
@@ -10,7 +12,8 @@ cvspath="/home/cvs-unstable"
 cvsmod="unstable"
 cvstag="CURRENT-64"
 
-stagedir="/home/arch64/staging/unstable"
+#stagedir="/home/arch64/staging/unstable"
+stagedir="$HOME/staging/unstable64"
 
 # call the real script
 . `dirname $0`/db-inc

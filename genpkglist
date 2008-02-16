@@ -41,36 +41,3 @@ for category in `find * -maxdepth 0 -type d | grep -v CVS`; do
 	done
 	cd ..
 done
-
-cd $ftppath
-unset DUPES DUPEFILES last
-for pkg in *.pkg.tar.gz; do
-	pkgname=$(getpkgname $pkg)
-	if [ "$last" = "$pkgname" ]; then
-		DUPES="$DUPES $pkgname"
-		DUPEFILES="$DUPEFILES $pkg"
-	fi
-	last=$pkgname
-done
-
-showdupes() {
-	done=
-	for i in *.pkg.tar.gz; do
-		pkgname=$(getpkgname $i)
-		if [ "$pkgname" = "$1" ]; then
-			ls -l $i | awk '{print $6" "$7" "$8" "$9}'
-			done=1
-		else
-			[ "$done" = "1" ] && return
-		fi
-	done
-}
-
-if [ "$DUPES" ]; then
-	echo "Possible Dupes for $ftppath (remove old versions)"
-	echo "Date             Filename"
-	for dupe in $((for d in `echo $DUPES`; do echo $d; done) | sort -u); do
-		showdupes $dupe
-	done
-fi
-

@@ -167,6 +167,8 @@ if [ "$updatelists" ]; then
 	fi
 fi
 
+$ARCHDIR/ftpdir-cleanup $reponame $arch
+
 cleanup
 
 # vim: set ts=2 noet ft=sh:

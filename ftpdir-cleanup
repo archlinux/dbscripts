@@ -51,3 +51,7 @@ rm -rf ${TMPDIR}
 echo -ne "DIRECTORY:\n${FTPDIR}\n\n"
 echo -ne "DELETEFILES:\n${DELETEFILES}\n\n"
 echo -ne "MISSINGFILES:\n${MISSINGFILES}\n\n"
+
+cd ${FTPDIR}
+mv ${DELETEFILES} /home/package-cleanup/
+cd -

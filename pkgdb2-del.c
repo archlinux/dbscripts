@@ -4,9 +4,9 @@
 #include <string.h>
 #include <limits.h>
 
-#define DB_USER "archweb"
-#define DB_NAME "archweb"
-#define DB_PASS "passwords-are-cool"
+#ifndef DB_PASS
+    #error "MySQL connection info undefined"
+#endif
 
 typedef struct pkg {
 	unsigned int id;

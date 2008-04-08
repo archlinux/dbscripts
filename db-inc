@@ -173,8 +173,10 @@ fi
 if [ "$updatelists" ]; then
 		echo "==> Generating Text Package List..." >&2
 		cd $TMPDIR/checkout
-		$ARCHDIR/genpkglist $ftppath $arch
-		mv packages.txt $ftppath/packages.txt
+		$ARCHDIR/genpkglist $ftppath $svnrepo
+		if [ -f packages.txt ]; then
+			mv packages.txt $ftppath/packages.txt
+		fi
 fi
 
 cleanup

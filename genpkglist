@@ -18,26 +18,57 @@ getpkgname() {
   echo ${tmp%-*-*}
 }
 
-pkgfile="`pwd`/packages.txt"
+pkgfile="$(pwd)/packages.txt"
 ftppath=$1
-dbarch=$2
+repotag=$2
 
 rm -f $pkgfile
-for category in `find * -maxdepth 0 -type d | grep -v CVS`; do
-	cd $category
-	for pkg in `/bin/ls`; do
-		cd $pkg
+for package in *; do
+    if [ -d "$package/$repotag/" ]; then
+        cd "$package/$repotag/"
 		if [ -f PKGBUILD ]; then
 			. PKGBUILD
 			if [ -f $ftppath/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
-				echo "$category/$pkgname-$pkgver-$pkgrel.pkg.tar.gz" >>$pkgfile
+				echo "$pkgname-$pkgver-$pkgrel.pkg.tar.gz" >>$pkgfile
 			elif [ -f $ftppath/$pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz ]; then
-				echo "$category/$pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz" >>$pkgfile
+				echo "$pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz" >>$pkgfile
 			else
 				echo "notice: Missing $pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz in ftp site" >&2
 			fi
-		fi
+        fi
 		cd ..
-	done
-	cd ..
+    fi
 done
+
+cd $ftppath
+unset DUPES DUPEFILES last
+for pkg in *.pkg.tar.gz; do
+       pkgname=$(getpkgname $pkg)
+       if [ "$last" = "$pkgname" ]; then
+               DUPES="$DUPES $pkgname"
+               DUPEFILES="$DUPEFILES $pkg"
+       fi
+       last=$pkgname
+done
+
+showdupes() {
+       done=
+       for i in *.pkg.tar.gz; do
+               pkgname=$(getpkgname $i)
+               if [ "$pkgname" = "$1" ]; then
+                       ls -l $i | awk '{print $6" "$7" "$8" "$9}'
+                       done=1
+               else
+                       [ "$done" = "1" ] && return
+               fi
+       done
+}
+
+if [ "$DUPES" ]; then
+    DUPES=$((for d in $DUPES; do echo $d; done) | sort -u)
+    echo "Possible Dupes for $ftppath (remove old versions)"
+    echo "Date             Filename"
+    for dupe in $DUPES; do
+        showdupes $dupe
+    done
+fi

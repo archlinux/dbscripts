@@ -1,53 +1,69 @@
-[ "$UID" = "" ] && UID=`uid`
-TMPDIR="/tmp/archpkg.$arch.$repoid.$UID"
+#!/bin/bash
 
 # where are the arch scripts located?
 ARCHDIR="/arch"
 
+#All this fun stuff used to be in the db-(whatever) files
+# Let's make it cleaner
+export CARCH="$arch"
+ftppath="/home/ftp/$reponame/os/$arch/"
+svnpath="/home/svn-packages"
+svnrepo="$reponame-$arch"
+
+#Hacky for now
+if [ "$arch" = "x86_64" ]; then
+	stagedir="$HOME/staging/$reponame-64"
+else
+	stagedir="$HOME/staging/$reponame"
+fi
+
+[ "$UID" = "" ] && UID=$(uid)
+TMPDIR="/tmp/archpkg.$arch.$repoid.$UID"
+
 if [ ! `type -p fakeroot` ]; then
-	echo "error: fakeroot is missing" >&2
-	exit 1
+		echo "error: fakeroot is missing" >&2
+		exit 1
 fi
 
 if [ ! -d $stagedir ]; then
-	echo "error: staging directory missing: $stagedir" >&2
-	exit 1
+		echo "error: staging directory missing: $stagedir" >&2
+		exit 1
 fi
 
 # Get the package name from the filename
 # hackish, but should work for now
 getpkgname() {
-  local tmp
+		local tmp
 
-  tmp=${1##*/}
-  tmp=${tmp%.pkg.tar.gz}
-  tmp=${tmp%-i686}
-  tmp=${tmp%-x86_64}
-  echo ${tmp%-*-*}
+		tmp=${1##*/}
+		tmp=${tmp%.pkg.tar.gz}
+		tmp=${tmp%-i686}
+		tmp=${tmp%-x86_64}
+		echo ${tmp%-*-*}
 }
 
 cleanup() {
-	rm -rf $TMPDIR
-	# unlock
-	rm -f /tmp/.repolck.$arch.$repoid
-	[ "$1" ] && exit $1
+		rm -rf $TMPDIR
+		# unlock
+		rm -f /tmp/.repolck.$arch.$repoid
+		[ "$1" ] && exit $1
 }
 
 ctrl_c() {
-	echo "Interrupted" >&2
-	cleanup 0
+		echo "Interrupted" >&2
+		cleanup 0
 }
 
 die() {
-	echo "$*" >&2
-	cleanup 1
+		echo "$*" >&2
+		cleanup 1
 }
 
 # check for locks
 if [ -f /tmp/.repolck.$arch.$repoid ]; then
-	owner=`/bin/ls -l /tmp/.repolck.$arch.$repoid | awk '{print $3}'`
-	echo "error: db generation is already in progress (started by $owner)"
-	exit 1
+		owner=`/bin/ls -l /tmp/.repolck.$arch.$repoid | awk '{print $3}'`
+		echo "error: db generation is already in progress (started by $owner)"
+		exit 1
 fi
 
 # catch ^C breaks
@@ -57,30 +73,30 @@ touch /tmp/.repolck.$arch.$repoid
 
 # RedHat's mktemp is broken...
 if [ -d $TMPDIR ]; then
-	echo "==> Removing old temp dir..." >&2
-	rm -rf $TMPDIR || exit 1
+		echo "==> Removing old temp dir..." >&2
+		rm -rf $TMPDIR || exit 1
 fi
 mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
 
 cd $TMPDIR
 
-# Checkout the CVS module if we need to
+# Checkout the SVN module if we need to
 updatelists=
 if [ "`ls $stagedir/add 2>/dev/null`" -o "`ls $stagedir/del 2>/dev/null`" ]; then
-	# if $cvsdir is set, then use that instead of doing our own cvs checkout
-	if [ "$cvsdir" ]; then
-		mv $cvsdir $TMPDIR/$cvsmod
-	else
-		echo "==> Checking out module: $cvsmod ($cvstag)"
-		CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:$cvspath cvs -q export -r $cvstag $cvsmod
-		if [ $? -gt 0 ]; then
-			die "==> CVS export failed!"
+		# if $svndir is set, then use that instead of doing our own cvs checkout
+		if [ "$svndir" ]; then
+				mv $svndir $TMPDIR/checkout
+		else
+				echo "==> Checking out repo: $svnrepo ($arch)"
+				svn export file://$svnpath $TMPDIR/checkout
+				if [ $? -gt 0 ]; then
+						die "==> SVN export failed!"
+				fi
 		fi
-	fi
-	updatelists=1
+		updatelists=1
 else
-	echo "No files to process"
-	cleanup 0
+		echo "No files to process"
+		cleanup 0
 fi
 
 # Right-O, now we look through the "add" and "del" subdirectories of
@@ -92,83 +108,75 @@ fi
 # one db-* invocation, but it's not a huge performance hit.
 
 if [ -d $stagedir/add -a "`ls $stagedir/add`" ]; then
-	cd $TMPDIR
-	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
+		cd $TMPDIR
+		echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
-	# copy the db file into our working area
-	cp $ftppath/$reponame.db.tar.gz .
+		# copy the db file into our working area
+		cp $ftppath/$reponame.db.tar.gz .
 
-	cd $stagedir/add
-	# run it thru fakeroot make sure everything is owned by root.root
-	echo "$ARCHDIR/updatesync-many add $TMPDIR/$reponame.db.tar.gz $TMPDIR/$cvsmod" \
-		| fakeroot
-
-	if [ $? -ne 0 ]; then
-		die "==> Error returned from updatesync-many"
-	fi
-
-	cp $TMPDIR/$reponame.db.tar.gz $ftppath
-
-	# only for i686 (for now)
-	if [ "$arch" = "i686" ]; then
-		echo "==> Scanning for New/Updated packages..." >&2
 		cd $stagedir/add
-		$ARCHDIR/pkgdb1 $TMPDIR/$cvsmod | $ARCHDIR/pkgdb2-add $repoid $stagedir/add
-	fi
-
-	# move the package files into the ftp directory
-	mv -f $stagedir/add/*.pkg.tar.gz $ftppath
-fi
-	
-if [ -d $stagedir/del -a "`ls $stagedir/del`" ]; then
-	cd $TMPDIR
-	echo "==> Processing deleted packages for repository '$reponame'..." >&2
-
-	# copy the db file into our working area
-	cp $ftppath/$reponame.db.tar.gz .
-
-	cd $stagedir/del
-	# run it thru fakeroot make sure everything is owned by root.root
-	echo "$ARCHDIR/updatesync-many del $TMPDIR/$reponame.db.tar.gz NOT-USED" \
+		# run it thru fakeroot make sure everything is owned by root.root
+		echo "$ARCHDIR/updatesync-many add $TMPDIR/$reponame.db.tar.gz $TMPDIR/checkout $svnrepo" \
 		| fakeroot
 
-	if [ $? -ne 0 ]; then
-		die "==> Error returned from updatesync-many"
-	fi
+		if [ $? -ne 0 ]; then
+				die "==> Error returned from updatesync-many"
+		fi
 
-	cp $TMPDIR/$reponame.db.tar.gz $ftppath
+		cp $TMPDIR/$reponame.db.tar.gz $ftppath
 
-	# only for i686 (for now)
-	if [ "$arch" = "i686" ]; then
-		echo "==> Scanning for Deleted packages..." >&2
+		# only for i686 (for now)
+		if [ "$arch" = "i686" ]; then
+				echo "==> Scanning for New/Updated packages..." >&2
+				cd $stagedir/add
+				$ARCHDIR/pkgdb1 $TMPDIR/checkout $svnrepo | $ARCHDIR/pkgdb2-add $repoid $stagedir/add
+		fi
+
+		# move the package files into the ftp directory
+		mv -f $stagedir/add/*.pkg.tar.gz $ftppath
+fi
+
+if [ -d $stagedir/del -a "`ls $stagedir/del`" ]; then
+		cd $TMPDIR
+		echo "==> Processing deleted packages for repository '$reponame'..." >&2
+
+		# copy the db file into our working area
+		cp $ftppath/$reponame.db.tar.gz .
+
 		cd $stagedir/del
-		(
-			for i in *.pkg.tar.gz; do
-				pkgname=$(getpkgname $i)
-				echo $pkgname
-			done
-		) | $ARCHDIR/pkgdb2-del $repoid $stagedir/del
-	fi
+		# run it thru fakeroot make sure everything is owned by root.root
+		echo "$ARCHDIR/updatesync-many del $TMPDIR/$reponame.db.tar.gz NOT-USED ZOMGWOO" \
+		| fakeroot
 
-  # remove the package files
-	rm -f $stagedir/del/*.pkg.tar.gz
+		if [ $? -ne 0 ]; then
+				die "==> Error returned from updatesync-many"
+		fi
+
+		cp $TMPDIR/$reponame.db.tar.gz $ftppath
+
+		# only for i686 (for now)
+		if [ "$arch" = "i686" ]; then
+				echo "==> Scanning for Deleted packages..." >&2
+				cd $stagedir/del
+				(
+				for i in *.pkg.tar.gz; do
+						pkgname=$(getpkgname $i)
+						echo $pkgname
+				done
+				) | $ARCHDIR/pkgdb2-del $repoid $stagedir/del
+		fi
+
+		# remove the package files
+		rm -f $stagedir/del/*.pkg.tar.gz
 fi
 
 if [ "$updatelists" ]; then
-	echo "==> Generating Text Package List..." >&2
-	cd $TMPDIR/$cvsmod
-	$ARCHDIR/genpkglist $ftppath $arch
-
-	# hack -- only Current's packages.txt goes in a "setup" subdir
-	if [ "$reponame" = "current" ]; then
-		mv packages.txt $ftppath/setup/packages.txt
-	else
+		echo "==> Generating Text Package List..." >&2
+		cd $TMPDIR/checkout
+		$ARCHDIR/genpkglist $ftppath $arch
 		mv packages.txt $ftppath/packages.txt
-	fi
 fi
-
-$ARCHDIR/ftpdir-cleanup $reponame $arch
 
 cleanup
 
-# vim: set ts=2 noet ft=sh:
+# vim: set ts=4 sw=4 noet ft=sh:

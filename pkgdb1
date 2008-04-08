@@ -3,66 +3,67 @@
 # Get the package name from the filename
 # hackish, but should work for now
 getpkgname() {
-  local tmp
+    local tmp
 
-  tmp=${1##*/}
-  tmp=${tmp%.pkg.tar.gz}
-  tmp=${tmp%-i686}
-  tmp=${tmp%-x86_64}
-  echo ${tmp%-*-*}
+    tmp=${1##*/}
+    tmp=${tmp%.pkg.tar.gz}
+    tmp=${tmp%-i686}
+    tmp=${tmp%-x86_64}
+    echo ${tmp%-*-*}
 }
 
-STAGEDIR=`pwd`
+STAGEDIR=$(pwd)
 
-ABSDIR=$1
-if [ "$ABSDIR" = "" ]; then
-	me=`basename $0`
-	echo "usage: $me <abs_dir>" >&2
-	exit 1
+#This is our "unknown" category. We will have to do something about this later.
+# It is a stop-gap
+CATEGORY=25
+
+SVNCO=$1
+REPOTAG=$2
+if [ "$SVNCO" = "" ]; then
+    me=$(basename $0)
+    echo "usage: $me <abs_dir> <repo_tag>" >&2
+    exit 1
 fi
 
-if [ ! "`ls $STAGEDIR/*.pkg.tar.gz 2>/dev/null`" ]; then
-	exit
+if [ ! "$(ls $STAGEDIR/*.pkg.tar.gz 2>/dev/null)" ]; then
+    exit
 fi
 
 cd $STAGEDIR
-for pkgfile in `ls $STAGEDIR/*.pkg.tar.gz`; do
-	pkgname=$(getpkgname $pkgfile);
-	fullname=$(basename $pkgfile)
-	# find the matching PKGBUILD
-	tmpf=$(mktemp /tmp/pkgdb1.XXXXXXXXXX) || exit 1
-	find $ABSDIR -type d -name "$pkgname" >$tmpf
-	if [ "`cat $tmpf | wc -l`" != "1" ]; then
-		echo "WARNING: could not find PKGBUILD for $pkgname, cannot update this entry" >&2
-		rm $tmpf
-		continue
-	fi
-	pkgbuild="`cat $tmpf`/PKGBUILD"
-	rm $tmpf
-	if [ ! -f $pkgbuild ]; then
-		echo "WARNING: could not find PKGBUILD for $fullname, cannot update this entry" >&2
-		continue
-	fi
-	# pick out the category from the pathname
-	catpath=$(cd `dirname $pkgbuild`/.. && pwd)
-	category=${catpath##*/}
-	# now read the PKGBUILD and output the data for pkgdb2
-  unset pkgname pkgver pkgrel pkgdesc license groups provides md5sums force
-  unset replaces depends conflicts backup source install build makedepends
-  unset options
-	source $pkgbuild || continue
+for pkgfile in $STAGEDIR/*.pkg.tar.gz; do
+    pkgname=$(getpkgname $pkgfile);
+    fullname=$(basename $pkgfile)
+    pkgpath="$SVNCO/$pkgname/repos/$REPOTAG"
 
-	deplist=${depends[@]}
-	sources=${source[@]}
-	echo $fullname
-	echo $pkgname
-	echo $pkgver
-	echo $pkgrel
-	echo $pkgdesc
-	echo $category
-	echo $url
-	echo $sources
-	echo $deplist
+    # find the matching PKGBUILD
+    if [ ! -d "$pkgpath" ]; then
+        msg "WARNING: could not find PKGBUILD for $pkgname, cannot update this entry"
+        return
+    fi
+    pkgbuild="${pkgpath}/PKGBUILD"
+    if [ ! -f $pkgbuild ]; then
+        msg "WARNING: could not find PKGBUILD for $fullname, cannot update this entry"
+        return
+    fi
+
+    # pick out the category from the pathname
+    unset pkgname pkgver pkgrel pkgdesc license groups provides md5sums force
+    unset replaces depends conflicts backup source install build makedepends
+    unset options
+    source $pkgbuild || continue
+
+    deplist=${depends[@]}
+    sources=${source[@]}
+    echo $fullname
+    echo $pkgname
+    echo $pkgver
+    echo $pkgrel
+    echo $pkgdesc
+    echo $CATEGORY
+    echo $url
+    echo $sources
+    echo $deplist
 done
 
 exit 0

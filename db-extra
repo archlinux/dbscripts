@@ -4,14 +4,4 @@ repoid=2
 reponame="extra"
 arch="i686"
 
-ftppath="/home/ftp/extra/os/i686"
-
-cvspath="/home/cvs-extra"
-cvsmod="extra"
-cvstag="CURRENT"
-
-stagedir="$HOME/staging/extra"
-
-# call the real script
-. `dirname $0`/db-inc
-
+. $(dirname $0)/db-inc

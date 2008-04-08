@@ -4,14 +4,5 @@ repoid=3
 reponame="unstable"
 arch="i686"
 
-ftppath="/home/ftp/unstable/os/i686"
-
-cvspath="/home/cvs-unstable"
-cvsmod="unstable"
-cvstag="CURRENT"
-
-stagedir="$HOME/staging/unstable"
-
-# call the real script
-. `dirname $0`/db-inc
+. $(dirname $0)/db-inc
 

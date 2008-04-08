@@ -4,14 +4,4 @@ repoid=5
 reponame="core"
 arch="i686"
 
-ftppath="/home/ftp/core/os/i686"
-
-cvspath="/home/cvs-core"
-cvsmod="core"
-cvstag="CURRENT"
-
-stagedir="$HOME/staging/core"
-
-# call the real script
-. `dirname $0`/db-inc
-
+. $(dirname $0)/db-inc

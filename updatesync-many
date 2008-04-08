@@ -23,13 +23,13 @@
 
 usage() {
 	echo "updatesync-many"
-	echo "usage: $0 <action> <dbfile> <abs_dir>"
+	echo "usage: $0 <action> <dbfile> <svn_checkout> <repo_tag>"
 	echo
 	echo "This should probably only be run from the Arch db-generation scripts"
 	echo
 	echo "Caveats:"
 	echo " - Make sure you run it from the staging directory"
-	echo " - Use absolute pathnames for dbfile and abs_dir"
+	echo " - Use absolute pathnames for dbfile and svn_checkout"
 	echo
 	exit 0
 }
@@ -167,17 +167,14 @@ update_entry()
 	pkgfile=$1
 	pkgname=$(getpkgname ${pkgfile})
 	fullname=$(basename ${pkgfile})
+    pkgpath="$SVNCO/$pkgname/repos/$REPOTAG"
 
 	# find the matching PKGBUILD
-	tmpf=$(mktemp /tmp/updatesync-many.XXXXXXXXXX) || exit 1
-	find $ABSDIR -type d -name "$pkgname" >$tmpf
-	if [ "`cat $tmpf | wc -l`" != "1" ]; then
+    if [ ! -d "$pkgpath" ]; then
 		msg "WARNING: could not find PKGBUILD for $pkgname, cannot update this entry"
-		rm $tmpf
 		return
 	fi
-	pkgbuild="`cat $tmpf`/PKGBUILD"
-	rm $tmpf
+	pkgbuild="${pkgpath}/PKGBUILD"
 	if [ ! -f $pkgbuild ]; then
 		msg "WARNING: could not find PKGBUILD for $fullname, cannot update this entry"
 		return
@@ -218,7 +215,8 @@ fi
 
 ACTION=$1
 PKGDB=$2
-ABSDIR=$3
+SVNCO=$3
+REPOTAG=$4
 STAGEDIR="`pwd`"
 PKGDIR="`dirname $PKGDB`"
 if [ "$PKGDIR" = "." ]; then

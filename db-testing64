@@ -1,58 +1,7 @@
 #!/bin/bash
 
-export CARCH=x86_64
-
 repoid=4
 reponame="testing"
 arch="x86_64"
 
-ftppath="/home/ftp/testing/os/x86_64"
-
-cvspath="/home/cvs-arch"
-cvsmod="testing"
-cvstag="TESTING-64"
-
-#stagedir="/home/arch64/staging/testing"
-stagedir="$HOME/staging/testing64"
-
-testing_cleanup() {
-	rm -rf $testingtmp
-}
-
-# catch ^C
-trap testing_cleanup SIGINT
-
-if [ -f /tmp/.repolck.$arch.$repoid ]; then
-	owner=`/bin/ls -l /tmp/.repolck.$arch.$repoid | awk '{print $3}'`
-	echo "error: db generation is already in progress (started by $owner)"
-	exit 1
-fi
-# lock
-touch /tmp/.repolck.$arch.$repoid
-
-# testing is special, so we have to do the CVS checkout stuff here
-testingtmp=$(mktemp -d /tmp/testtmp-XXXXXX) || exit 1
-cvsdir=$testingtmp/testing
-mkdir $cvsdir
-cd $cvsdir
-
-if [ "`ls $stagedir/add`" -o "`ls $stagedir/del`" ]; then
-	echo "==> Checking out TESTING-64 branches..." >&2
-	echo "--- CORE ---"
-	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-core cvs -q export -r TESTING-64 core
-	cp -a core/* . && rm -rf core
-	echo "--- EXTRA ---"
-	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-extra cvs -q export -r TESTING-64 extra
-	cp -a extra/* . && rm -rf extra
-	echo "--- UNSTABLE ---"
-	CVS_RSH=ssh CVSROOT=:ext:cvs.archlinux.org:/home/cvs-unstable cvs -q export -r TESTING-64 unstable
-	cp -a unstable/* . && rm -rf unstable
-fi
-
-# unlock
-rm -f /tmp/.repolck.$arch.$repoid
-
-# call the real script
-. `dirname $0`/db-inc
-
-testing_cleanup
+. $(dirname $0)/db-inc

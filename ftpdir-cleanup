@@ -53,5 +53,5 @@ echo -ne "DELETEFILES:\n${DELETEFILES}\n\n"
 echo -ne "MISSINGFILES:\n${MISSINGFILES}\n\n"
 
 cd ${FTPDIR}
-mv ${DELETEFILES} /home/package-cleanup/
-cd -
+[ -n "${DELETEFILES}" ] && mv ${DELETEFILES} /home/package-cleanup/
+cd - >/dev/null

@@ -87,8 +87,8 @@ if [ "`ls $stagedir/add 2>/dev/null`" -o "`ls $stagedir/del 2>/dev/null`" ]; the
 		if [ "$svndir" ]; then
 				mv $svndir $TMPDIR/checkout
 		else
-				echo "==> Checking out repo: $svnrepo ($arch)"
-				svn export file://$svnpath $TMPDIR/checkout
+				echo "==> Checking out repo: $svnrepo ($arch) - Please be patient"
+				svn export -q file://$svnpath $TMPDIR/checkout
 				if [ $? -gt 0 ]; then
 						die "==> SVN export failed!"
 				fi

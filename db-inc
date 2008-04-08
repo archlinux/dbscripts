@@ -17,8 +17,10 @@ else
 	stagedir="$HOME/staging/$reponame"
 fi
 
-[ "$UID" = "" ] && UID=$(uid)
-TMPDIR="/tmp/archpkg.$arch.$repoid.$UID"
+WORKDIR="~/.dbscripts"
+CHECKOUTDIR="$WORKDIR/checkout"
+LOCKFILE="$WORKDIR/lock"
+DBFILE="$WORKDIR/$reponame.db.tar.gz"
 
 if [ ! `type -p fakeroot` ]; then
 		echo "error: fakeroot is missing" >&2
@@ -43,9 +45,8 @@ getpkgname() {
 }
 
 cleanup() {
-		rm -rf $TMPDIR
 		# unlock
-		rm -f /tmp/.repolck.$arch.$repoid
+		rm -f "~/.dbscripts/lock"
 		[ "$1" ] && exit $1
 }
 
@@ -60,38 +61,39 @@ die() {
 }
 
 # check for locks
-if [ -f /tmp/.repolck.$arch.$repoid ]; then
-		owner=`/bin/ls -l /tmp/.repolck.$arch.$repoid | awk '{print $3}'`
-		echo "error: db generation is already in progress (started by $owner)"
+if [ -f ~/.dbscripts/lock ]; then
+		echo "error: db generation is already in progress"
 		exit 1
 fi
 
 # catch ^C breaks
 trap ctrl_c SIGINT
 # lock
-touch /tmp/.repolck.$arch.$repoid
+touch ~/.dbscripts/lock
 
-# RedHat's mktemp is broken...
-if [ -d $TMPDIR ]; then
-		echo "==> Removing old temp dir..." >&2
-		rm -rf $TMPDIR || exit 1
+if [ -d $CHECKOUTDIR ]; then
+	cd $CHECKOUTDIR
+	svn update
+	if [ $? -gt 0 ]; then
+		die "==> SVN update failed, aborting!"
+	fi
+else
+	echo "==> Checking out repo: $svnrepo ($arch) - Please be patient"
+	svn checkout file://$svnpath $CHECKOUTDIR
+	if [ $? -gt 0 ]; then
+		die "==> SVN checkout failed, aborting!"
+	fi
 fi
-mkdir $TMPDIR; [ $? -gt 0 ] && exit 1
 
-cd $TMPDIR
+cd $CHECKOUTDIR
 
 # Checkout the SVN module if we need to
 updatelists=
 if [ "`ls $stagedir/add 2>/dev/null`" -o "`ls $stagedir/del 2>/dev/null`" ]; then
-	echo "==> Checking out repo: $svnrepo ($arch) - Please be patient"
-	svn export -q file://$svnpath $TMPDIR/checkout
-	if [ $? -gt 0 ]; then
-		die "==> SVN export failed!"
-	fi
 	updatelists=1
 else
-		echo "No files to process"
-		cleanup 0
+	echo "No files to process"
+	cleanup 0
 fi
 
 # Right-O, now we look through the "add" and "del" subdirectories of
@@ -103,28 +105,26 @@ fi
 # one db-* invocation, but it's not a huge performance hit.
 
 if [ -d $stagedir/add -a "`ls $stagedir/add`" ]; then
-		cd $TMPDIR
 		echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
 		# copy the db file into our working area
-		cp $ftppath/$reponame.db.tar.gz .
+		cp $ftppath/$reponame.db.tar.gz $DBFILE
 
 		cd $stagedir/add
 		# run it thru fakeroot make sure everything is owned by root.root
-		echo "$ARCHDIR/updatesync-many add $TMPDIR/$reponame.db.tar.gz $TMPDIR/checkout $svnrepo" \
-		| fakeroot
+		echo "$ARCHDIR/updatesync-many add $DBFILE $CHECKOUTDIR $svnrepo" | fakeroot
 
 		if [ $? -ne 0 ]; then
 				die "==> Error returned from updatesync-many"
 		fi
 
-		cp $TMPDIR/$reponame.db.tar.gz $ftppath
+		cp $DBFILE $ftppath
 
 		# only for i686 (for now)
 		if [ "$arch" = "i686" ]; then
 				echo "==> Scanning for New/Updated packages..." >&2
 				cd $stagedir/add
-				$ARCHDIR/pkgdb1 $TMPDIR/checkout $svnrepo | $ARCHDIR/pkgdb2-add $repoid $stagedir/add
+				$ARCHDIR/pkgdb1 $CHECKOUTDIR $svnrepo | $ARCHDIR/pkgdb2-add $repoid $stagedir/add
 		fi
 
 		# move the package files into the ftp directory
@@ -132,22 +132,21 @@ if [ -d $stagedir/add -a "`ls $stagedir/add`" ]; then
 fi
 
 if [ -d $stagedir/del -a "`ls $stagedir/del`" ]; then
-		cd $TMPDIR
 		echo "==> Processing deleted packages for repository '$reponame'..." >&2
 
 		# copy the db file into our working area
-		cp $ftppath/$reponame.db.tar.gz .
+		cp $ftppath/$reponame.db.tar.gz $DBFILE
 
 		cd $stagedir/del
 		# run it thru fakeroot make sure everything is owned by root.root
-		echo "$ARCHDIR/updatesync-many del $TMPDIR/$reponame.db.tar.gz NOT-USED ZOMGWOO" \
+		echo "$ARCHDIR/updatesync-many del $DBFILE NOT-USED ZOMGWOO" \
 		| fakeroot
 
 		if [ $? -ne 0 ]; then
 				die "==> Error returned from updatesync-many"
 		fi
 
-		cp $TMPDIR/$reponame.db.tar.gz $ftppath
+		cp $DBFILE $ftppath
 
 		# only for i686 (for now)
 		if [ "$arch" = "i686" ]; then
@@ -167,7 +166,7 @@ fi
 
 if [ "$updatelists" ]; then
 		echo "==> Generating Text Package List..." >&2
-		cd $TMPDIR/checkout
+		cd $CHECKOUTDIR
 		$ARCHDIR/genpkglist $ftppath $svnrepo
 		if [ -f packages.txt ]; then
 			mv packages.txt $ftppath/packages.txt

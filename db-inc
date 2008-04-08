@@ -83,17 +83,12 @@ cd $TMPDIR
 # Checkout the SVN module if we need to
 updatelists=
 if [ "`ls $stagedir/add 2>/dev/null`" -o "`ls $stagedir/del 2>/dev/null`" ]; then
-		# if $svndir is set, then use that instead of doing our own cvs checkout
-		if [ "$svndir" ]; then
-				mv $svndir $TMPDIR/checkout
-		else
-				echo "==> Checking out repo: $svnrepo ($arch) - Please be patient"
-				svn export -q file://$svnpath $TMPDIR/checkout
-				if [ $? -gt 0 ]; then
-						die "==> SVN export failed!"
-				fi
-		fi
-		updatelists=1
+	echo "==> Checking out repo: $svnrepo ($arch) - Please be patient"
+	svn export -q file://$svnpath $TMPDIR/checkout
+	if [ $? -gt 0 ]; then
+		die "==> SVN export failed!"
+	fi
+	updatelists=1
 else
 		echo "No files to process"
 		cleanup 0

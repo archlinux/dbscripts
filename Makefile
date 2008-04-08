@@ -1,7 +1,7 @@
 # mysql db info.
 DB_NAME:="archlinux"
 DB_USER:="archlinux"
-DB_PASS:="passwords-are-cool"
+DB_PASS:="passwords-are-NOT-cool"
 
 MYSQL_DEFS:=-DDB_NAME=\"$(DB_NAME)\" -DDB_USER=\"$(DB_USER)\" -DDB_PASS=\"$(DB_PASS)\"
 MYSQL_FLAGS:=-I/usr/include/mysql -L/usr/lib/mysql -lmysqlclient

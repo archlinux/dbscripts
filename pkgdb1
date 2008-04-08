@@ -15,8 +15,8 @@ getpkgname() {
 STAGEDIR=$(pwd)
 
 #This is our "unknown" category. We will have to do something about this later.
-# It is a stop-gap
-CATEGORY=25
+# It is a stop-gap. We will insert new packages in this way
+CATEGORY="unknown"
 
 SVNCO=$1
 REPOTAG=$2

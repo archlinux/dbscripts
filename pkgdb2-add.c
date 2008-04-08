@@ -222,7 +222,7 @@ int main(int argc, char **argv)
                  "SELECT id FROM categories WHERE category='%s'", cat);
         result = doquery(&db, query);
         if(mysql_num_rows(result) == 0) {
-            fprintf(stderr, "pkgdb2-add: no db category found for '%s'\n", cat);
+            catid = 25;
             /*
                snprintf(query, sizeof(query), "INSERT INTO categories (id,category) "
                " VALUES (NULL,'%s')", addslashes(cat));

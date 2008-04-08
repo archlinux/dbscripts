@@ -12,7 +12,7 @@ svnrepo="$reponame-$arch"
 
 #Hacky for now
 if [ "$arch" = "x86_64" ]; then
-	stagedir="$HOME/staging/$reponame-64"
+	stagedir="$HOME/staging/${reponame}64"
 else
 	stagedir="$HOME/staging/$reponame"
 fi

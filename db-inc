@@ -19,7 +19,7 @@ fi
 
 WORKDIR="~/.dbscripts"
 CHECKOUTDIR="$WORKDIR/checkout"
-LOCKFILE="$WORKDIR/lock"
+LOCKFILE="/tmp/.repolck.$arch.$repoid"
 DBFILE="$WORKDIR/$reponame.db.tar.gz"
 
 if [ ! `type -p fakeroot` ]; then
@@ -46,7 +46,7 @@ getpkgname() {
 
 cleanup() {
 		# unlock
-		rm -f "~/.dbscripts/lock"
+		rm -f "$LOCKFILE"
 		[ "$1" ] && exit $1
 }
 
@@ -61,15 +61,16 @@ die() {
 }
 
 # check for locks
-if [ -f ~/.dbscripts/lock ]; then
-		echo "error: db generation is already in progress"
-		exit 1
+if [ -f "$LOCKFILE" ]; then
+	owner=$(/bin/ls -l $LOCKFILE | /bin/awk '{print $3}')
+	echo "error: db generation is already in progress (started by $owner)"
+	exit 1
 fi
 
 # catch ^C breaks
 trap ctrl_c SIGINT
 # lock
-touch ~/.dbscripts/lock
+touch "$LOCKFILE"
 
 if [ -d $CHECKOUTDIR ]; then
 	cd $CHECKOUTDIR

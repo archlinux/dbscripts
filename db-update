@@ -27,7 +27,7 @@ fi
 
 WORKDIR="~/.dbscripts"
 CHECKOUTDIR="$WORKDIR/checkout"
-LOCKFILE="/tmp/.repolck.$arch.$repoid"
+LOCKFILE="/tmp/.repolck.$arch.$reponame"
 DBFILE="$WORKDIR/$reponame.db.tar.gz"
 
 if [ ! `type -p fakeroot` ]; then
@@ -129,13 +129,6 @@ if [ -d $stagedir/add -a "`ls $stagedir/add`" ]; then
 
 		cp $DBFILE $ftppath
 
-		# only for i686 (for now)
-		if [ "$arch" = "i686" ]; then
-				echo "==> Scanning for New/Updated packages..." >&2
-				cd $stagedir/add
-				$ARCHDIR/pkgdb1 $CHECKOUTDIR $svnrepo | $ARCHDIR/pkgdb2-add $repoid $stagedir/add
-		fi
-
 		# move the package files into the ftp directory
 		mv -f $stagedir/add/*.pkg.tar.gz $ftppath
 fi
@@ -156,18 +149,6 @@ if [ -d $stagedir/del -a "`ls $stagedir/del`" ]; then
 		fi
 
 		cp $DBFILE $ftppath
-
-		# only for i686 (for now)
-		if [ "$arch" = "i686" ]; then
-				echo "==> Scanning for Deleted packages..." >&2
-				cd $stagedir/del
-				(
-				for i in *.pkg.tar.gz; do
-						pkgname=$(getpkgname $i)
-						echo $pkgname
-				done
-				) | $ARCHDIR/pkgdb2-del $repoid $stagedir/del
-		fi
 
 		# remove the package files
 		rm -f $stagedir/del/*.pkg.tar.gz

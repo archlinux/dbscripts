@@ -1,8 +1,4 @@
 #!/bin/bash
 
-repoid=3
-reponame="unstable"
-arch="i686"
-
-. $(dirname $0)/db-inc
+$(dirname $0)/db-update "i686" "unstable"
 

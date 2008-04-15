@@ -3,8 +3,16 @@
 # where are the arch scripts located?
 ARCHDIR="/arch"
 
+if [ $# -ne 2 ]; then
+	echo "usage: $(basename $0) <arch> <repo>"
+	exit 1
+fi
+
 #All this fun stuff used to be in the db-(whatever) files
 # Let's make it cleaner
+arch="$1"
+reponame="$2"
+
 export CARCH="$arch"
 ftppath="/home/ftp/$reponame/os/$arch/"
 svnpath="/home/svn-packages"

@@ -1,7 +1,3 @@
 #!/bin/bash
 
-repoid=5
-reponame="core"
-arch="i686"
-
-. $(dirname $0)/db-inc
+$(dirname $0)/db-update "i686" "core"

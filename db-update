@@ -1,168 +1,187 @@
 #!/bin/bash
 
-# where are the arch scripts located?
-ARCHDIR="/arch"
-
 if [ $# -ne 2 ]; then
-	echo "usage: $(basename $0) <arch> <repo>"
+	echo "usage: $(basename $0) <arch> <reponame>"
 	exit 1
 fi
 
-#All this fun stuff used to be in the db-(whatever) files
-# Let's make it cleaner
+if [ -f "/etc/makepkg.conf" ]; then
+	#Get some config info
+	. /etc/makepkg.conf
+else
+	echo "/etc/makepkg.conf does not exist!"
+	exit 1
+fi
+
 arch="$1"
 reponame="$2"
 
 export CARCH="$arch"
-ftppath="/home/ftp/$reponame/os/$arch/"
-svnpath="/home/svn-packages"
+
+##### Arch specific stuff. TODO make this configurable #####
+#ftppath="/home/ftp/$reponame/os/$arch/"
+ftppath="/home/aaron/dbscripts/ftp-$reponame"
+svnpath="file:///home/svn-packages"
 svnrepo="$reponame-$arch"
+#stagedir="$HOME/staging/$reponame"
+stagedir="/home/aaron/dbscripts/staging/$reponame"
+############################################################
 
-#Hacky for now
-if [ "$arch" = "x86_64" ]; then
-	stagedir="$HOME/staging/${reponame}64"
-else
-	stagedir="$HOME/staging/$reponame"
-fi
+[ "$UID" = "" ] && UID=$(uid)
 
-WORKDIR="~/.dbscripts"
-CHECKOUTDIR="$WORKDIR/checkout"
+WORKDIR="/tmp/db-update.$svnrepo.$UID"
 LOCKFILE="/tmp/.repolck.$arch.$reponame"
-DBFILE="$WORKDIR/$reponame.db.tar.gz"
+ADDPKGS=""
+REMPKGS=""
 
 if [ ! `type -p fakeroot` ]; then
-		echo "error: fakeroot is missing" >&2
-		exit 1
+	echo "error: fakeroot is missing" >&2
+	exit 1
 fi
 
 if [ ! -d $stagedir ]; then
-		echo "error: staging directory missing: $stagedir" >&2
-		exit 1
+	echo "error: staging directory missing: $stagedir" >&2
+	exit 1
 fi
 
 # Get the package name from the filename
 # hackish, but should work for now
 getpkgname() {
-		local tmp
+	local tmp
 
-		tmp=${1##*/}
-		tmp=${tmp%.pkg.tar.gz}
-		tmp=${tmp%-i686}
-		tmp=${tmp%-x86_64}
-		echo ${tmp%-*-*}
+	tmp=${1##*/}
+	tmp=${tmp%$PKGEXT}
+	tmp=${tmp%-$CARCH}
+	echo ${tmp%-*-*}
 }
 
 cleanup() {
-		# unlock
-		rm -f "$LOCKFILE"
-		[ "$1" ] && exit $1
+	# unlock
+	rm -f "$LOCKFILE"
+	#rm -rf "$WORKDIR"
+	[ "$1" ] && exit $1
 }
 
 ctrl_c() {
-		echo "Interrupted" >&2
-		cleanup 0
+	echo "Interrupted" >&2
+	cleanup 0
 }
 
 die() {
-		echo "$*" >&2
-		cleanup 1
+	echo "$*" >&2
+	cleanup 1
 }
 
 # check for locks
 if [ -f "$LOCKFILE" ]; then
-	owner=$(/bin/ls -l $LOCKFILE | /bin/awk '{print $3}')
+	owner="$(/usr/bin/stat -c %U $LOCKFILE)"
 	echo "error: db generation is already in progress (started by $owner)"
 	exit 1
 fi
 
-# catch ^C breaks
-trap ctrl_c SIGINT
-# lock
+trap ctrl_c 2
+trap cleanup 0
+
 touch "$LOCKFILE"
 
-if [ -d $CHECKOUTDIR ]; then
-	cd $CHECKOUTDIR
-	svn update
-	if [ $? -gt 0 ]; then
-		die "==> SVN update failed, aborting!"
-	fi
-else
-	echo "==> Checking out repo: $svnrepo ($arch) - Please be patient"
-	svn checkout file://$svnpath $CHECKOUTDIR
-	if [ $? -gt 0 ]; then
-		die "==> SVN checkout failed, aborting!"
-	fi
+mkdir -p "$WORKDIR"
+
+to_add=""
+if [ -d "$stagedir/add" ]; then
+	ADDPKGS="$(ls $stagedir{64,}/add/*-${arch}$PKGEXT 2>/dev/null)"
 fi
 
-cd $CHECKOUTDIR
+if [ -n "$ADDPKGS" ]; then
+	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
-# Checkout the SVN module if we need to
-updatelists=
-if [ "`ls $stagedir/add 2>/dev/null`" -o "`ls $stagedir/del 2>/dev/null`" ]; then
-	updatelists=1
-else
-	echo "No files to process"
-	cleanup 0
-fi
+	cd "$WORKDIR"
+	svn checkout -N $svnpath checkout
+	cd checkout
 
-# Right-O, now we look through the "add" and "del" subdirectories of
-# $stagedir and process the packages there accordingly -- all packages
-# in the "add" dir are added/updated, all packages in the "del" dir
-# are removed.
-#
-# This means the sync db could actually be unpacked/repacked twice in
-# one db-* invocation, but it's not a huge performance hit.
-
-if [ -d $stagedir/add -a "`ls $stagedir/add`" ]; then
-		echo "==> Processing new/updated packages for repository '$reponame'..." >&2
-
-		# copy the db file into our working area
-		cp $ftppath/$reponame.db.tar.gz $DBFILE
-
-		cd $stagedir/add
-		# run it thru fakeroot make sure everything is owned by root.root
-		echo "$ARCHDIR/updatesync-many add $DBFILE $CHECKOUTDIR $svnrepo" | fakeroot
-
-		if [ $? -ne 0 ]; then
-				die "==> Error returned from updatesync-many"
+	for pkg in $ADDPKGS; do
+		_pkgfile=$(basename $pkg)
+		_pkgname="$(getpkgname $pkg)"
+		echo "    Checking SVN for $_pkgname"
+		svn up -q $_pkgname
+		if [ -d "$_pkgname/repos/$svnrepo" ]; then
+			. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
+			if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$CARCH$PKGEXT" ]; then
+				to_add="$to_add $pkg"
+			else
+				echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
+			fi
+		else
+			echo "    WARNING: Package $_pkgname not found in $svnrepo"
 		fi
+	done
 
-		cp $DBFILE $ftppath
+	cd "$WORKDIR"
+	[ -d build/ ] || mkdir build
 
-		# move the package files into the ftp directory
-		mv -f $stagedir/add/*.pkg.tar.gz $ftppath
+	# copy the db file into our working area
+	[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
+	cp $to_add build/
+
+	cd build/
+	/usr/bin/repo-add "$reponame.db.tar.$DB_COMPRESSION" $to_add
+else
+	echo "No packages to add"
 fi
 
-if [ -d $stagedir/del -a "`ls $stagedir/del`" ]; then
-		echo "==> Processing deleted packages for repository '$reponame'..." >&2
+to_rem=""
+if [ -d "$stagedir/del" ]; then
+	REMPKGS="$(ls $stagedir{64,}/del/*-${arch}$PKGEXT 2>/dev/null)"
+fi
 
-		# copy the db file into our working area
-		cp $ftppath/$reponame.db.tar.gz $DBFILE
+if [ -n "$REMPKGS" ]; then
+	echo "==> Processing deleted packages for repository '$reponame'..." >&2
 
-		cd $stagedir/del
-		# run it thru fakeroot make sure everything is owned by root.root
-		echo "$ARCHDIR/updatesync-many del $DBFILE NOT-USED ZOMGWOO" \
-		| fakeroot
+	if [ ! -d "$WORKDIR/checkout" ]; then
+		cd "$WORKDIR"
+		svn checkout -N $svnpath checkout
+	fi
+	cd "$WORKDIR/checkout"
 
-		if [ $? -ne 0 ]; then
-				die "==> Error returned from updatesync-many"
+	#TODO removal shouldn't require a package file
+	for pkg in $REMPKGS; do
+		_pkgfile=$(basename $pkg)
+		_pkgname="$(getpkgname $pkg)"
+		echo "    Checking SVN for $_pkgname"
+		svn up -q $_pkgname
+		if [ -d "$_pkgname/repos/$svnrepo" ]; then
+			echo "    WARNING: $_pkgname still exists in $svnrepo"
+		else
+			to_rem="$to_rem $pkg"
 		fi
+	done
 
-		cp $DBFILE $ftppath
+	cd "$WORKDIR"
+	[ -d build/ ] || mkdir build
 
-		# remove the package files
-		rm -f $stagedir/del/*.pkg.tar.gz
+	# copy the db file into our working area
+	[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
+	for rem in $to_rem; do
+		if [ -f "build/$rem" ]; then
+			rm "build/$rem"
+		fi
+	done
+
+	cd build/
+	/usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $to_rem
+else
+	echo "No packages to delete"
+fi
+
+if [ $(ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
+	cp -r "$WORKDIR/build/"* "$ftppath" 
 fi
 
 if [ "$updatelists" ]; then
-		echo "==> Generating Text Package List..." >&2
-		cd $CHECKOUTDIR
-		$ARCHDIR/genpkglist $ftppath $svnrepo
-		if [ -f packages.txt ]; then
-			mv packages.txt $ftppath/packages.txt
-		fi
+	echo "==> Generating Text Package List..." >&2
+	cd "$WORKDIR/checkout"
+	$ARCHDIR/genpkglist $ftppath $svnrepo
+	if [ -f packages.txt ]; then
+		mv packages.txt $ftppath/packages.txt
+	fi
 fi
-
-cleanup
-
 # vim: set ts=4 sw=4 noet ft=sh:

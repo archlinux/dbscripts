@@ -13,8 +13,8 @@ else
 	exit 1
 fi
 
-arch="$1"
-reponame="$2"
+reponame="$1"
+arch="$2"
 
 export CARCH="$arch"
 

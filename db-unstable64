@@ -1,4 +1,4 @@
 #!/bin/bash
 
-$(dirname $0)/db-update "x86_64" "unstable"
+$(dirname $0)/db-update "unstable" "x86_64" 
 

@@ -14,9 +14,12 @@ getpkgname() {
   echo ${tmp%-*-*}
 }
 
+reponame=$1
+arch=$2
+
 FTPBASEDIR="/home/ftp"
-FTPDIR=${FTPBASEDIR}/${1}/os/${2}
-DBFILE=${FTPDIR}/${1}.db.tar.gz
+FTPDIR=${FTPBASEDIR}/$reponame/os/$arch
+DBFILE=${FTPDIR}/$reponame.db.tar.gz
 MISSINGFILES=""
 DELETEFILES=""
 

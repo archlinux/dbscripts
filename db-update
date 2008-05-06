@@ -167,14 +167,16 @@ if [ -n "$REMPKGS" ]; then
 
 	# copy the db file into our working area
 	[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
-	for rem in $to_rem; do
-		if [ -f "build/$rem" ]; then
-			/bin/rm "build/$rem"
-		fi
-	done
 
 	cd build/
 	/usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $to_rem
+
+	for rem in $to_rem; do
+		if [ -f "$ftppath/$rem" ]; then
+			/bin/rm "$ftppath/$rem"
+			/bin/rm "$rem"
+		fi
+	done
 else
 	echo "No packages to delete"
 fi

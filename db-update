@@ -181,15 +181,9 @@ fi
 
 # if non empty, move all build dirs
 if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
+	echo "Copying new files to '$ftppath'"
 	/bin/cp -r "$WORKDIR/build/"* "$ftppath" 
-fi
-
-if [ "$updatelists" ]; then
-	echo "==> Generating Text Package List..." >&2
-	cd "$WORKDIR/checkout"
-	$ARCHDIR/genpkglist $ftppath $svnrepo
-	if [ -f packages.txt ]; then
-		mv packages.txt $ftppath/packages.txt
-	fi
+else
+	echo "Nothing to copy, no work done"
 fi
 # vim: set ts=4 sw=4 noet ft=sh:

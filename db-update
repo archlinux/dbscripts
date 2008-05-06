@@ -19,12 +19,10 @@ arch="$2"
 export CARCH="$arch"
 
 ##### Arch specific stuff. TODO make this configurable #####
-#ftppath="/home/ftp/$reponame/os/$arch/"
-ftppath="/home/aaron/dbscripts/ftp-$reponame"
+ftppath="/home/ftp/$reponame/os/$arch/"
 svnpath="file:///home/svn-packages"
 svnrepo="$reponame-$arch"
-#stagedir="$HOME/staging/$reponame"
-stagedir="/home/aaron/dbscripts/staging/$reponame"
+stagedir="$HOME/staging/$reponame"
 ############################################################
 
 [ "$UID" = "" ] && UID=$(uid)

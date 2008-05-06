@@ -80,27 +80,36 @@ fi
 trap ctrl_c 2
 trap cleanup 0
 
-touch "$LOCKFILE"
+/bin/touch "$LOCKFILE"
 
-mkdir -p "$WORKDIR"
+/bin/mkdir -p "$WORKDIR"
+
+echo "Updating DB for $reponame $arch"
+
+if [ -d "${stagedir}64" ]; then
+	echo "It looks like you have an old staging dir"
+	echo "Packages are now differentiated by the arch in the filename."
+	echo "Please delete '${stagedir}64'"
+	/bin/cp -r "${stagedir}64/" "$stagedir"
+fi
 
 to_add=""
 if [ -d "$stagedir/add" ]; then
-	ADDPKGS="$(ls $stagedir{64,}/add/*-${arch}$PKGEXT 2>/dev/null)"
+	ADDPKGS="$(/bin/ls $stagedir/add/*-${arch}$PKGEXT 2>/dev/null)"
 fi
 
 if [ -n "$ADDPKGS" ]; then
 	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
-	cd "$WORKDIR"
-	svn checkout -N $svnpath checkout
-	cd checkout
+	/bin/cd "$WORKDIR"
+	/usr/bin/svn checkout -N $svnpath checkout
+	/bin/cd checkout
 
 	for pkg in $ADDPKGS; do
 		_pkgfile=$(basename $pkg)
 		_pkgname="$(getpkgname $pkg)"
 		echo "    Checking SVN for $_pkgname"
-		svn up -q $_pkgname
+		/usr/bin/svn up -q $_pkgname
 		if [ -d "$_pkgname/repos/$svnrepo" ]; then
 			. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
 			if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$CARCH$PKGEXT" ]; then
@@ -118,7 +127,7 @@ if [ -n "$ADDPKGS" ]; then
 
 	# copy the db file into our working area
 	[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
-	cp $to_add build/
+	/bin/cp $to_add build/
 
 	cd build/
 	/usr/bin/repo-add "$reponame.db.tar.$DB_COMPRESSION" $to_add
@@ -128,17 +137,17 @@ fi
 
 to_rem=""
 if [ -d "$stagedir/del" ]; then
-	REMPKGS="$(ls $stagedir{64,}/del/*-${arch}$PKGEXT 2>/dev/null)"
+	REMPKGS="$(/bin/ls $stagedir/del/*-${arch}$PKGEXT 2>/dev/null)"
 fi
 
 if [ -n "$REMPKGS" ]; then
 	echo "==> Processing deleted packages for repository '$reponame'..." >&2
 
 	if [ ! -d "$WORKDIR/checkout" ]; then
-		cd "$WORKDIR"
-		svn checkout -N $svnpath checkout
+		/bin/cd "$WORKDIR"
+		/usr/bin/svn checkout -N $svnpath checkout
 	fi
-	cd "$WORKDIR/checkout"
+	/bin/cd "$WORKDIR/checkout"
 
 	#TODO removal shouldn't require a package file
 	for pkg in $REMPKGS; do
@@ -160,7 +169,7 @@ if [ -n "$REMPKGS" ]; then
 	[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
 	for rem in $to_rem; do
 		if [ -f "build/$rem" ]; then
-			rm "build/$rem"
+			/bin/rm "build/$rem"
 		fi
 	done
 

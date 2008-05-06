@@ -179,8 +179,9 @@ else
 	echo "No packages to delete"
 fi
 
-if [ $(ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
-	cp -r "$WORKDIR/build/"* "$ftppath" 
+# if non empty, move all build dirs
+if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
+	/bin/cp -r "$WORKDIR/build/"* "$ftppath" 
 fi
 
 if [ "$updatelists" ]; then

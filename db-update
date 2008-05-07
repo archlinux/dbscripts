@@ -200,13 +200,10 @@ if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 	echo "Copying new files to '$ftppath'"
 	/bin/cp -r "$WORKDIR/build/"* "$ftppath" 
 	echo "Cleaning staging dir"
-	echo "/bin/rm $to_add $to_rem"
 	/bin/rm $to_add $to_rem
 else
 	echo "Nothing to copy, no work done"
 fi
-
-
 
 cleanup
 # vim: set ts=4 sw=4 noet ft=sh:

@@ -122,15 +122,20 @@ if [ -n "$ADDPKGS" ]; then
 		fi
 	done
 
-	cd "$WORKDIR"
-	[ -d build/ ] || mkdir build
+	if [ -n "$to_add" ]; then
 
-	# copy the db file into our working area
-	[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
-	/bin/cp $to_add build/
+		cd "$WORKDIR"
+		[ -d build/ ] || mkdir build
 
-	cd build/
-	/usr/bin/repo-add "$reponame.db.tar.$DB_COMPRESSION" $to_add
+		# copy the db file into our working area
+		[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
+		/bin/cp $to_add build/
+
+		cd build/
+		/usr/bin/repo-add "$reponame.db.tar.$DB_COMPRESSION" $to_add
+	else
+		echo "Errors found when adding packages"
+	fi
 else
 	echo "No packages to add"
 fi
@@ -162,21 +167,25 @@ if [ -n "$REMPKGS" ]; then
 		fi
 	done
 
-	cd "$WORKDIR"
-	[ -d build/ ] || mkdir build
+	if [ -n "$to_rem" ]; then
+		cd "$WORKDIR"
+		[ -d build/ ] || mkdir build
 
-	# copy the db file into our working area
-	[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
+		# copy the db file into our working area
+		[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
 
-	cd build/
-	/usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $to_rem
+		cd build/
+		/usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $to_rem
 
-	for rem in $to_rem; do
-		if [ -f "$ftppath/$rem" ]; then
-			/bin/rm "$ftppath/$rem"
-			/bin/rm "$rem"
-		fi
-	done
+		for rem in $to_rem; do
+			if [ -f "$ftppath/$rem" ]; then
+				/bin/rm "$ftppath/$rem"
+				/bin/rm "$rem"
+			fi
+		done
+	else
+		echo "Errors found when removing packages"
+	fi
 else
 	echo "No packages to delete"
 fi
@@ -188,4 +197,6 @@ if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 else
 	echo "Nothing to copy, no work done"
 fi
+
+cleanup
 # vim: set ts=4 sw=4 noet ft=sh:

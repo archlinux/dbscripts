@@ -101,9 +101,9 @@ fi
 if [ -n "$ADDPKGS" ]; then
 	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
-	/bin/cd "$WORKDIR"
+	cd "$WORKDIR"
 	/usr/bin/svn checkout -N $svnpath checkout
-	/bin/cd checkout
+	cd checkout
 
 	for pkg in $ADDPKGS; do
 		_pkgfile=$(basename $pkg)
@@ -144,10 +144,10 @@ if [ -n "$REMPKGS" ]; then
 	echo "==> Processing deleted packages for repository '$reponame'..." >&2
 
 	if [ ! -d "$WORKDIR/checkout" ]; then
-		/bin/cd "$WORKDIR"
+		cd "$WORKDIR"
 		/usr/bin/svn checkout -N $svnpath checkout
 	fi
-	/bin/cd "$WORKDIR/checkout"
+	cd "$WORKDIR/checkout"
 
 	#TODO removal shouldn't require a package file
 	for pkg in $REMPKGS; do

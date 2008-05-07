@@ -32,7 +32,13 @@ LOCKFILE="/tmp/.repolck.$arch.$reponame"
 ADDPKGS=""
 REMPKGS=""
 
-if [ ! `type -p fakeroot` ]; then
+if [ ! -d "$ftppath" ]; then
+	echo "FTP path for this repo ($reponame) is missing"
+	echo "Please contact a system administrator"
+	exit 1
+fi
+
+if [ ! $(type -p fakeroot) ]; then
 	echo "error: fakeroot is missing" >&2
 	exit 1
 fi

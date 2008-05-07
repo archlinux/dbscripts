@@ -90,7 +90,7 @@ if [ -d "${stagedir}64" ]; then
 	echo "It looks like you have an old staging dir"
 	echo "Packages are now differentiated by the arch in the filename."
 	echo "Please delete '${stagedir}64'"
-	/bin/cp -r "${stagedir}64/" "$stagedir"
+	/bin/cp -r "${stagedir}64/"* "$stagedir/"
 fi
 
 to_add=""

@@ -1,0 +1,97 @@
+#!/bin/bash
+
+if [ $# -ne 3 ]; then
+	echo "usage: $(basename $0) <pkgname> <arch> <reponame>"
+	exit 1
+fi
+
+if [ -f "/etc/makepkg.conf" ]; then
+	#Get some config info
+	. /etc/makepkg.conf
+else
+	echo "/etc/makepkg.conf does not exist!"
+	exit 1
+fi
+
+packagename="$1"
+reponame="$2"
+arch="$3"
+
+export CARCH="$arch"
+
+##### Arch specific stuff. TODO make this configurable #####
+ftppath="/home/ftp/$reponame/os/$arch/"
+svnpath="file:///home/svn-packages"
+svnrepo="$reponame-$arch"
+############################################################
+
+[ "$UID" = "" ] && UID=$(uid)
+
+WORKDIR="/tmp/db-remove.$svnrepo.$UID"
+LOCKFILE="/tmp/.repolck.$arch.$reponame"
+
+cleanup() {
+	# unlock
+	rm -f "$LOCKFILE"
+	rm -rf "$WORKDIR"
+	[ "$1" ] && exit $1
+}
+
+ctrl_c() {
+	echo "Interrupted" >&2
+	cleanup 0
+}
+
+die() {
+	echo "$*" >&2
+	cleanup 1
+}
+
+# check for locks
+if [ -f "$LOCKFILE" ]; then
+	owner="$(/usr/bin/stat -c %U $LOCKFILE)"
+	echo "error: db generation is already in progress (started by $owner)"
+	exit 1
+fi
+
+trap ctrl_c 2
+trap cleanup 0
+
+/bin/touch "$LOCKFILE"
+/bin/mkdir -p "$WORKDIR"
+
+
+echo "==> Removing package '$packagename' from '$reponame'..." >&2
+
+cd "$WORKDIR"
+/usr/bin/svn checkout -N $svnpath checkout
+cd checkout
+
+/usr/bin/svn up -q $packagename
+if [ -d "$packagename/repos/$svnrepo" ]; then
+	echo "    Removing from subversion"
+	/usr/bin/svn rm --force -q "$packagename/repos/$svnrepo"
+	/usr/bin/svn commit -q -m "$(basename $0): $packagename removed by $(id -un)"
+fi
+
+cd "$WORKDIR"
+[ -d build/ ] || mkdir build
+
+# copy the db file into our working area
+if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
+	cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
+else
+	echo "No database found at '$ftpdir', nothing more to do"
+	exit 0
+fi
+
+echo "    Removing from $reponame DB file"
+cd build/
+/usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $packagename
+
+cp "$reponame.db.tar.$DB_COMPRESSION" "$ftppath/"
+
+echo "Package files will be cleaned up automatically"
+
+cleanup
+# vim: set ts=4 sw=4 noet ft=sh:

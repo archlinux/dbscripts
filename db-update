@@ -83,7 +83,15 @@ trap cleanup 0
 
 /bin/touch "$LOCKFILE"
 
-/bin/mkdir -p "$WORKDIR"
+/bin/mkdir -p "$WORKDIR/build"
+cd "$WORKDIR"
+
+# copy the db file into our working area
+if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
+	cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
+else
+	touch "build/$reponame.db.tar.$DB_COMPRESSION"
+fi
 
 echo "Updating DB for $reponame $arch"
 
@@ -126,17 +134,15 @@ if [ -n "$ADDPKGS" ]; then
 	done
 
 	if [ -n "$to_add" ]; then
+		cd "$WORKDIR/build/"
+		/bin/cp $to_add .
 
-		cd "$WORKDIR"
-		[ -d build/ ] || mkdir build
+		pkgs=""
+		for pkg in $to_add; do pkgs="$pkgs $(basename $pkg)"; done
 
-		# copy the db file into our working area
-		[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
-		/bin/cp $to_add build/
-
-		cd build/
-		/usr/bin/repo-add "$reponame.db.tar.$DB_COMPRESSION" $to_add
+		/usr/bin/repo-add "$reponame.db.tar.$DB_COMPRESSION" $pkgs
 	else
+		rm -f "build/$reponame.db.tar.$DB_COMPRESSION"
 		echo "Errors found when adding packages"
 	fi
 else
@@ -166,26 +172,22 @@ if [ -n "$REMPKGS" ]; then
 		if [ -d "$_pkgname/repos/$svnrepo" ]; then
 			echo "    WARNING: $_pkgname still exists in $svnrepo"
 		else
-			to_rem="$to_rem $pkg"
+			to_rem="$to_rem $_pkgname"
 		fi
 	done
 
 	if [ -n "$to_rem" ]; then
-		cd "$WORKDIR"
-		[ -d build/ ] || mkdir build
+		cd "$WORKDIR/build/"
 
-		# copy the db file into our working area
-		[ -f "$ftppath/$reponame.db.tar.gz" ] && cp "$ftppath/$reponame.db.tar.gz" build/
-
-		cd build/
+		#NOTE: to_rem consists of package NAMES only
 		/usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $to_rem
 
-		for rem in $to_rem; do
-			if [ -f "$ftppath/$rem" ]; then
-				/bin/rm "$ftppath/$rem"
-			fi
+		for rem in $REMPKGS; do
+			rem="$(basename $rem)"
+			/bin/rm -f "$ftppath/$rem"
 		done
 	else
+		rm -f "build/$reponame.db.tar.$DB_COMPRESSION"
 		echo "Errors found when removing packages"
 	fi
 else
@@ -196,10 +198,14 @@ fi
 if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 	echo "Copying new files to '$ftppath'"
 	/bin/cp -r "$WORKDIR/build/"* "$ftppath" 
-	echo "Cleaning staging dir"
-	/bin/rm $to_add $to_rem
+
 else
 	echo "Nothing to copy, no work done"
+fi
+
+if [ -n "$ADDPKGS" -o -n "$REMPKGS" ]; then
+	echo "Cleaning staging dir"
+	/bin/rm $ADDPKGS $REMPKGS
 fi
 
 cleanup

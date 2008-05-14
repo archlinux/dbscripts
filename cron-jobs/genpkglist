@@ -1,74 +1,28 @@
 #!/bin/bash
-#
-# genpkglist
-#
-# Generates a text package database for use with the setup script
-# (also used to check for missing packages in the download directory)
-#
 
-# Get the package name from the filename
-# hackish, but should work for now
-getpkgname() {
-  local tmp
-
-  tmp=${1##*/}
-  tmp=${tmp%.pkg.tar.gz}
-  tmp=${tmp%-i686}
-  tmp=${tmp%-x86_64}
-  echo ${tmp%-*-*}
-}
-
-pkgfile="$(pwd)/packages.txt"
-ftppath=$1
-repotag=$2
-
-rm -f $pkgfile
-for package in *; do
-    if [ -d "$package/$repotag/" ]; then
-        cd "$package/$repotag/"
-		if [ -f PKGBUILD ]; then
-			. PKGBUILD
-			if [ -f $ftppath/$pkgname-$pkgver-$pkgrel.pkg.tar.gz ]; then
-				echo "$pkgname-$pkgver-$pkgrel.pkg.tar.gz" >>$pkgfile
-			elif [ -f $ftppath/$pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz ]; then
-				echo "$pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz" >>$pkgfile
-			else
-				echo "notice: Missing $pkgname-$pkgver-$pkgrel-$dbarch.pkg.tar.gz in ftp site" >&2
-			fi
-        fi
-		cd ..
-    fi
-done
-
-cd $ftppath
-unset DUPES DUPEFILES last
-for pkg in *.pkg.tar.gz; do
-       pkgname=$(getpkgname $pkg)
-       if [ "$last" = "$pkgname" ]; then
-               DUPES="$DUPES $pkgname"
-               DUPEFILES="$DUPEFILES $pkg"
-       fi
-       last=$pkgname
-done
-
-showdupes() {
-       done=
-       for i in *.pkg.tar.gz; do
-               pkgname=$(getpkgname $i)
-               if [ "$pkgname" = "$1" ]; then
-                       ls -l $i | awk '{print $6" "$7" "$8" "$9}'
-                       done=1
-               else
-                       [ "$done" = "1" ] && return
-               fi
-       done
-}
-
-if [ "$DUPES" ]; then
-    DUPES=$((for d in $DUPES; do echo $d; done) | sort -u)
-    echo "Possible Dupes for $ftppath (remove old versions)"
-    echo "Date             Filename"
-    for dupe in $DUPES; do
-        showdupes $dupe
-    done
+if [ $# -ne 2 ]; then
+	echo "usage: $(basename $0) <reponame> <arch>"
+	exit 1
 fi
+
+reponame=$1
+arch=$2
+
+##### Arch specific stuff. TODO make this configurable #####
+ftppath="/home/ftp/$reponame/os/$arch/"
+############################################################
+
+if [ ! -d "$ftppath" ]; then
+    echo "FTP path '$ftppath' does not exist"
+    exit 1
+fi
+
+if [ ! -f /etc/makepkg.conf ]; then
+    echo "/etc/makepkg.conf not found! Aborting"
+    exit 1
+fi
+
+. /etc/makepkg.conf
+
+cd "$ftppath"
+ls -1 *$PKGEXT

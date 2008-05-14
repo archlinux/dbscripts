@@ -38,11 +38,6 @@ if [ ! -d "$ftppath" ]; then
 	exit 1
 fi
 
-if [ ! $(type -p fakeroot) ]; then
-	echo "error: fakeroot is missing" >&2
-	exit 1
-fi
-
 if [ ! -d $stagedir ]; then
 	echo "error: staging directory missing: $stagedir" >&2
 	exit 1

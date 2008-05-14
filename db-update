@@ -57,7 +57,7 @@ getpkgname() {
 cleanup() {
 	# unlock
 	rm -f "$LOCKFILE"
-	#rm -rf "$WORKDIR"
+	rm -rf "$WORKDIR"
 	[ "$1" ] && exit $1
 }
 

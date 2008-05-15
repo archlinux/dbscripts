@@ -1,0 +1,79 @@
+#!/bin/bash
+
+reposdir=/home/ftp/
+targetdir=/home/pierre/public_html/test-repo/
+repos="core extra unstable testing community"
+arches="i686 x86_64"
+
+if [ -f "/tmp/createFileList.lock" ]; then
+    echo "Error: createFileList allready in progress."
+    exit 1
+fi
+
+touch "/tmp/createFileList.lock" || exit 1
+TMPDIR=$(mktemp -d /tmp/createFileList.XXXXXX) || exit 1
+CACHEDIR=$(mktemp -d /tmp/createFileList.XXXXXX) || exit 1
+
+getpkgname() {
+    local tmp
+
+    tmp=${1##*/}
+    tmp=${tmp%.pkg.tar.gz}
+    tmp=${tmp%-i686}
+    tmp=${tmp%-x86_64}
+    tmp=${tmp%-any}
+    echo $tmp
+}
+
+cd $reposdir
+for repo in $repos; do
+    REPO_DB_FILE=${repo}.files.tar.gz
+    for arch in $arches; do
+        repodir=${repo}/os/${arch}/
+        cached="no"
+
+        # extract old file archive
+        if [ -f ${targetdir}${repodir}${REPO_DB_FILE} ]; then
+            mkdir -p ${CACHEDIR}/${repodir}
+            bsdtar -xf ${targetdir}${repodir}${REPO_DB_FILE} -C ${CACHEDIR}/${repodir}
+            cached="yes"
+        fi
+
+        # create file lists
+        for pkg in $repodir*.pkg.tar.gz; do
+            basename=$(basename $pkg)
+            pkgname=$(getpkgname $basename)
+            tmppkgdir=${TMPDIR}/${repodir}${pkgname}/
+            mkdir -p $tmppkgdir
+            if [ -f "${CACHEDIR}/${repodir}${pkgname}/files" ]; then
+#               echo "cache: $pkgname"
+                mv ${CACHEDIR}/${repodir}${pkgname}/files ${tmppkgdir}files
+            else
+#               echo "$repo/$arch: $pkgname"
+                echo '%FILES%' > ${tmppkgdir}files
+                bsdtar --exclude=.* -tf $pkg >> ${tmppkgdir}files
+                cached="no"
+            fi
+        done
+
+        # create new file archive
+        if [ "$cached" == "no" ]; then
+            # at least one package has changed, so let's rebuild the archive
+#           echo "creating ${REPO_DB_FILE}/${arch}"
+            pkgdir=${targetdir}${repodir}
+            mkdir -p $pkgdir
+            cd ${TMPDIR}/${repodir}
+            [ -f "${pkgdir}${REPO_DB_FILE}.old" ] && rm "${pkgdir}${REPO_DB_FILE}.old"
+            [ -f "${pkgdir}${REPO_DB_FILE}" ] && mv "${pkgdir}${REPO_DB_FILE}" "${pkgdir}${REPO_DB_FILE}.old"
+            bsdtar --exclude=*.tar.gz -czf ${pkgdir}${REPO_DB_FILE} *
+        fi
+
+        cd $reposdir
+    done
+done
+
+cd - >/dev/null
+rm -rf $TMPDIR || exit 1
+rm -rf $CACHEDIR || exit 1
+rm -f "/tmp/createFileList.lock" || exit 1
+# echo 'done'

@@ -1,45 +1,64 @@
 #!/bin/bash
 
-usage() {
-  echo "Usage: $0 repo architecture"
-}
-
-getpkgname() {
-  local tmp
-
-  tmp=${1##*/}
-  tmp=${tmp%.pkg.tar.gz}
-  tmp=${tmp%-i686}
-  tmp=${tmp%-x86_64}
-  echo ${tmp%-*-*}
-}
+if [ $# -ne 2 ]; then
+	echo "usage: $(basename $0) <reponame> <arch>"
+	exit 1
+fi
 
 reponame=$1
 arch=$2
 
-FTPBASEDIR="/home/ftp"
-FTPDIR=${FTPBASEDIR}/$reponame/os/$arch
-DBFILE=${FTPDIR}/$reponame.db.tar.gz
+##### Arch specific stuff. TODO make this configurable #####
+ftppath="/home/ftp/$reponame/os/$arch/"
+############################################################
+
+if [ ! -d "$ftppath" ]; then
+    echo "FTP path '$ftppath' does not exist"
+    exit 1
+fi
+
+if [ ! -f /etc/makepkg.conf ]; then
+    echo "/etc/makepkg.conf not found! Aborting"
+    exit 1
+fi
+
+. /etc/makepkg.conf
+
+getpkgname() {
+	local tmp
+
+	tmp=${1##*/}
+	tmp=${tmp%$PKGEXT}
+	tmp=${tmp%-$arch}
+	echo ${tmp%-*-*}
+}
+
+getpkgname_ver() {
+	local tmp
+
+	tmp=${1##*/}
+	tmp=${tmp%$PKGEXT}
+	echo ${tmp%-$arch}
+}
+
 MISSINGFILES=""
 DELETEFILES=""
-
-if [ $# -lt 2 -o ! -f ${DBFILE} ]; then
-  usage
-  exit 1
-fi
+EXTRAFILES=""
 
 TMPDIR=$(mktemp -d /tmp/cleanup.XXXXXX) || exit 1
 
-cd ${TMPDIR}
-tar xzf ${DBFILE}
+cd "${TMPDIR}"
+/bin/tar xzf "$ftppath/$reponame.db.tar.$DB_COMPRESSION"
+
 for pkg in *; do
-  filename=$(grep -A1 '^%FILENAME%$' ${pkg}/desc | tail -n1)
+  filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
   [ -z "${filename}" ] && filename="${pkg}.pkg.tar.gz"
-  if [ ! -f ${FTPDIR}/${filename} ]; then
+
+  if [ ! -f "${ftppath}/${filename}" ]; then
     MISSINGFILES="${MISSINGFILES} ${filename}"
   else
     pkgname="$(getpkgname ${filename})"
-    for otherfile in ${FTPDIR}/${pkgname}-*; do
+    for otherfile in ${ftppath}/${pkgname}-*; do
       otherfile="$(basename ${otherfile})"
       if [ "${otherfile}" != "${filename}" -a "${pkgname}" = "$(getpkgname ${otherfile})" ]; then
         DELETEFILES="${DELETEFILES} ${otherfile}"
@@ -48,13 +67,43 @@ for pkg in *; do
   fi
 done
 
-cd - >/dev/null
+cd "$ftppath"
+for pkg in *$PKGEXT; do
+    pkgname="$(getpkgname_ver ${filename})"
+    if [ ! -d "$TMPDIR/$pkgname" ]; then
+        EXTRAFILES="$EXTRAFILES $pkg"
+    fi
+done 
+
+
+
+cd "$ftppath"
 rm -rf ${TMPDIR}
 
-echo -ne "DIRECTORY:\n${FTPDIR}\n\n"
-echo -ne "DELETEFILES:\n${DELETEFILES}\n\n"
-echo -ne "MISSINGFILES:\n${MISSINGFILES}\n\n"
+if [ -n "${DELETEFILES}" ]; then
+    #rm -f ${DELETEFILES}
+    #mv ${DELETEFILES} /home/package-cleanup/
+    echo ""
+fi
 
-cd ${FTPDIR}
-[ -n "${DELETEFILES}" ] && mv ${DELETEFILES} /home/package-cleanup/
-cd - >/dev/null
+echo "Scan complete for $reponame ($arch) at ${ftppath}"
+if [ -n "$DELETEFILES" ]; then
+    echo "    The following files have been moved to package-cleanup:"
+    for f in $DELETEFILES; do
+        echo "        $f"
+    done
+fi
+echo ""
+if [ -n "$MISSINGFILES" ]; then
+    echo "    The following files are missing in the repo:"
+    for f in $MISSINGFILES; do
+        echo "        $f"
+    done
+fi
+echo ""
+if [ -n "$EXTRAFILES" ]; then
+    echo "    The following files are in the repo but not the db:"
+    for f in $EXTRAFILES; do
+        echo "        $f"
+    done
+fi

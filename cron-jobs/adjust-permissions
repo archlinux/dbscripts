@@ -1,0 +1,24 @@
+#!/bin/sh
+
+if [ -f /tmp/.ftpmaint.lck ]; then
+	exit 0
+fi
+
+/bin/touch /tmp/.ftpmaint.lck
+
+cd /home/ftp
+/bin/chown -R ftp:ftp-arch core/os/i686
+/bin/chown -R ftp:ftp-arch core/os/x86_64
+/bin/chown -R ftp:ftp-extra {extra,unstable,testing}/os/i686
+/bin/chown -R ftp:ftp-extra {extra,unstable,testing}/os/x86_64
+/bin/chown -R ftp:aur community
+
+/bin/chmod -R g+w /home/aur/unsupported{,-temp}
+
+for d in core extra unstable testing community; do
+    /bin/chmod -R g+w $d/os/i686
+    /bin/chmod -R g+w $d/os/x86_64
+done
+/bin/chmod 555 /home/ftp
+
+rm -f /tmp/.ftpmaint.lck

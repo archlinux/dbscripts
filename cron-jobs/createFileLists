@@ -1,7 +1,8 @@
 #!/bin/bash
 
 reposdir=/home/ftp/
-targetdir=/home/pierre/public_html/test-repo/
+#targetdir=/home/pierre/public_html/test-repo/
+targetdir=$reposdir
 repos="core extra unstable testing community"
 arches="i686 x86_64"
 

@@ -1,13 +1,11 @@
 #!/bin/bash
 
-if [ $# -le 1 ]; then
-    echo "usage: $(basename 0) <arch> <packagename> [<packagename> [<packagename ...]]"
+if [ $# -le 0 ]; then
+    echo "usage: $(basename 0) <packagename> [<packagename> [<packagename ...]]"
     exit 0
 fi
 
-arch=$1; shift
-
 for pkg in $@; do
     echo "==> Moving package '$pkg'"
-    $(dirname $0)/db-move "$pkg" "testing" "extra" "$arch"
+    $(dirname $0)/db-move "$pkg" "testing" "extra" "i686"
 done

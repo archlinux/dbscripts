@@ -69,41 +69,46 @@ done
 
 cd "$ftppath"
 for pkg in *$PKGEXT; do
-    pkgname="$(getpkgname_ver ${filename})"
-    if [ ! -d "$TMPDIR/$pkgname" ]; then
-        EXTRAFILES="$EXTRAFILES $pkg"
+    pkgname="$(getpkgname $pkg)"
+    if [ "$pkg" != "$TMPDIR/$pkgname-*" -a "$(getpkgname $(basename $pkg))" = "$pkgname" ]; then
+        continue 2
     fi
+    EXTRAFILES="$EXTRAFILE $pkg"
 done 
-
-
 
 cd "$ftppath"
 rm -rf ${TMPDIR}
 
-if [ -n "${DELETEFILES}" ]; then
-    #rm -f ${DELETEFILES}
-    #mv ${DELETEFILES} /home/package-cleanup/
-    echo ""
-fi
-
 echo "Scan complete for $reponame ($arch) at ${ftppath}"
 if [ -n "$DELETEFILES" ]; then
-    echo "    The following files have been moved to package-cleanup:"
+    echo "    The following files are out of date"
+    echo "    They will be moved to /home/package-cleanup"
     for f in $DELETEFILES; do
         echo "        $f"
     done
 fi
 echo ""
 if [ -n "$MISSINGFILES" ]; then
-    echo "    The following files are missing in the repo:"
+    echo "    The following files are missing in the repo"
     for f in $MISSINGFILES; do
         echo "        $f"
     done
 fi
 echo ""
 if [ -n "$EXTRAFILES" ]; then
-    echo "    The following files are in the repo but not the db:"
+    echo "    The following files are in the repo but not the db"
+    echo "    They will be moved to /home/package-cleanup"
     for f in $EXTRAFILES; do
         echo "        $f"
     done
+fi
+
+if [ -n "${DELETEFILES}" ]; then
+    #mv ${DELETEFILES} /home/package-cleanup/
+    echo ""
+fi
+
+if [ -n "${EXTRAFILES}" ]; then
+    #mv ${EXTRAFILES} /home/package-cleanup/
+    echo ""
 fi

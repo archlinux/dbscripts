@@ -1,0 +1,107 @@
+#!/bin/bash
+
+if [ $# -ne 3 ]; then
+	echo "usage: $(basename $0) <packagename> <repo> <arch>"
+	exit 1
+fi
+
+if [ -f "/etc/makepkg.conf" ]; then
+	#Get some config info
+	. /etc/makepkg.conf
+else
+	echo "/etc/makepkg.conf does not exist!"
+	exit 1
+fi
+packagename="$1"
+reponame="$2"
+arch="$3"
+
+##### Arch specific stuff. TODO make this configurable #####
+srcpath="/home/aaron/public_html/sources/"
+svnpath="file:///home/svn-packages/$packagename/repos/$reponame-$arch"
+############################################################
+
+WORKDIR="/tmp/make-sourceball.$svnrepo.$UID"
+
+cleanup() {
+	# unlock
+	rm -rf "$WORKDIR"
+	[ "$1" ] && exit $1
+}
+
+ctrl_c() {
+	echo "Interrupted" >&2
+	cleanup 0
+}
+
+die() {
+	echo "$*" >&2
+	cleanup 1
+}
+
+##### Copied from makepkg #####
+
+strip_url() {
+    echo "$1" | sed 's|^.*://.*/||g'
+}
+
+create_srcpackage() {
+	echo "Creating source package..."
+	local comp_files="$BUILDSCRIPT"
+	echo "   Adding: $BUILDSCRIPT"
+    . $BUILDSCRIPT
+
+	if [ "$install" != "" ]; then
+		if [ -f $install ]; then
+			echo "   Adding: install script '$install'"
+			comp_files="$comp_files $install"
+		else
+			die "Install script '$install' not found."
+		fi
+	fi
+
+	if [ -f ChangeLog ]; then
+		echo "   Adding: ChangeLog"
+		comp_files="$comp_files ChangeLog"
+	fi
+
+	local i
+	for i in ${source[@]}; do
+        i="$(strip_url "$i")"
+		if [ -f $i ]; then
+			echo "   Adding: $i"
+			comp_files="$comp_files $i"
+		fi
+	done
+
+	local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
+
+	# tar it up
+	echo "Compressing source package"
+	if ! /usr/bin/bsdtar -czf "$pkg_file" $comp_files; then
+		die "Failed to create source package file."
+	fi
+
+    echo "Source package complete: $pkg_file"
+    if [ ! -d "$srcpath" ]; then
+        mkdir -p "$srcpath"
+    fi
+    cp $pkg_file "$srcpath"
+}
+
+trap ctrl_c 2
+trap cleanup 0
+
+/bin/mkdir -p "$WORKDIR"
+cd "$WORKDIR"
+
+echo "Creating Source tarball for $packagename ($reponame-$arch)"
+
+if /usr/bin/svn checkout -N $svnpath; then
+    cd "$reponame-$arch"
+    echo "Cheating with makepkg to download sources"
+    /usr/bin/makepkg -g || die "Error downloading files"
+    create_srcpackage
+else
+    die "Package '$packagename' does not exist in repo $reponame-$arch"
+fi

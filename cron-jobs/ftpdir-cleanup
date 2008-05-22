@@ -104,11 +104,11 @@ if [ -n "$EXTRAFILES" ]; then
 fi
 
 if [ -n "${DELETEFILES}" ]; then
-    #mv ${DELETEFILES} /home/package-cleanup/
+    mv ${DELETEFILES} /home/package-cleanup/
     echo ""
 fi
 
 if [ -n "${EXTRAFILES}" ]; then
-    #mv ${EXTRAFILES} /home/package-cleanup/
+    mv ${EXTRAFILES} /home/package-cleanup/
     echo ""
 fi

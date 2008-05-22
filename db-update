@@ -101,7 +101,8 @@ if [ -d "${stagedir}64" ]; then
 	echo "Packages are now differentiated by the arch in the filename."
 	echo "Please delete '${stagedir}64'"
 	echo "--------------------------------------------------"
-	/bin/cp -r "${stagedir}64/"* "$stagedir/"
+	/bin/mv "${stagedir}64/add/"* "$stagedir/add/"
+	/bin/mv "${stagedir}64/del/"* "$stagedir/del/"
 fi
 
 to_add=""

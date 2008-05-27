@@ -1,0 +1,58 @@
+#!/bin/bash
+
+if [ -f "/etc/makepkg.conf" ]; then
+  . /etc/makepkg.conf
+else
+  echo "/etc/makepkg.conf does not exist!"
+  exit 1
+fi
+
+case "$0" in
+  *64)
+    arch="x86_64"
+    ;;
+  *)
+    arch="i686"
+    ;;
+esac
+svnpath="file:///home/svn-packages"
+WORKDIR="$(mktemp -d /tmp/testing2x.XXXXXX)"
+
+cleanup() {
+  rm -rf "${WORKDIR}"
+  [ -n "$1" ] && exit $1
+}
+
+ctrl_c() {
+  echo "Interrupted" >&2
+  cleanup 0
+}
+
+trap ctrl_c 2
+trap cleanup 0
+
+cd "${WORKDIR}"
+/usr/bin/svn checkout -N ${svnpath} checkout
+cd checkout
+
+for pkg in $*; do
+  moved=0
+  /usr/bin/svn up -q ${pkg}
+  if [ -f "${pkg}/repos/testing-${arch}/${BUILDSCRIPT}" ]; then
+    for repo in core extra; do
+      if [ -f "${pkg}/repos/${repo}-${arch}/${BUILDSCRIPT}" ]; then
+        echo "===> Moving package '${pkg}': testing-${arch} -> ${repo}-${arch}"
+        $(dirname $0)/db-move "${pkg}" "testing" "${repo}" "${arch}"
+        moved=1
+        break
+      fi
+    done
+    if [ ${moved} -eq 0 ]; then
+      echo "===> Warning: ${pkg} is only in testing-${arch}, cannot determine where to move it"
+    fi
+  else
+    echo "===> Warning: ${pkg} is not in testing-${arch}"
+  fi
+done
+
+cleanup

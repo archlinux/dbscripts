@@ -18,7 +18,7 @@ arch="$3"
 
 ##### Arch specific stuff. TODO make this configurable #####
 srcpath="/home/aaron/public_html/sources/"
-svnpath="file:///home/svn-packages/$packagename/repos/$reponame-$arch"
+svnpath="file:///home/svn-packages/$packagename/"
 ############################################################
 
 WORKDIR="/tmp/make-sourceball.$svnrepo.$UID"
@@ -97,11 +97,20 @@ cd "$WORKDIR"
 
 echo "Creating Source tarball for $packagename ($reponame-$arch)"
 
-if /usr/bin/svn checkout -N $svnpath; then
+if /usr/bin/svn checkout -N "$svnpath/repos/$reponame-$arch"; then
     cd "$reponame-$arch"
-    echo "Cheating with makepkg to download sources"
-    /usr/bin/makepkg -g || die "Error downloading files"
-    create_srcpackage
+    if /usr/bin/makepkg -g; then
+        create_srcpackage
+    else #try the trunk, it may have updates to the source URL
+        if /usr/bin/svn checkout -N "$svnpath/trunk"; then
+            cd "trunk"
+            if /usr/bin/makepkg -g; then
+                create_srcpackage
+            else
+                die "Cannot get sources properly. Dying"
+            fi
+        fi
+    fi
 else
     die "Package '$packagename' does not exist in repo $reponame-$arch"
 fi

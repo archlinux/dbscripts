@@ -70,10 +70,12 @@ done
 cd "$ftppath"
 for pkg in *$PKGEXT; do
     pkgname="$(getpkgname $pkg)"
-    if [ "$pkg" != "$TMPDIR/$pkgname-*" -a "$(getpkgname $(basename $pkg))" = "$pkgname" ]; then
-        continue 2
-    fi
-    EXTRAFILES="$EXTRAFILE $pkg"
+    for p in ${TMPDIR}/${pkgname}-*; do
+        if [ -d "${p}" -a "$(getpkgname $(basename ${p}))" = "${pkgname}" ]; then
+            continue 2
+        fi
+    done
+    EXTRAFILES="$EXTRAFILES $pkg"
 done 
 
 cd "$ftppath"

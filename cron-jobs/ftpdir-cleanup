@@ -1,0 +1,35 @@
+#!/bin/bash
+
+#TODO add community
+repos="core extra unstable testing"
+arches="i686 x86_64"
+
+LOCKFILE="/tmp/.ftpdircleanup.lock"
+
+cleanup () {
+	rm -f "$LOCKFILE"
+    exit 0
+}
+
+ctrl_c() {
+    cleanup
+}
+
+if [ -f "$LOCKFILE" ]; then
+	owner="$(/usr/bin/stat -c %U $LOCKFILE)"
+	echo "error: source tarball generation is already in progress (started by $owner)"
+	exit 1
+fi
+
+trap cleanup 0
+trap ctrl_c 2
+
+/bin/touch "$LOCKFILE"
+
+for repo in $repos; do
+    for arch in $arches; do
+        $(dirname $0)/../misc-scripts/ftpdir-cleanup $repo $arch
+    done
+done
+
+cleanup

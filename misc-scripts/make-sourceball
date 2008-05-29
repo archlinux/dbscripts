@@ -39,12 +39,6 @@ die() {
 	cleanup 1
 }
 
-##### Copied from makepkg #####
-
-strip_url() {
-    echo "$1" | sed 's|^.*://.*/||g'
-}
-
 create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null

@@ -26,6 +26,7 @@ abs_conf_dir = "/etc/abs"
 valid_archs = ['i686', 'x86_64']
 cvs_tags = {'i686': 'CURRENT', 'x86_64': 'CURRENT-64'}
 include_paths = ['core', 'extra', 'community', 'unstable']
+pkgdir_path_depth = 3
 
 base_server = "ftp.archlinux.org" # Must be ftp site
 # Ensure that core repo only depends on core, and the extra repo only
@@ -115,7 +116,11 @@ def split_dep_prov_symbol(dep):
 	return (dep, prov, symbol)
 
 def repo_from_path(path):
-	return path.split("/")[-4]
+	# Community HACK: community still has old 
+	# community/category/pkgname/PKGBUILD path - accomodate for this
+	if path.split("/")[-1 * (pkgdir_path_depth + 1)] == "community":
+		return path.split("/")[-1 * (pkgdir_path_depth + 1)]
+	return path.split("/")[-1 * pkgdir_path_depth]
 
 def create_supfile(sourcefile, destfile, newtag):
 	o = open(sourcefile, 'r')
@@ -264,8 +269,15 @@ def get_pkgbuilds_in_dir(rootdir):
 					pkgbuild_provides[provide] = pkgname
 				if pkgname != name:
 					mismatches.append(pkgname + " vs. " + fpath.replace(absroot, ""))
-	if not pkgfound and rootdir.replace(absroot, "").count("/") == 3:
-		misses.append(rootdir.replace(absroot, "") + "/PKGBUILD")
+	if not pkgfound and rootdir != absroot:
+		repo = rootdir.replace(absroot, "").split("/")[1]
+		num_slashes = pkgdir_path_depth - 1
+		# Community HACK: community still has old 
+		# community/category/pkgname/PKGBUILD path - accomodate for this
+		if repo == "community" and rootdir.replace(absroot, "").count("/") == num_slashes + 1 and rootdir.split("/")[-1] != "CVS":
+			misses.append(rootdir.replace(absroot, "") + "/PKGBUILD")
+		if repo != "community" and rootdir.replace(absroot, "").count("/") == num_slashes:
+			misses.append(rootdir.replace(absroot, "") + "/PKGBUILD")
 	
 def verify_depends_makedepends(verify_makedeps=False):
 	# Make sure all the deps we parsed are actually packages; also
@@ -581,17 +593,13 @@ def print_usage():
 	print "Usage: check_archlinux [OPTION]"
 	print ""
 	print "Options:"
-	print "  --abs-tree=<path>           Check specified tree (assumes the abs tree"
-	print "                              is i686 unless overridden with --arch)"
-	print "  --arch=<arch>               Use specified arch (e.g. 'x86_64')"
-	print "  -g                          Generate graphical dependency tree(s)"
-	print "  -h, --help                  Show this help and exit"
+	print "  --abs-tree=<path>  REQUIRED   Check specified tree (assumes the abs tree"
+	print "                                is i686 unless overridden with --arch)"
+	print "  --arch=<arch>      OPTIONAL   Use specified arch (e.g. 'x86_64')"
+	print "  -g                 OPTIONAL   Generate graphical dependency tree(s)"
+	print "  -h, --help         OPTIONAL   Show this help and exit"
 	print ""
 	print "Examples:"
-	print "\n  Check all arches and do fresh cvs checkouts:"
-	print "    check_archlinux"
-	print "\n  Check x_86_64 only and do fresh cvs checkout:"
-	print "    check_archlinux --arch=x86_64"
 	print "\n  Check existing i686 abs tree:"
 	print "    check_archlinux --abs-tree=/var/abs"
 	print "\n  Check existing x86_64 abs tree and also generate dep tree image:"
@@ -631,35 +639,21 @@ if opts != []:
 					self.print_usage()
 				sys.exit()
 
-if len(user_absroot) > 0 and len(user_arch) == 0:
+if len(user_absroot) == 0:
+	self.print_usage()
+	sys.exit()
+
+if len(user_arch) == 0:
 	user_arch = valid_archs[0] # i686 default..
 
 if len(user_absroot) > 0:
 	print "Warning: Ensure your ABS tree is clean to prevent false positives."
 
 try:
-	absroots = []
-	fsup = 'supfile.curr'
 	for arch in valid_archs:
 		if len(user_arch) == 0 or user_arch == arch:
 			print_heading(arch + " Integrity Check")
-			if len(user_absroot) == 0:
-				# Create temp dir for cvs checkout:
-				absroot = tempfile.mkdtemp(prefix="abs-" + arch + "-") 
-				absroots.append(absroot)
-				print "\nChecking out clean abs tree"
-				for repo in include_paths:
-					print "==>", repo
-					# Create (and modify) supfile:
-					if not os.path.exists(abs_conf_dir + '/supfile.' + repo):
-						print "Cannot find file " + abs_conf_dir + '/supfile.' + repo + ". Aborting..."
-						sys.exit()
-					create_supfile(abs_conf_dir + '/supfile.' + repo, fsup, cvs_tags[arch])
-					cmd = 'csup -L 0 -r 0 -g -b ' + absroot + ' -c .sup ' + fsup
-					os.system(cmd)
-			else:
-				absroot = user_absroot
-				absroots.append(absroot)
+			absroot = user_absroot
 			curr_include_paths = []
 			for repo in include_paths:
 				curr_include_paths.append(absroot + "/" + repo)
@@ -702,23 +696,8 @@ try:
 			print_results()
 			if graphdeptree:
 				visualize_repo()
-			
-			print "\nCleaning up temporary abs tree..."
-			if len(user_absroot) == 0:
-				# Delete temp abs tree:
-				if os.path.exists(absroot):
-					removeall(absroot)
-					os.rmdir(absroot)
+
 except:
-	# Cleanup files...
-	if len(user_absroot) == 0:
-		print "\nCleaning up temporary abs tree(s)..."
-		# Delete any temp abs trees:
-		for path in absroots:
-			if os.path.exists(path):
-				removeall(path)
-				os.rmdir(path)
-finally:
-	# Remove supfile:
-	if os.path.exists(fsup):
-		os.remove(fsup)
+	sys.exit()
+
+# vim: set ts=2 sw=2 noet :

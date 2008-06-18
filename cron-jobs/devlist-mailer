@@ -2,15 +2,16 @@
 #Dummy helper to send email to arch-dev
 # It does nothing if no output
 
-#LIST="arch-dev-public@archlinux.org"
-LIST="aaronmgriffin@gmail.com"
-FROM="cron@archlinux.org"
+LIST="arch-dev-public@archlinux.org"
+#LIST="aaronmgriffin@gmail.com"
+FROM="repomaint"
 
 stdin="$(cat)"
 #echo used to strip whitespace for checking for actual data
 if [ -n "$(echo $stdin)" ]; then
-    echo "Subject: Repository Maintenance $(date +"%d-%m-%Y %H:%M")
-    From: cron@archlinux.org
 
-    $stdin" | /usr/sbin/sendmail -F$FROM "$LIST"
+echo "Subject: Repository Maintenance $(date +"%d-%m-%Y %H:%M")
+
+$stdin" | /usr/sbin/sendmail -F$FROM "$LIST"
+
 fi

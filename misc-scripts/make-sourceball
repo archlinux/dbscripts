@@ -21,7 +21,7 @@ srcpath="/home/aaron/public_html/sources/"
 svnpath="file:///home/svn-packages/$packagename/"
 ############################################################
 
-WORKDIR="/tmp/make-sourceball.$svnrepo.$UID"
+WORKDIR="/tmp/make-sourceball.$packagename.$UID"
 
 cleanup() {
 	# unlock
@@ -39,54 +39,29 @@ die() {
 	cleanup 1
 }
 
-##### Copied from makepkg #####
-
-strip_url() {
-    echo "$1" | sed 's|^.*://.*/||g'
-}
-
 create_srcpackage() {
-	echo "Creating source package..."
-	local comp_files="$BUILDSCRIPT"
-	echo "   Adding: $BUILDSCRIPT"
-    . $BUILDSCRIPT
+    if [ -d "$1" ]; then
+        pushd "$1" >/dev/null
+        . "$BUILDSCRIPT"
+        if ! /usr/bin/makepkg -gc >/dev/null 2>&1; then
+            popd >/dev/null
+            return 1
+        fi
+        popd >/dev/null
 
-	if [ "$install" != "" ]; then
-		if [ -f $install ]; then
-			echo "   Adding: install script '$install'"
-			comp_files="$comp_files $install"
-		else
-			die "Install script '$install' not found."
-		fi
-	fi
+        local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
+        if ! /usr/bin/bsdtar -czf "$pkg_file" "$1"; then
+            return 2
+        fi
 
-	if [ -f ChangeLog ]; then
-		echo "   Adding: ChangeLog"
-		comp_files="$comp_files ChangeLog"
-	fi
+        echo ":: Source package complete: $pkg_file"
+        if [ ! -d "$srcpath" ]; then
+            mkdir -p "$srcpath"
+        fi
+        cp $pkg_file "$srcpath"
 
-	local i
-	for i in ${source[@]}; do
-        i="$(strip_url "$i")"
-		if [ -f $i ]; then
-			echo "   Adding: $i"
-			comp_files="$comp_files $i"
-		fi
-	done
-
-	local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
-
-	# tar it up
-	echo "Compressing source package"
-	if ! /usr/bin/bsdtar -czf "$pkg_file" $comp_files; then
-		die "Failed to create source package file."
-	fi
-
-    echo "Source package complete: $pkg_file"
-    if [ ! -d "$srcpath" ]; then
-        mkdir -p "$srcpath"
+        return 0
     fi
-    cp $pkg_file "$srcpath"
 }
 
 trap ctrl_c 2
@@ -97,19 +72,30 @@ cd "$WORKDIR"
 
 echo "Creating Source tarball for $packagename ($reponame-$arch)"
 
-if /usr/bin/svn checkout -N "$svnpath/repos/$reponame-$arch"; then
-    cd "$reponame-$arch"
-    if /usr/bin/makepkg -g; then
-        create_srcpackage
-    else #try the trunk, it may have updates to the source URL
-        if /usr/bin/svn checkout -N "$svnpath/trunk"; then
-            cd "trunk"
-            if /usr/bin/makepkg -g; then
-                create_srcpackage
+if /usr/bin/svn export -q "$svnpath/repos/$reponame-$arch" $packagename; then
+    create_srcpackage "$packagename"
+    if [ $? -eq 0 ]; then
+        exit 0
+    elif [ $? -eq 1 ]; then
+        #trunk sometimes has updated URLs
+        echo ":: Failed to download source, attempting trunk build"
+        rm -rf "$packagename"
+        if /usr/bin/svn export -q "$svnpath/trunk" "$packagename"; then
+            create_srcpackage "$packagename"
+            if [ $? -eq 0 ]; then
+                echo ":: Source package complete: $pkg_file"
+                exit 0
+            elif [ $? -eq 1 ]; then
+                die ":: Failed to download source"
+            elif [ $? -eq 2 ]; then
+                die ":: Failed to compress package"
             else
-                die "Cannot get sources properly. Dying"
+                die ":: Unknown failure reason"
             fi
         fi
+        exit 1
+    elif [ $? -eq 2 ]; then
+        die ":: Failed to compress package"
     fi
 else
     die "Package '$packagename' does not exist in repo $reponame-$arch"

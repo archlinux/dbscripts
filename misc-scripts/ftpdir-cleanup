@@ -94,15 +94,17 @@ if [ -n "$DELETEFILES" ]; then
     for f in $DELETEFILES; do
         echo "        $f"
     done
+    echo ""
 fi
-echo ""
+
 if [ -n "$MISSINGFILES" ]; then
     echo "    The following files are missing in the repo"
     for f in $MISSINGFILES; do
         echo "        $f"
     done
+    echo ""
 fi
-echo ""
+
 if [ -n "$EXTRAFILES" ]; then
     echo "    The following files are in the repo but not the db"
     echo "    They will be moved to /home/package-cleanup"

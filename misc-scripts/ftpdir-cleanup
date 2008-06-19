@@ -81,7 +81,13 @@ done
 cd "$ftppath"
 rm -rf ${TMPDIR}
 
+#Make sure we've done *something* before outputting anything
+if [ -z "$DELETEFILES$MISSINGFILES$EXTRAFILES" ]; then
+    exit 0
+fi
+
 echo "Scan complete for $reponame ($arch) at ${ftppath}"
+
 if [ -n "$DELETEFILES" ]; then
     echo "    The following files are out of date"
     echo "    They will be moved to /home/package-cleanup"

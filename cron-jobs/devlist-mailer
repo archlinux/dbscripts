@@ -4,13 +4,20 @@
 
 LIST="arch-dev-public@archlinux.org"
 #LIST="aaronmgriffin@gmail.com"
-FROM="repomaint"
+FROM="repomaint@archlinux.org"
+
+SUBJECT="Repository Maintenance $(date +"%d-%m-%Y %H:%M")"
+if [ $# -eq 1 ]; then
+    SUBJECT="$1"
+fi
 
 stdin="$(cat)"
 #echo used to strip whitespace for checking for actual data
 if [ -n "$(echo $stdin)" ]; then
 
-echo "Subject: Repository Maintenance $(date +"%d-%m-%Y %H:%M")
+echo "Subject: $SUBJECT
+To: $LIST
+From: $FROM
 
 $stdin" | /usr/sbin/sendmail -F$FROM "$LIST"
 

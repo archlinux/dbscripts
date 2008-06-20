@@ -636,11 +636,11 @@ if opts != []:
 				if a in ("play", "pause", "stop", "next", "prev", "pp", "info", "status", "repeat", "shuffle"):
 					self.single_connect_for_passed_arg(a)
 				else:
-					self.print_usage()
+					print_usage()
 				sys.exit()
 
 if len(user_absroot) == 0:
-	self.print_usage()
+	print_usage()
 	sys.exit()
 
 if len(user_arch) == 0:

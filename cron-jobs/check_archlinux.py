@@ -25,7 +25,8 @@
 abs_conf_dir = "/etc/abs"
 valid_archs = ['i686', 'x86_64']
 cvs_tags = {'i686': 'CURRENT', 'x86_64': 'CURRENT-64'}
-include_paths = ['core', 'extra', 'community', 'unstable']
+#include_paths = ['core', 'extra', 'community', 'unstable']
+include_paths = ['core', 'extra', 'unstable']
 pkgdir_path_depth = 3
 
 base_server = "ftp.archlinux.org" # Must be ftp site

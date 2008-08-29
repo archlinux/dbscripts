@@ -1,0 +1,8 @@
+1) Build the python module
+$ python setup.py build
+
+2) copy it back to the current working directory
+$ cp build/lib.*/alpm.* .
+
+3) run the script
+$ ./check_packages.py -h

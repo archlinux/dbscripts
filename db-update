@@ -198,7 +198,9 @@ fi
 # if non empty, move all build dirs
 if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 	echo "Copying new files to '$ftppath'"
-	/bin/cp -r "$WORKDIR/build/"* "$ftppath" 
+	if ! /bin/cp -r "$WORKDIR/build/"* "$ftppath"; then
+		die "error: failure while copying files to $ftppath"
+	fi
 
 else
 	echo "Nothing to copy, no work done"

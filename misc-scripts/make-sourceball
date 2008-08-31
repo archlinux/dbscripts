@@ -5,19 +5,16 @@ if [ $# -ne 3 ]; then
 	exit 1
 fi
 
-if [ -f "/etc/makepkg.conf" ]; then
-	#Get some config info
-	. /etc/makepkg.conf
-else
-	echo "/etc/makepkg.conf does not exist!"
-	exit 1
-fi
+. "$(dirname $0)/../db-functions"
+
+source_makepkg
+
 packagename="$1"
 reponame="$2"
 arch="$3"
 
 ##### Arch specific stuff. TODO make this configurable #####
-srcpath="/home/aaron/public_html/sources/"
+srcpath="/home/ftp/sources/"
 svnpath="file:///home/svn-packages/$packagename/"
 ############################################################
 
@@ -43,21 +40,19 @@ create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
         . "$BUILDSCRIPT"
-        if ! /usr/bin/makepkg -gc >/dev/null 2>&1; then
+        if ! /usr/bin/makepkg --allsource >/dev/null 2>&1; then
             popd >/dev/null
             return 1
         fi
         popd >/dev/null
 
         local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
-        if ! /usr/bin/bsdtar -czf "$pkg_file" "$1"; then
-            return 2
-        fi
 
         echo ":: Source package complete: $pkg_file"
         if [ ! -d "$srcpath" ]; then
             mkdir -p "$srcpath"
         fi
+        rm -f "$srcpath/${pkgname}-*-*${SRCEXT}"
         cp $pkg_file "$srcpath"
 
         return 0
@@ -65,7 +60,7 @@ create_srcpackage() {
 }
 
 trap ctrl_c 2
-trap cleanup 0
+trap cleanup 0 1
 
 /bin/mkdir -p "$WORKDIR"
 cd "$WORKDIR"

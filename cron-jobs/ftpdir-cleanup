@@ -17,7 +17,7 @@ ctrl_c() {
 
 if [ -f "$LOCKFILE" ]; then
 	owner="$(/usr/bin/stat -c %U $LOCKFILE)"
-	echo "error: source tarball generation is already in progress (started by $owner)"
+	echo "error: ftp cleanup is already in progress (started by $owner)"
 	exit 1
 fi
 

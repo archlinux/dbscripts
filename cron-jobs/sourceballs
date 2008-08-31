@@ -1,0 +1,81 @@
+#!/bin/bash
+
+ftpbase="/home/ftp"
+srcbase="/home/aaron/public_html/sources/"
+repos="core extra unstable testing"
+arches="i686 x86_64"
+
+LOCKFILE="/tmp/.sourceball.lock"
+
+if [ ! -f /etc/makepkg.conf ]; then
+    echo "/etc/makepkg.conf not found! Aborting"
+    exit 1
+fi
+
+. /etc/makepkg.conf
+cleanup () {
+	rm -f "$LOCKFILE"
+    exit 0
+}
+
+ctrl_c() {
+    cleanup
+}
+
+if [ -f "$LOCKFILE" ]; then
+	owner="$(/usr/bin/stat -c %U $LOCKFILE)"
+	echo "error: source tarball generation is already in progress (started by $owner)"
+	exit 1
+fi
+
+trap cleanup 0
+trap ctrl_c 2
+
+/bin/touch "$LOCKFILE"
+
+dirname="$(/bin/readlink -f $(/usr/bin/dirname $0))"
+
+getpkgname() {
+	local tmp
+
+	tmp=${1##*/}
+	tmp=${tmp%$PKGEXT}
+    for a in $arches; do
+        tmp=${tmp%-$a}
+    done
+	echo ${tmp%-*-*}
+}
+
+FAILED_PKGS=""
+
+for repo in $repos; do
+    for arch in $arches; do
+        export CARCH="$arch"
+        ftppath="$ftpbase/$repo/os/$arch"
+        cd $ftppath
+        for pkg in *$PKGEXT; do
+            pkgname=$(getpkgname $pkg)
+            srcpath="$srcbase/"
+            srcpkg="${pkg//-$arch$PKGEXT/$SRCEXT}"
+
+            if grep $pkgname "$dirname/sourceballs.skip" >/dev/null 2>&1; then
+                echo ":: Skipping package '$pkgname'"
+                continue
+            fi
+
+            if [ ! -f "$srcpath$srcpkg" ]; then
+                if ! $dirname/../misc-scripts/make-sourceball $pkgname $repo $arch; then
+                    FAILED_PKGS="$FAILED_PKGS $pkg"
+                fi
+            fi
+        done
+    done
+done
+
+if [ -n "$FAILED_PKGS" ]; then
+    echo ""
+    echo "The following packages failed:"
+    echo -e $FAILED_PKGS | sed "s| |\n\t|g" | sort -u
+fi
+
+cleanup

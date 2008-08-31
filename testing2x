@@ -1,11 +1,8 @@
 #!/bin/bash
 
-if [ -f "/etc/makepkg.conf" ]; then
-  . /etc/makepkg.conf
-else
-  echo "/etc/makepkg.conf does not exist!"
-  exit 1
-fi
+. "$(dirname $0)/db-functions"
+
+source_makepkg
 
 case "$0" in
   *64)
@@ -29,7 +26,7 @@ ctrl_c() {
 }
 
 trap ctrl_c 2
-trap cleanup 0
+trap cleanup 0 1
 
 cd "${WORKDIR}"
 /usr/bin/svn checkout -N ${svnpath} checkout

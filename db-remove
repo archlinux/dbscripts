@@ -5,13 +5,9 @@ if [ $# -ne 3 ]; then
 	exit 1
 fi
 
-if [ -f "/etc/makepkg.conf" ]; then
-	#Get some config info
-	. /etc/makepkg.conf
-else
-	echo "/etc/makepkg.conf does not exist!"
-	exit 1
-fi
+. "$(dirname $0)/db-functions"
+
+source_makepkg
 
 packagename="$1"
 reponame="$2"
@@ -28,11 +24,10 @@ svnrepo="$reponame-$arch"
 [ "$UID" = "" ] && UID=$(uid)
 
 WORKDIR="/tmp/db-remove.$svnrepo.$UID"
-LOCKFILE="/tmp/.repolck.$arch.$reponame"
 
 cleanup() {
 	# unlock
-	rm -f "$LOCKFILE"
+	repo_unlock $reponame $arch
 	rm -rf "$WORKDIR"
 	[ "$1" ] && exit $1
 }
@@ -47,17 +42,11 @@ die() {
 	cleanup 1
 }
 
-# check for locks
-if [ -f "$LOCKFILE" ]; then
-	owner="$(/usr/bin/stat -c %U $LOCKFILE)"
-	echo "error: db generation is already in progress (started by $owner)"
-	exit 1
-fi
-
 trap ctrl_c 2
-trap cleanup 0
+trap cleanup 0 1
 
-/bin/touch "$LOCKFILE"
+repo_lock $reponame $arch
+
 /bin/mkdir -p "$WORKDIR"
 
 

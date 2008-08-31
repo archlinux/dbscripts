@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ftpbase="/home/ftp"
-srcbase="/home/aaron/public_html/sources/"
+srcbase="/home/ftp/sources"
 repos="core extra unstable testing"
 arches="i686 x86_64"
 

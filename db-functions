@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Random integrity things
+[ "$UID" = "" ] && UID=$(uid)
+
+# Useful functions
+source_makepkg () {
+	if [ -f "/etc/makepkg.conf" ]; then
+		#Get some config info
+		. /etc/makepkg.conf
+	else
+		echo "/etc/makepkg.conf does not exist!"
+		exit 1
+	fi
+}
+
+repo_lock () { #repo_lock repo-name arch
+	LOCKFILE="/tmp/.repolck.$1.$2"
+	if [ -f "$LOCKFILE" ]; then
+		owner="$(/usr/bin/stat -c %U $LOCKFILE)"
+		echo "error: db generation is already in progress (started by $owner)"
+		exit 1
+	else
+		/bin/touch "$LOCKFILE"
+	fi
+}
+
+repo_unlock () { #repo_unlock repo-name arch
+	LOCKFILE="/tmp/.repolck.$1.$2"
+	if [ ! -f "$LOCKFILE" ]; then
+		echo "error: repo lock doesn't exist... something went terribly wrong!"
+	else
+		rm -f "$LOCKFILE"
+	fi
+}
+
+# Get the package name from the filename
+# hackish, but should work for now
+getpkgname() {
+	local tmp
+
+	tmp=${1##*/}
+	tmp=${tmp%$PKGEXT}
+	tmp=${tmp%-$CARCH}
+	echo ${tmp%-*-*}
+}
+
+# vim: set ts=4 sw=4 noet ft=sh:

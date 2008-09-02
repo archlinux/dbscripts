@@ -41,6 +41,7 @@ getpkgname() {
 
 	tmp=${1##*/}
 	tmp=${tmp%$PKGEXT}
+	tmp=${tmp%$SRCEXT}
 	tmp=${tmp%-$CARCH}
 	echo ${tmp%-*-*}
 }

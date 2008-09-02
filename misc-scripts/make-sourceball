@@ -52,7 +52,13 @@ create_srcpackage() {
         if [ ! -d "$srcpath" ]; then
             mkdir -p "$srcpath"
         fi
-        rm -f "$srcpath/${pkgname}-*-*${SRCEXT}"
+        #Remove old sourceballs
+        for pkg in "$srcpath/$pkgname-*"; do
+            pkg="$(basename $pkg)"
+            if "$(getpkgname $pkg)" == "$pkgname" ]; then
+                rm -f "$srcpath/$pkg"
+            fi
+        done
         cp $pkg_file "$srcpath"
 
         return 0

@@ -8,5 +8,6 @@ MAILTO="root"
 #|      |       |       |       |       commands                   # 
 #################################################################### 
 */5     *       *       *       *       /arch/cron-jobs/adjust-permissions
-00      21      *       *       *       /arch/cron-jobs/createFileList
+00      21      *       *       *       /arch/cron-jobs/createFileList >/dev/null 2>&1
+00      23      *       *       *       /arch/cron-jobs/sourceballs
 00      */3     *       *       *       /arch/cron-jobs/ftpdir-cleanup | /arch/cron-jobs/devlist-mailer

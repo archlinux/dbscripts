@@ -46,4 +46,21 @@ getpkgname() {
 	echo ${tmp%-*-*}
 }
 
+check_pkg_arch () { #check_pkg_arch pkgfile arch
+	local arch
+	_arch="$(/usr/bin/bsdtar -xOf "$1" .PKGINFO | /bin/grep "^arch" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
+
+	if [ -z "$_arch" ]; then
+		echo "ERROR: Package '$1' has no arch in the PKGINFO. Fail!"
+		return 1
+	fi
+	if [ "$_arch" = "$2" ]; then
+		echo "yay"
+		return 0
+	else
+		echo "nay"
+		return 1
+	fi
+}
+
 # vim: set ts=4 sw=4 noet ft=sh:

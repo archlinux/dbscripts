@@ -27,7 +27,7 @@ svnrepo_to="$repoto-$arch"
 
 [ "$UID" = "" ] && UID=$(uid)
 
-WORKDIR="/tmp/db-move.$svnrepo_from.$svnrepo_to.$UID"
+WORKDIR="/home/tmp/db-move.$svnrepo_from.$svnrepo_to.$UID"
 
 cleanup() {
 	# unlock

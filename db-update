@@ -23,7 +23,7 @@ stagedir="$HOME/staging/$reponame"
 
 [ "$UID" = "" ] && UID=$(uid)
 
-WORKDIR="/tmp/db-update.$svnrepo.$UID"
+WORKDIR="/home/tmp/db-update.$svnrepo.$UID"
 ADDPKGS=""
 REMPKGS=""
 

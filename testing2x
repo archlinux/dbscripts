@@ -13,7 +13,7 @@ case "$0" in
     ;;
 esac
 svnpath="file:///home/svn-packages"
-WORKDIR="$(mktemp -d /tmp/testing2x.XXXXXX)"
+WORKDIR="/home/tmp/testing2x.$UID"
 
 cleanup() {
   rm -rf "${WORKDIR}"

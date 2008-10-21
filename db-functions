@@ -55,10 +55,8 @@ check_pkg_arch () { #check_pkg_arch pkgfile arch
 		return 1
 	fi
 	if [ "$_arch" = "$2" ]; then
-		echo "yay"
 		return 0
 	else
-		echo "nay"
 		return 1
 	fi
 }

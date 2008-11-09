@@ -67,7 +67,7 @@ die() {
 }
 
 trap ctrl_c 2
-trap cleanup 0 1
+trap cleanup 0
 
 repo_lock $reponame $arch
 

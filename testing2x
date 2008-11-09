@@ -26,7 +26,7 @@ ctrl_c() {
 }
 
 trap ctrl_c 2
-trap cleanup 0 1
+trap cleanup 0
 
 cd "${WORKDIR}"
 /usr/bin/svn checkout -N ${svnpath} checkout

@@ -13,8 +13,6 @@ cd /home/ftp
 /bin/chown -R ftp:ftp-extra {extra,testing}/os/x86_64
 /bin/chown -R ftp:aur community
 
-/bin/chmod -R g+w /home/aur/unsupported{,-temp}
-
 for d in core extra testing community; do
     /bin/chmod -R g+w $d/os/i686
     /bin/chmod -R g+w $d/os/x86_64

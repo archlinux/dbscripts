@@ -3,6 +3,11 @@
 # Random integrity things
 [ "$UID" = "" ] && UID=$(uid)
 
+BASEDIR="$(dirname $0)"
+if [ -f "$BASEDIR/config" ]; then
+	. "$BASEDIR/config"
+fi
+
 # Useful functions
 source_makepkg () {
 	if [ -f "/etc/makepkg.conf" ]; then

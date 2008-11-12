@@ -12,7 +12,6 @@ case "$0" in
     arch="i686"
     ;;
 esac
-svnpath="file:///home/svn-packages"
 WORKDIR="/home/tmp/testing2x.$UID"
 
 cleanup() {
@@ -29,7 +28,7 @@ trap ctrl_c 2
 trap cleanup 0
 
 cd "${WORKDIR}"
-/usr/bin/svn checkout -N ${svnpath} checkout
+/usr/bin/svn checkout -N $SVN_PATH checkout
 cd checkout
 
 for pkg in $*; do

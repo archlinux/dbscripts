@@ -15,11 +15,8 @@ arch="$3"
 
 export CARCH="$arch"
 
-##### Arch specific stuff. TODO make this configurable #####
-ftppath="/home/ftp/$reponame/os/$arch/"
-svnpath="file:///home/svn-packages"
+ftppath="$FTP_BASE/$reponame/os/$arch/"
 svnrepo="$reponame-$arch"
-############################################################
 
 [ "$UID" = "" ] && UID=$(uid)
 
@@ -53,7 +50,7 @@ repo_lock $reponame $arch
 echo "==> Removing package '$packagename' from '$reponame'..." >&2
 
 cd "$WORKDIR"
-/usr/bin/svn checkout -N $svnpath checkout
+/usr/bin/svn checkout -N $SVN_PATH checkout
 cd checkout
 
 /usr/bin/svn up -q $packagename

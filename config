@@ -1,0 +1,4 @@
+
+FTP_BASE="/home/ftp/"
+SVN_PATH="file:///home/svn-packages"
+STAGING="$HOME/staging/"

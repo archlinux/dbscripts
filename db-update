@@ -14,12 +14,9 @@ arch="$2"
 
 export CARCH="$arch"
 
-##### Arch specific stuff. TODO make this configurable #####
-ftppath="/home/ftp/$reponame/os/$arch/"
-svnpath="file:///home/svn-packages"
+ftppath="$FTP_BASE/$reponame/os/$arch/"
 svnrepo="$reponame-$arch"
-stagedir="$HOME/staging/$reponame"
-############################################################
+stagedir="$STAGING/$reponame"
 
 [ "$UID" = "" ] && UID=$(uid)
 
@@ -102,7 +99,7 @@ if [ -n "$ADDPKGS" ]; then
 	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
 	cd "$WORKDIR"
-	/usr/bin/svn checkout -N $svnpath checkout
+	/usr/bin/svn checkout -N $SVN_PATH checkout
 	cd checkout
 
 	for pkg in $ADDPKGS; do
@@ -154,7 +151,7 @@ if [ -n "$REMPKGS" ]; then
 
 	if [ ! -d "$WORKDIR/checkout" ]; then
 		cd "$WORKDIR"
-		/usr/bin/svn checkout -N $svnpath checkout
+		/usr/bin/svn checkout -N $SVN_PATH checkout
 	fi
 	cd "$WORKDIR/checkout"
 

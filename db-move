@@ -17,13 +17,10 @@ arch="$4"
 
 export CARCH="$arch"
 
-##### Arch specific stuff. TODO make this configurable #####
-ftppath_from="/home/ftp/$repofrom/os/$arch/"
-ftppath_to="/home/ftp/$repoto/os/$arch/"
-svnpath="file:///home/svn-packages"
+ftppath_from="$FTP_BASE/$repofrom/os/$arch/"
+ftppath_to="$FTP_BASE/$repoto/os/$arch/"
 svnrepo_from="$repofrom-$arch"
 svnrepo_to="$repoto-$arch"
-############################################################
 
 [ "$UID" = "" ] && UID=$(uid)
 
@@ -56,7 +53,7 @@ repo_lock $repofrom $arch
 /bin/mkdir -p "$WORKDIR"
 
 cd "$WORKDIR"
-/usr/bin/svn checkout -N $svnpath checkout
+/usr/bin/svn checkout -N $SVN_PATH checkout
 cd checkout
 
 /usr/bin/svn up -q $packagename

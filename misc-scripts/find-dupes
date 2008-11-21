@@ -9,7 +9,7 @@ reponame=$1
 arch=$2
 
 ##### Arch specific stuff. TODO make this configurable #####
-ftppath="/home/ftp/$reponame/os/$arch/"
+ftppath="/srv/ftp/$reponame/os/$arch/"
 ############################################################
 
 if [ ! -d "$ftppath" ]; then

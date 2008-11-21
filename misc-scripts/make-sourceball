@@ -14,8 +14,8 @@ reponame="$2"
 arch="$3"
 
 ##### Arch specific stuff. TODO make this configurable #####
-srcpath="/home/ftp/sources/"
-svnpath="file:///home/svn-packages/$packagename/"
+srcpath="/srv/ftp/sources/"
+svnpath="file:///srv/svn-packages/$packagename/"
 ############################################################
 
 WORKDIR="/tmp/make-sourceball.$packagename.$UID"

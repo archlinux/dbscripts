@@ -12,7 +12,7 @@ case "$0" in
     arch="i686"
     ;;
 esac
-WORKDIR="/home/tmp/testing2x.$UID"
+WORKDIR="$TMPDIR/testing2x.$UID"
 
 cleanup() {
   rm -rf "${WORKDIR}"

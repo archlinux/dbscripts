@@ -1,4 +1,5 @@
 
-FTP_BASE="/home/ftp/"
-SVN_PATH="file:///home/svn-packages"
+FTP_BASE="/srv/ftp/"
+SVN_PATH="file:///srv/svn/packages"
 STAGING="$HOME/staging/"
+TMPDIR="/srv/tmp"

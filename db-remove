@@ -20,7 +20,7 @@ svnrepo="$reponame-$arch"
 
 [ "$UID" = "" ] && UID=$(uid)
 
-WORKDIR="/home/tmp/db-remove.$svnrepo.$UID"
+WORKDIR="$TMPDIR/db-remove.$svnrepo.$UID"
 
 cleanup() {
 	# unlock

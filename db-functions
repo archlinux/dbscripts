@@ -20,7 +20,7 @@ source_makepkg () {
 }
 
 repo_lock () { #repo_lock repo-name arch
-	LOCKFILE="/tmp/.repolck.$1.$2"
+	LOCKFILE="$TMPDIR/.repolock.$1.$2"
 	if [ -f "$LOCKFILE" ]; then
 		owner="$(/usr/bin/stat -c %U $LOCKFILE)"
 		echo "error: db generation is already in progress (started by $owner)"
@@ -31,7 +31,7 @@ repo_lock () { #repo_lock repo-name arch
 }
 
 repo_unlock () { #repo_unlock repo-name arch
-	LOCKFILE="/tmp/.repolck.$1.$2"
+	LOCKFILE="$TMPDIR/.repolock.$1.$2"
 	if [ ! -f "$LOCKFILE" ]; then
 		echo "error: repo lock doesn't exist... something went terribly wrong!"
 	else

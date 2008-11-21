@@ -22,7 +22,6 @@ stagedir="$STAGING/$reponame"
 
 WORKDIR="$TMPDIR/db-update.$svnrepo.$UID"
 ADDPKGS=""
-REMPKGS=""
 
 if [ ! -d "$ftppath" ]; then
 	echo "FTP path for this repo ($reponame) is missing"
@@ -91,9 +90,19 @@ if [ -d "${stagedir}64" ]; then
 	/bin/mv "${stagedir}64/del/"* "$stagedir/del/"
 fi
 
+if [ -d "${stagedir}/add" ]; then
+	echo "--------------------------------------------------"
+	echo "It looks like you have an old staging dir"
+	echo "The 'add' and 'del' dirs are no longer used."
+	echo "Please delete staging/<reponame>/{add,del}"
+	echo " and ensure you are using the newest devtools"
+	echo "--------------------------------------------------"
+	/bin/mv "${stagedir}/add/"* "$stagedir/"
+fi
+
 to_add=""
-if [ -d "$stagedir/add" ]; then
-	ADDPKGS="$(/bin/ls $stagedir/add/*-${arch}$PKGEXT 2>/dev/null)"
+if [ -d "$stagedir" ]; then
+	ADDPKGS="$(/bin/ls $stagedir/*-${arch}$PKGEXT 2>/dev/null)"
 fi
 
 if [ -n "$ADDPKGS" ]; then
@@ -142,51 +151,6 @@ else
 	echo "No packages to add"
 fi
 
-to_rem=""
-if [ -d "$stagedir/del" ]; then
-	REMPKGS="$(/bin/ls $stagedir/del/*-${arch}$PKGEXT 2>/dev/null)"
-fi
-
-if [ -n "$REMPKGS" ]; then
-	echo "==> Processing deleted packages for repository '$reponame'..." >&2
-
-	if [ ! -d "$WORKDIR/checkout" ]; then
-		cd "$WORKDIR"
-		/usr/bin/svn checkout -N $SVN_PATH checkout
-	fi
-	cd "$WORKDIR/checkout"
-
-	#TODO removal shouldn't require a package file
-	for pkg in $REMPKGS; do
-		_pkgfile=$(basename $pkg)
-		_pkgname="$(getpkgname $pkg)"
-		echo "    Checking SVN for $_pkgname"
-		svn up -q $_pkgname
-		if [ -d "$_pkgname/repos/$svnrepo" ]; then
-			echo "    WARNING: $_pkgname still exists in $svnrepo"
-		else
-			to_rem="$to_rem $_pkgname"
-		fi
-	done
-
-	if [ -n "$to_rem" ]; then
-		cd "$WORKDIR/build/"
-
-		#NOTE: to_rem consists of package NAMES only
-		/usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $to_rem
-
-		for rem in $REMPKGS; do
-			rem="$(basename $rem)"
-			/bin/rm -f "$ftppath/$rem"
-		done
-	else
-		rm -f "build/$reponame.db.tar.$DB_COMPRESSION"
-		echo "Errors found when removing packages"
-	fi
-else
-	echo "No packages to delete"
-fi
-
 # if non empty, move all build dirs
 if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 	echo "Copying new files to '$ftppath'"
@@ -200,9 +164,9 @@ else
 	echo "Nothing to copy, no work done"
 fi
 
-if [ -n "$ADDPKGS" -o -n "$REMPKGS" ]; then
+if [ -n "$ADDPKGS" ]; then
 	echo "Cleaning staging dir"
-	/bin/rm $ADDPKGS $REMPKGS
+	/bin/rm $ADDPKGS
 fi
 
 cleanup

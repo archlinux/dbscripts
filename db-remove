@@ -23,6 +23,7 @@ svnrepo="$reponame-$arch"
 WORKDIR="$TMPDIR/db-remove.$svnrepo.$UID"
 
 cleanup() {
+    trap '' 0 2
 	# unlock
 	repo_unlock $reponame $arch
 	rm -rf "$WORKDIR"

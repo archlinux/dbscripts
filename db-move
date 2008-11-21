@@ -27,6 +27,7 @@ svnrepo_to="$repoto-$arch"
 WORKDIR="$TMPDIR/db-move.$svnrepo_from.$svnrepo_to.$UID"
 
 cleanup() {
+    trap '' 0 2
 	# unlock
     repo_unlock $repoto $arch
     repo_unlock $repofrom $arch

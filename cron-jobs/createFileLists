@@ -3,7 +3,7 @@
 reposdir=/srv/ftp/
 #targetdir=/home/pierre/public_html/test-repo/
 targetdir=$reposdir
-repos="core extra unstable testing community"
+repos="core extra testing community"
 arches="i686 x86_64"
 
 if [ -f "/tmp/createFileList.lock" ]; then

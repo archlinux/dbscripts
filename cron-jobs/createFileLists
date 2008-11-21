@@ -1,6 +1,6 @@
 #!/bin/bash
 
-reposdir=/home/ftp/
+reposdir=/srv/ftp/
 #targetdir=/home/pierre/public_html/test-repo/
 targetdir=$reposdir
 repos="core extra unstable testing community"

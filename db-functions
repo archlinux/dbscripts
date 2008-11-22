@@ -19,6 +19,16 @@ source_makepkg () {
 	fi
 }
 
+UMASK=""
+set_umask () {
+	UMASK="$(umask)"
+	umask 002
+}
+
+restore_umask () {
+	umask $UMASK
+}
+
 repo_lock () { #repo_lock repo-name arch
 	LOCKFILE="$TMPDIR/.repolock.$1.$2"
 	if [ -f "$LOCKFILE" ]; then

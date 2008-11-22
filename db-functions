@@ -37,6 +37,7 @@ repo_lock () { #repo_lock repo-name arch
 		exit 1
 	else
 		/bin/touch "$LOCKFILE"
+		set_umask
 	fi
 }
 
@@ -47,6 +48,7 @@ repo_unlock () { #repo_unlock repo-name arch
 	else
 		rm -f "$LOCKFILE"
 	fi
+	restore_umask
 }
 
 # Get the package name from the filename

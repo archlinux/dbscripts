@@ -66,7 +66,7 @@ cd "$WORKDIR"
 
 # copy the db file into our working area
 if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
-	copy_helper "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
+	/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
 else
 	echo "No database found at '$ftpdir', nothing more to do"
 	exit 0
@@ -76,7 +76,7 @@ echo "    Removing from $reponame DB file"
 cd build/
 /usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $packagename
 
-copy_helper "$reponame.db.tar.$DB_COMPRESSION" "$ftppath/"
+/bin/cp "$reponame.db.tar.$DB_COMPRESSION" "$ftppath/"
 
 echo "Package files will be cleaned up automatically"
 

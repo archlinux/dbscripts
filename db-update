@@ -73,7 +73,7 @@ cd "$WORKDIR"
 
 # copy the db file into our working area
 if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
-	copy_helper "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
+	/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
 else
 	touch "build/$reponame.db.tar.$DB_COMPRESSION"
 fi
@@ -137,7 +137,7 @@ if [ -n "$ADDPKGS" ]; then
 
 	if [ -n "$to_add" ]; then
 		cd "$WORKDIR/build/"
-		for f in $to_add; do copy_helper "$f" .; done
+		for f in $to_add; do /bin/cp "$f" .; done
 
 		pkgs=""
 		for pkg in $to_add; do pkgs="$pkgs $(basename $pkg)"; done
@@ -155,7 +155,7 @@ fi
 if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 	echo "Copying new files to '$ftppath'"
 	for f in "$WORKDIR/build/"*; do
-		if ! copy_helper "$f" "$ftppath"; then
+		if ! /bin/cp "$f" "$ftppath"; then
 			die "error: failure while copying files to $ftppath"
 		fi
 	done

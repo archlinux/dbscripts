@@ -76,13 +76,4 @@ check_pkg_arch () { #check_pkg_arch pkgfile arch
 	fi
 }
 
-# Simple helper function to ensure we always
-# have proper DB permissions
-copy_helper () { #copy_helper file dest
-	/bin/cp $1 $2 || return 1
-    dir=$2
-    [ -f $dir ] && dir=$(dirname $dir)
-	/bin/chmod 664 "$dir/$(basename $1)" || return 1
-}
-
 # vim: set ts=4 sw=4 noet ft=sh:

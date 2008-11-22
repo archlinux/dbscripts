@@ -13,14 +13,14 @@ source_makepkg
 packagename="$1"
 repofrom="$2"
 repoto="$3"
-arch="$4"
+_arch="$4"
 
-export CARCH="$arch"
+export CARCH="$_arch"
 
-ftppath_from="$FTP_BASE/$repofrom/os/$arch/"
-ftppath_to="$FTP_BASE/$repoto/os/$arch/"
-svnrepo_from="$repofrom-$arch"
-svnrepo_to="$repoto-$arch"
+ftppath_from="$FTP_BASE/$repofrom/os/$_arch/"
+ftppath_to="$FTP_BASE/$repoto/os/$_arch/"
+svnrepo_from="$repofrom-$_arch"
+svnrepo_to="$repoto-$_arch"
 
 [ "$UID" = "" ] && UID=$(uid)
 
@@ -29,8 +29,8 @@ WORKDIR="$TMPDIR/db-move.$svnrepo_from.$svnrepo_to.$UID"
 cleanup() {
     trap '' 0 2
 	# unlock
-    repo_unlock $repoto $arch
-    repo_unlock $repofrom $arch
+    repo_unlock $repoto $_arch
+    repo_unlock $repofrom $_arch
 	rm -rf "$WORKDIR"
 	[ "$1" ] && exit $1
 }
@@ -48,8 +48,8 @@ die() {
 trap ctrl_c 2
 trap cleanup 0
 
-repo_lock $repoto $arch
-repo_lock $repofrom $arch
+repo_lock $repoto $_arch
+repo_lock $repofrom $_arch
 
 /bin/mkdir -p "$WORKDIR"
 
@@ -60,7 +60,7 @@ cd checkout
 /usr/bin/svn up -q $packagename
 if [ -d "$packagename/repos/$svnrepo_from" ]; then
     . "$packagename/repos/$svnrepo_from/$BUILDSCRIPT"
-    _pkgfile="$pkgname-$pkgver-$pkgrel-$CARCH$PKGEXT"
+    _pkgfile="$pkgname-$pkgver-$pkgrel-$_arch$PKGEXT"
 
     if [ ! -f "$ftppath_from/$_pkgfile" ]; then
         die "error: package file '$_pkgfile' not found in repo '$repofrom'"
@@ -74,7 +74,7 @@ if [ -d "$packagename/repos/$svnrepo_from" ]; then
 
     echo "    Moving svn entries"
     /usr/bin/svn mv -r HEAD "$packagename/repos/$svnrepo_from" "$packagename/repos/$svnrepo_to"
-    /usr/bin/svn commit -m "$(basename $0): moved $packagename from [$repofrom] to [$repoto] ($arch)"
+    /usr/bin/svn commit -m "$(basename $0): moved $packagename from [$repofrom] to [$repoto] ($_arch)"
 
     echo "    Moving package file and updating DBs"
     cd "$WORKDIR"

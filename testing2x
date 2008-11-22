@@ -6,10 +6,10 @@ source_makepkg
 
 case "$0" in
     *64)
-    arch="x86_64"
+    _arch="x86_64"
     ;;
     *)
-    arch="i686"
+    _arch="i686"
     ;;
 esac
 WORKDIR="$TMPDIR/testing2x.$UID"
@@ -36,20 +36,20 @@ cd checkout
 for pkg in $*; do
     moved=0
     /usr/bin/svn up -q ${pkg}
-    if [ -f "${pkg}/repos/testing-${arch}/${BUILDSCRIPT}" ]; then
+    if [ -f "${pkg}/repos/testing-${_arch}/${BUILDSCRIPT}" ]; then
         for repo in core extra; do
-            if [ -f "${pkg}/repos/${repo}-${arch}/${BUILDSCRIPT}" ]; then
-                echo "===> Moving package '${pkg}': testing-${arch} -> ${repo}-${arch}"
-                $(dirname $0)/db-move "${pkg}" "testing" "${repo}" "${arch}"
+            if [ -f "${pkg}/repos/${repo}-${_arch}/${BUILDSCRIPT}" ]; then
+                echo "===> Moving package '${pkg}': testing-${_arch} -> ${repo}-${_arch}"
+                $(dirname $0)/db-move "${pkg}" "testing" "${repo}" "${_arch}"
                 moved=1
                 break
             fi
         done
         if [ ${moved} -eq 0 ]; then
-            echo "===> Warning: ${pkg} is only in testing-${arch}, cannot determine where to move it"
+            echo "===> Warning: ${pkg} is only in testing-${_arch}, cannot determine where to move it"
         fi
     else
-        echo "===> Warning: ${pkg} is not in testing-${arch}"
+        echo "===> Warning: ${pkg} is not in testing-${_arch}"
     fi
 done
 

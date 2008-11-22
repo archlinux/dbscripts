@@ -10,12 +10,12 @@ fi
 source_makepkg
 
 reponame="$1"
-arch="$2"
+_arch="$2"
 
-export CARCH="$arch"
+export CARCH="$_arch"
 
-ftppath="$FTP_BASE/$reponame/os/$arch/"
-svnrepo="$reponame-$arch"
+ftppath="$FTP_BASE/$reponame/os/$_arch/"
+svnrepo="$reponame-$_arch"
 stagedir="$STAGING/$reponame"
 
 [ "$UID" = "" ] && UID=$(uid)
@@ -48,7 +48,7 @@ getpkgname() {
 cleanup() {
     trap '' 0 2
 	# unlock
-	repo_unlock $reponame $arch
+	repo_unlock $reponame $_arch
 	rm -rf "$WORKDIR"
 	[ "$1" ] && exit $1
 }
@@ -66,7 +66,7 @@ die() {
 trap ctrl_c 2
 trap cleanup 0
 
-repo_lock $reponame $arch
+repo_lock $reponame $_arch
 
 /bin/mkdir -p "$WORKDIR/build"
 cd "$WORKDIR"
@@ -78,7 +78,7 @@ else
 	touch "build/$reponame.db.tar.$DB_COMPRESSION"
 fi
 
-echo "Updating DB for $reponame $arch"
+echo "Updating DB for $reponame $_arch"
 
 if [ -d "${stagedir}64" ]; then
 	echo "--------------------------------------------------"
@@ -102,7 +102,7 @@ fi
 
 to_add=""
 if [ -d "$stagedir" ]; then
-	ADDPKGS="$(/bin/ls $stagedir/*-${arch}$PKGEXT 2>/dev/null)"
+	ADDPKGS="$(/bin/ls $stagedir/*-${_arch}$PKGEXT 2>/dev/null)"
 fi
 
 if [ -n "$ADDPKGS" ]; then
@@ -116,15 +116,15 @@ if [ -n "$ADDPKGS" ]; then
 		_pkgfile=$(basename $pkg)
 		_pkgname="$(getpkgname $pkg)"
 
-		echo "    Validating package arch ($arch) $_pkgname"
-		if ! check_pkg_arch "$pkg" "$arch"; then
+		echo "    Validating package arch ($_arch) $_pkgname"
+		if ! check_pkg_arch "$pkg" "$_arch"; then
 			echo "   ERROR: $_pkgfile was built for the wrong architecture"
 		else
 			echo "    Checking SVN for $_pkgname"
 			/usr/bin/svn up -q $_pkgname
 			if [ -d "$_pkgname/repos/$svnrepo" ]; then
 				. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
-				if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$CARCH$PKGEXT" ]; then
+				if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$_arch$PKGEXT" ]; then
 					to_add="$to_add $pkg"
 				else
 					echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"

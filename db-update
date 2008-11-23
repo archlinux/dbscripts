@@ -71,13 +71,6 @@ repo_lock $reponame $_arch
 /bin/mkdir -p "$WORKDIR/build"
 cd "$WORKDIR"
 
-# copy the db file into our working area
-if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
-	/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
-else
-	touch "build/$reponame.db.tar.$DB_COMPRESSION"
-fi
-
 echo "Updating DB for $reponame $_arch"
 
 if [ -d "${stagedir}64" ]; then
@@ -108,6 +101,14 @@ if [ -d "$stagedir" ]; then
 fi
 
 if [ -n "$ADDPKGS" ]; then
+
+	echo "==> Copying DB file from '$reponame'..." >&2
+	if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
+		/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
+	else
+		touch "build/$reponame.db.tar.$DB_COMPRESSION"
+	fi
+
 	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
 	cd "$WORKDIR"

@@ -97,7 +97,9 @@ if [ -d "${stagedir}/add" ]; then
 	echo "Please delete staging/<reponame>/{add,del}"
 	echo " and ensure you are using the newest devtools"
 	echo "--------------------------------------------------"
-	/bin/mv "${stagedir}/add/"* "$stagedir/"
+	if [ -e "${stagedir}/add/"* ]; then
+		/bin/mv "${stagedir}/add/"* "$stagedir/"
+	fi
 fi
 
 to_add=""

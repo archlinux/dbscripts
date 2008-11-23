@@ -21,7 +21,7 @@ source_makepkg () {
 
 UMASK=""
 set_umask () {
-	UMASK="$(umask)"
+	[ "$UMASK" == "" ] && UMASK="$(umask)"
 	umask 002
 }
 

@@ -74,8 +74,6 @@ cd "$WORKDIR"
 # copy the db file into our working area
 if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
 	/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
-else
-	touch "build/$reponame.db.tar.$DB_COMPRESSION"
 fi
 
 echo "Updating DB for $reponame $_arch"

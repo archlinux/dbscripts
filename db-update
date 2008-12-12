@@ -142,7 +142,7 @@ if [ -n "$ADDPKGS" ]; then
 		pkgs=""
 		for pkg in $to_add; do pkgs="$pkgs $(basename $pkg)"; done
 
-		/usr/bin/repo-add "$reponame.db.tar.$DB_COMPRESSION" $pkgs
+		/usr/bin/repo-add -q "$reponame.db.tar.$DB_COMPRESSION" $pkgs
 	else
 		rm -f "build/$reponame.db.tar.$DB_COMPRESSION"
 		echo "Errors found when adding packages"

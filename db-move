@@ -84,7 +84,7 @@ if [ -d "$packagename/repos/$svnrepo_from" ]; then
     # copy the db file into our working area
     if [ -f "$ftppath_from/$repofrom.db.tar.$DB_COMPRESSION" ]; then
         /bin/cp "$ftppath_from/$repofrom.db.tar.$DB_COMPRESSION" .
-        /usr/bin/repo-remove "$repofrom.db.tar.$DB_COMPRESSION" $packagename || die "Error in repo-remove"
+        /usr/bin/repo-remove -q "$repofrom.db.tar.$DB_COMPRESSION" $packagename || die "Error in repo-remove"
         #use '*' to move the old DB too
         mv $repofrom.db.tar.$DB_COMPRESSION* $ftppath_from
         echo "    Package files will be cleaned up automatically"
@@ -95,7 +95,7 @@ if [ -d "$packagename/repos/$svnrepo_from" ]; then
     fi
 
     /bin/cp "$ftppath_from/$_pkgfile" .
-    /usr/bin/repo-add "$repoto.db.tar.$DB_COMPRESSION" $_pkgfile || die "Error in repo-add"
+    /usr/bin/repo-add -q "$repoto.db.tar.$DB_COMPRESSION" $_pkgfile || die "Error in repo-add"
     #use '*' to move the old DB too
     mv $repoto.db.tar.$DB_COMPRESSION* $_pkgfile $ftppath_to
 else

@@ -164,9 +164,9 @@ else
 	echo "Nothing to copy, no work done"
 fi
 
-if [ -n "$ADDPKGS" ]; then
+if [ -n "$to_add" ]; then
 	echo "Cleaning staging dir"
-	/bin/rm $ADDPKGS
+	/bin/rm $to_add
 fi
 
 cleanup

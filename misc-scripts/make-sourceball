@@ -13,10 +13,7 @@ packagename="$1"
 reponame="$2"
 arch="$3"
 
-##### Arch specific stuff. TODO make this configurable #####
-srcpath="/srv/ftp/sources/"
-svnpath="file:///srv/svn-packages/$packagename/"
-############################################################
+srcpath="$FTP_BASE/sources/"
 
 WORKDIR="/tmp/make-sourceball.$packagename.$UID"
 
@@ -73,7 +70,7 @@ cd "$WORKDIR"
 
 echo "Creating Source tarball for $packagename ($reponame-$arch)"
 
-if /usr/bin/svn export -q "$svnpath/repos/$reponame-$arch" $packagename; then
+if /usr/bin/svn export -q "$SVN_PATH/repos/$reponame-$arch" $packagename; then
     create_srcpackage "$packagename"
     if [ $? -eq 0 ]; then
         exit 0
@@ -81,7 +78,7 @@ if /usr/bin/svn export -q "$svnpath/repos/$reponame-$arch" $packagename; then
         #trunk sometimes has updated URLs
         echo ":: Failed to download source, attempting trunk build"
         rm -rf "$packagename"
-        if /usr/bin/svn export -q "$svnpath/trunk" "$packagename"; then
+        if /usr/bin/svn export -q "$SVN_PATH/trunk" "$packagename"; then
             create_srcpackage "$packagename"
             if [ $? -eq 0 ]; then
                 echo ":: Source package complete: $pkg_file"

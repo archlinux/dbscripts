@@ -18,7 +18,7 @@ srcpath="$FTP_BASE/sources/"
 WORKDIR="/tmp/make-sourceball.$packagename.$UID"
 
 cleanup() {
-	# unlock
+	restore_umask
 	rm -rf "$WORKDIR"
 	[ "$1" ] && exit $1
 }
@@ -50,13 +50,13 @@ create_srcpackage() {
             mkdir -p "$srcpath"
         fi
         #Remove old sourceballs
-        for pkg in "$srcpath/$pkgname-*"; do
+        for pkg in "$srcpath/$pkgname-"*; do
             pkg="$(basename $pkg)"
-            if "$(getpkgname $pkg)" == "$pkgname" ]; then
+            if [ "$(getpkgname $pkg)" == "$pkgname" ]; then
                 rm -f "$srcpath/$pkg"
             fi
         done
-        cp $pkg_file "$srcpath"
+        cp "$pkgname/$pkg_file" "$srcpath"
 
         return 0
     fi
@@ -65,6 +65,7 @@ create_srcpackage() {
 trap ctrl_c 2
 trap cleanup 0 1
 
+set_umask
 /bin/mkdir -p "$WORKDIR"
 cd "$WORKDIR"
 

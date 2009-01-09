@@ -5,7 +5,8 @@ if [ $# -ne 3 ]; then
 	exit 1
 fi
 
-. "$(dirname $0)/../db-functions"
+BASEDIR="$(dirname $0)/../"
+. "$BASEDIR/db-functions"
 
 source_makepkg
 
@@ -71,7 +72,7 @@ cd "$WORKDIR"
 
 echo "Creating Source tarball for $packagename ($reponame-$arch)"
 
-if /usr/bin/svn export -q "$SVN_PATH/repos/$reponame-$arch" $packagename; then
+if /usr/bin/svn export -q "$SVN_PATH/$packagename/repos/$reponame-$arch" $packagename; then
     create_srcpackage "$packagename"
     if [ $? -eq 0 ]; then
         exit 0
@@ -79,7 +80,7 @@ if /usr/bin/svn export -q "$SVN_PATH/repos/$reponame-$arch" $packagename; then
         #trunk sometimes has updated URLs
         echo ":: Failed to download source, attempting trunk build"
         rm -rf "$packagename"
-        if /usr/bin/svn export -q "$SVN_PATH/trunk" "$packagename"; then
+        if /usr/bin/svn export -q "$SVN_PATH/$packagename/trunk" "$packagename"; then
             create_srcpackage "$packagename"
             if [ $? -eq 0 ]; then
                 echo ":: Source package complete: $pkg_file"

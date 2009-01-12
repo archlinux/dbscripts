@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Allowed licenses: build only for licenses in this array
+ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2')
+
 if [ $# -ne 3 ]; then
 	echo "usage: $(basename $0) <packagename> <repo> <arch>"
 	exit 1
@@ -34,10 +37,32 @@ die() {
 	cleanup 1
 }
 
+#usage: chk_license ${license[@]}"
+chk_license() {
+	local l
+	for l in "$@"; do
+		l="$(echo $l | tr '[:upper:]' '[:lower:]')"
+        for allowed in ${ALLOWED_LICENSES[@]}; do
+            allowed="$(echo $allowed | tr '[:upper:]' '[:lower:]')"
+            if [ "$l" = "$allowed" ]; then
+                return 0
+            fi
+        done
+	done
+
+    return 1
+}
+
 create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
         . "$BUILDSCRIPT"
+        if ! chk_license ${license[@]}; then
+            echo "Package license does not require source tarballs. Doing nothing"
+            echo "   license => (${license[@]})"
+            cleanup 0
+        fi
+
         if ! /usr/bin/makepkg --allsource >/dev/null 2>&1; then
             popd >/dev/null
             return 1

@@ -6,9 +6,13 @@ LIST="arch-dev-public@archlinux.org"
 #LIST="aaronmgriffin@gmail.com"
 FROM="repomaint@archlinux.org"
 
-SUBJECT="Repository Maintenance $(date +"%d-%m-%Y %H:%M")"
-if [ $# -eq 1 ]; then
-    SUBJECT="$1"
+SUBJECT="Repository Maintenance $(date +"%d-%m-%Y")"
+if [ $# -ge 1 ]; then
+    SUBJECT="$1 $(date +"%d-%m-%Y")"
+fi
+
+if [ $# -ge 2 ]; then
+    LIST="$2"
 fi
 
 stdin="$(cat)"

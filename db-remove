@@ -74,7 +74,7 @@ fi
 
 echo "    Removing from $reponame DB file"
 cd build/
-/usr/bin/repo-remove "$reponame.db.tar.$DB_COMPRESSION" $packagename
+/usr/bin/repo-remove -q "$reponame.db.tar.$DB_COMPRESSION" $packagename
 
 /bin/cp "$reponame.db.tar.$DB_COMPRESSION" "$ftppath/"
 

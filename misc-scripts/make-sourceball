@@ -1,11 +1,15 @@
 #!/bin/bash
 
+# Allowed licenses: build only for licenses in this array
+ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2')
+
 if [ $# -ne 3 ]; then
 	echo "usage: $(basename $0) <packagename> <repo> <arch>"
 	exit 1
 fi
 
-. "$(dirname $0)/../db-functions"
+BASEDIR="$(dirname $0)/../"
+. "$BASEDIR/db-functions"
 
 source_makepkg
 
@@ -13,15 +17,12 @@ packagename="$1"
 reponame="$2"
 arch="$3"
 
-##### Arch specific stuff. TODO make this configurable #####
-srcpath="/srv/ftp/sources/"
-svnpath="file:///srv/svn-packages/$packagename/"
-############################################################
+srcpath="$FTP_BASE/sources/"
 
 WORKDIR="/tmp/make-sourceball.$packagename.$UID"
 
 cleanup() {
-	# unlock
+	restore_umask
 	rm -rf "$WORKDIR"
 	[ "$1" ] && exit $1
 }
@@ -36,10 +37,32 @@ die() {
 	cleanup 1
 }
 
+#usage: chk_license ${license[@]}"
+chk_license() {
+	local l
+	for l in "$@"; do
+		l="$(echo $l | tr '[:upper:]' '[:lower:]')"
+        for allowed in ${ALLOWED_LICENSES[@]}; do
+            allowed="$(echo $allowed | tr '[:upper:]' '[:lower:]')"
+            if [ "$l" = "$allowed" ]; then
+                return 0
+            fi
+        done
+	done
+
+    return 1
+}
+
 create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
         . "$BUILDSCRIPT"
+        if ! chk_license ${license[@]}; then
+            echo "Package license does not require source tarballs. Doing nothing"
+            echo "   license => (${license[@]})"
+            cleanup 0
+        fi
+
         if ! /usr/bin/makepkg --allsource >/dev/null 2>&1; then
             popd >/dev/null
             return 1
@@ -53,13 +76,13 @@ create_srcpackage() {
             mkdir -p "$srcpath"
         fi
         #Remove old sourceballs
-        for pkg in "$srcpath/$pkgname-*"; do
+        for pkg in "$srcpath/$pkgname-"*; do
             pkg="$(basename $pkg)"
-            if "$(getpkgname $pkg)" == "$pkgname" ]; then
+            if [ "$(getpkgname $pkg)" == "$pkgname" ]; then
                 rm -f "$srcpath/$pkg"
             fi
         done
-        cp $pkg_file "$srcpath"
+        cp "$pkgname/$pkg_file" "$srcpath"
 
         return 0
     fi
@@ -68,12 +91,13 @@ create_srcpackage() {
 trap ctrl_c 2
 trap cleanup 0 1
 
+set_umask
 /bin/mkdir -p "$WORKDIR"
 cd "$WORKDIR"
 
 echo "Creating Source tarball for $packagename ($reponame-$arch)"
 
-if /usr/bin/svn export -q "$svnpath/repos/$reponame-$arch" $packagename; then
+if /usr/bin/svn export -q "$SVN_PATH/$packagename/repos/$reponame-$arch" $packagename; then
     create_srcpackage "$packagename"
     if [ $? -eq 0 ]; then
         exit 0
@@ -81,7 +105,7 @@ if /usr/bin/svn export -q "$svnpath/repos/$reponame-$arch" $packagename; then
         #trunk sometimes has updated URLs
         echo ":: Failed to download source, attempting trunk build"
         rm -rf "$packagename"
-        if /usr/bin/svn export -q "$svnpath/trunk" "$packagename"; then
+        if /usr/bin/svn export -q "$SVN_PATH/$packagename/trunk" "$packagename"; then
             create_srcpackage "$packagename"
             if [ $? -eq 0 ]; then
                 echo ":: Source package complete: $pkg_file"

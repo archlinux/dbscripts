@@ -3,7 +3,10 @@
 # Random integrity things
 [ "$UID" = "" ] && UID=$(uid)
 
-BASEDIR="$(dirname $0)"
+if [ -z "$BASEDIR" ]; then
+	BASEDIR="$(dirname $0)"
+fi
+
 if [ -f "$BASEDIR/config" ]; then
 	. "$BASEDIR/config"
 fi

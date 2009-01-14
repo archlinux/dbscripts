@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Usage : parse_pkgbuilds.sh arch <pkgbuilds_dir1,dir2,...>
+# Example : parse_pkgbuilds.sh i686 /var/abs/core /var/abs/extra
+
+exit() { return; }
+
 parse() {
 	unset pkgname pkgver pkgrel
 	unset depends makedepends conflicts provides
@@ -67,10 +72,12 @@ find_pkgbuilds() {
 	fi
 }
 
-if [ -z "$*" ]; then
+if [ -z "$1" -o -z "$2" ]; then
 	exit 1
 fi
 
+CARCH=$1
+shift
 for dir in "$@"; do
 	find_pkgbuilds $dir
 done

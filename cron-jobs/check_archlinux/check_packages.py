@@ -49,11 +49,11 @@ class Depend:
 		self.version = version
 		self.mod = mod
 
-def parse_pkgbuilds(repos):
+def parse_pkgbuilds(repos,arch):
 	oldcwd = os.getcwd()
 	os.chdir(absroot)
 	for repo in repos:
-		data = commands.getoutput(oldcwd + '/parse_pkgbuilds.sh ' + repo)
+		data = commands.getoutput(oldcwd + '/parse_pkgbuilds.sh ' + arch + ' ' + repo)
 		parse_data(repo,data)
 	os.chdir(oldcwd)
 
@@ -292,24 +292,27 @@ def print_usage():
 	print "Usage: ./check_packages.py [OPTION]"
 	print ""
 	print "Options:"
-	print "  --abs-tree=<path>             Check specified tree (default : /var/abs)"
-	print "  --repos=<r1,r2,...>           Check specified repos (default : core,extra)"
+	print "  --abs-tree=<path>             Check the specified tree (default : /var/abs)"
+	print "  --repos=<r1,r2,...>           Check the specified repos (default : core,extra)"
+	print "  --arch=<i686|x86_64>          Check the specified arch (default : i686)"
 	print "  -h, --help                    Show this help and exit"
 	print ""
 	print "Examples:"
 	print "\n  Check core and extra in existing abs tree:"
-	print "    ./check_packages.py --abs-tree=/var/abs --repos=core,extra"
+	print "    ./check_packages.py --abs-tree=/var/abs --repos=core,extra --arch=i686"
 	print "\n  Check community:"
-	print "    ./check_packages.py --abs-tree=/var/abs --repos=community"
+	print "    ./check_packages.py --abs-tree=/var/abs --repos=community --arch=i686"
 	print ""
 
 ## Default path to the abs root directory
 absroot = "/var/abs"
 ## Default list of repos to check
 repos = ['core', 'extra']
+## Default arch
+arch = "i686"
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "", ["abs-tree=", "repos="])
+	opts, args = getopt.getopt(sys.argv[1:], "", ["abs-tree=", "repos=", "arch="])
 except getopt.GetoptError:
 	print_usage()
 	sys.exit()
@@ -319,6 +322,8 @@ if opts != []:
 			absroot = a
 		elif o in ("--repos"):
 			repos = a.split(",")
+		elif o in ("--arch"):
+			arch = a
 		else:
 			print_usage()
 			sys.exit()
@@ -339,11 +344,11 @@ loadrepos = set([])
 for repo in repos:
 	loadrepos = loadrepos | set(get_repo_hierarchy(repo))
 
-print_heading("Integrity Check")
+print_heading("Integrity Check " + arch + " of " + ",".join(repos))
 print "\nPerforming integrity checks..."
 
 print "==> parsing pkgbuilds"
-parse_pkgbuilds(loadrepos)
+parse_pkgbuilds(loadrepos,arch)
 
 repopkgs = {}
 for name,pkg in packages.iteritems():

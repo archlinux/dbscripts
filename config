@@ -1,5 +1,7 @@
 
-FTP_BASE="/srv/ftp/"
+FTP_BASE="/srv/ftp"
 SVN_PATH="file:///srv/svn-packages"
-STAGING="$HOME/staging/"
+STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
+# To be used if $BUILDSCRIPT is removed from makepkg.conf
+#BUILDSCRIPT="PKGBUILD"

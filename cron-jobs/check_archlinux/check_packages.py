@@ -50,12 +50,10 @@ class Depend:
 		self.mod = mod
 
 def parse_pkgbuilds(repos,arch):
-	oldcwd = os.getcwd()
-	os.chdir(absroot)
 	for repo in repos:
-		data = commands.getoutput(oldcwd + '/parse_pkgbuilds.sh ' + arch + ' ' + repo)
+		data = commands.getoutput(os.path.dirname(sys.argv[0]) + '/parse_pkgbuilds.sh '
+				+ arch + ' ' + absroot + '/' +  repo)
 		parse_data(repo,data)
-	os.chdir(oldcwd)
 
 def parse_data(repo,data):
 	attrname = None

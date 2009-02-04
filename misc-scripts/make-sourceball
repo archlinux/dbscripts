@@ -33,7 +33,7 @@ ctrl_c() {
 }
 
 die() {
-	echo "$*" >&2
+	echo -e "$*" >&2
 	cleanup 1
 }
 
@@ -58,8 +58,7 @@ create_srcpackage() {
         pushd "$1" >/dev/null
         . "$BUILDSCRIPT"
         if ! chk_license ${license[@]}; then
-            echo "Package license does not require source tarballs. Doing nothing"
-            echo "   license => (${license[@]})"
+            echo -e "\tPackage license (${license[@]}) does not require source tarballs. Doing nothing"
             cleanup 0
         fi
 
@@ -71,7 +70,6 @@ create_srcpackage() {
 
         local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
 
-        echo ":: Source package complete: $pkg_file"
         if [ ! -d "$srcpath" ]; then
             mkdir -p "$srcpath"
         fi
@@ -103,25 +101,11 @@ if /usr/bin/svn export -q "$SVN_PATH/$packagename/repos/$reponame-$arch" $packag
         exit 0
     elif [ $? -eq 1 ]; then
         #trunk sometimes has updated URLs
-        echo ":: Failed to download source, attempting trunk build"
-        rm -rf "$packagename"
-        if /usr/bin/svn export -q "$SVN_PATH/$packagename/trunk" "$packagename"; then
-            create_srcpackage "$packagename"
-            if [ $? -eq 0 ]; then
-                echo ":: Source package complete: $pkg_file"
-                exit 0
-            elif [ $? -eq 1 ]; then
-                die ":: Failed to download source"
-            elif [ $? -eq 2 ]; then
-                die ":: Failed to compress package"
-            else
-                die ":: Unknown failure reason"
-            fi
-        fi
+        die "\tFailed to download source"
         exit 1
     elif [ $? -eq 2 ]; then
-        die ":: Failed to compress package"
+        die "\tFailed to compress package"
     fi
 else
-    die "Package '$packagename' does not exist in repo $reponame-$arch"
+    die "\tPackage does not exist in repo"
 fi

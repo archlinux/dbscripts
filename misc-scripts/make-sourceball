@@ -57,6 +57,9 @@ create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
         . "$BUILDSCRIPT"
+
+        echo "Creating source tarball for $pkgname-$pkgver-$pkgrel"
+
         if ! chk_license ${license[@]}; then
             echo -e "\tPackage license (${license[@]}) does not require source tarballs. Doing nothing"
             cleanup 0
@@ -64,7 +67,7 @@ create_srcpackage() {
 
         if ! /usr/bin/makepkg --allsource >/dev/null 2>&1; then
             popd >/dev/null
-            return 1
+            die "\tFailed to download source for $pkgname-$pkgver-$pkgrel ($reponame-$arch)"
         fi
         popd >/dev/null
 
@@ -93,19 +96,8 @@ set_umask
 /bin/mkdir -p "$WORKDIR"
 cd "$WORKDIR"
 
-echo "Creating Source tarball for $packagename ($reponame-$arch)"
-
 if /usr/bin/svn export -q "$SVN_PATH/$packagename/repos/$reponame-$arch" $packagename; then
     create_srcpackage "$packagename"
-    if [ $? -eq 0 ]; then
-        exit 0
-    elif [ $? -eq 1 ]; then
-        #trunk sometimes has updated URLs
-        die "\tFailed to download source"
-        exit 1
-    elif [ $? -eq 2 ]; then
-        die "\tFailed to compress package"
-    fi
 else
-    die "\tPackage does not exist in repo"
+    die "\tPackage '$packagename' does not exist in repo '$reponame-$arch'"
 fi

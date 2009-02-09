@@ -73,9 +73,11 @@ for repo in $repos; do
 done
 
 if [ -n "$FAILED_PKGS" ]; then
+    echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u > "$srcbase/failed.txt"
+
     echo ""
     echo "The following packages failed:"
-    echo -e $FAILED_PKGS | sed "s| |\n\t|g" | sort -u
+    cat "$srcbase/failed.txt"
 fi
 
 cleanup

@@ -18,6 +18,7 @@ reponame="$2"
 arch="$3"
 
 srcpath="$FTP_BASE/sources/"
+logpath="/var/log/sourceballs/"
 
 WORKDIR="/tmp/make-sourceball.$packagename.$UID"
 
@@ -65,11 +66,13 @@ create_srcpackage() {
             cleanup 0
         fi
 
-        if ! /usr/bin/makepkg --allsource >/dev/null 2>&1; then
+        if ! /usr/bin/makepkg --allsource >"$logpath/$pkgname" 2>&1; then
             popd >/dev/null
+            /bin/gzip -9 "$logpath/$pkgname"
             die "\tFailed to download source for $pkgname-$pkgver-$pkgrel ($reponame-$arch)"
         fi
         popd >/dev/null
+        /bin/rm "$logpath/$pkgname"
 
         local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
 
@@ -94,6 +97,7 @@ trap cleanup 0 1
 
 set_umask
 /bin/mkdir -p "$WORKDIR"
+/bin/mkdir -p "$logpath"
 cd "$WORKDIR"
 
 if /usr/bin/svn export -q "$SVN_PATH/$packagename/repos/$reponame-$arch" $packagename; then

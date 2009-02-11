@@ -49,6 +49,8 @@ getpkgname() {
 
 FAILED_PKGS=""
 
+echo "Errors occured during run:" > "$srcbase/errors.txt"
+
 for repo in $repos; do
     for arch in $arches; do
         export CARCH="$arch"
@@ -64,7 +66,8 @@ for repo in $repos; do
             fi
 
             if [ ! -f "$srcpath$srcpkg" ]; then
-                if ! $dirname/../misc-scripts/make-sourceball $pkgname $repo $arch; then
+                if ! $dirname/../misc-scripts/make-sourceball \
+                    $pkgname $repo $arch 2>>"$srcbase/errors.txt"; then
                     FAILED_PKGS="$FAILED_PKGS $pkg"
                 fi
             fi
@@ -73,11 +76,8 @@ for repo in $repos; do
 done
 
 if [ -n "$FAILED_PKGS" ]; then
-    echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u > "$srcbase/failed.txt"
-
-    echo ""
-    echo "The following packages failed:"
-    cat "$srcbase/failed.txt"
+    echo "The following packages failed:" > "$srcbase/failed.txt"
+    echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u >> "$srcbase/failed.txt"
 fi
 
 cleanup

@@ -4,14 +4,21 @@
 ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2')
 
 if [ $# -ne 3 ]; then
-	echo "usage: $(basename $0) <packagename> <repo> <arch>"
-	exit 1
+    echo "usage: $(basename $0) [-f] <packagename> <repo> <arch>"
+    echo "  -f  Force building. Skip license checks"
+    exit 1
 fi
 
 BASEDIR="$(dirname $0)/../"
 . "$BASEDIR/db-functions"
 
 source_makepkg
+
+FORCE=0
+if [ "$1" = "-f" ]; then
+    FORCE=1
+    shift
+fi
 
 packagename="$1"
 reponame="$2"
@@ -23,33 +30,38 @@ logpath="/var/log/sourceballs/"
 WORKDIR="/tmp/make-sourceball.$packagename.$UID"
 
 cleanup() {
-	restore_umask
-	rm -rf "$WORKDIR"
-	[ "$1" ] && exit $1
+    restore_umask
+    rm -rf "$WORKDIR"
+    [ "$1" ] && exit $1
 }
 
 ctrl_c() {
-	echo "Interrupted" >&2
-	cleanup 0
+    echo "Interrupted" >&2
+    cleanup 0
 }
 
 die() {
-	echo -e "$*" >&2
-	cleanup 1
+    echo -e "$*" >&2
+    cleanup 1
 }
 
 #usage: chk_license ${license[@]}"
 chk_license() {
-	local l
-	for l in "$@"; do
-		l="$(echo $l | tr '[:upper:]' '[:lower:]')"
+    #The -f flag skips this check
+    if [ $FORCE = 1 ]; then
+        return 0
+    fi
+
+    local l
+    for l in "$@"; do
+        l="$(echo $l | tr '[:upper:]' '[:lower:]')"
         for allowed in ${ALLOWED_LICENSES[@]}; do
             allowed="$(echo $allowed | tr '[:upper:]' '[:lower:]')"
             if [ "$l" = "$allowed" ]; then
                 return 0
             fi
         done
-	done
+    done
 
     return 1
 }

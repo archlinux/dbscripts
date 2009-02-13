@@ -15,7 +15,7 @@ source_makepkg
 
 packagename="$1"
 reponame="$2"
-arch="$3"
+_arch="$3"
 
 srcpath="$FTP_BASE/sources/"
 logpath="/var/log/sourceballs/"
@@ -68,7 +68,7 @@ create_srcpackage() {
         if ! /usr/bin/makepkg --allsource >"$logpath/$pkgname" 2>&1; then
             popd >/dev/null
             /bin/gzip -9 "$logpath/$pkgname"
-            die "\tFailed to download source for $pkgname-$pkgver-$pkgrel ($reponame-$arch)"
+            die "\tFailed to download source for $pkgname-$pkgver-$pkgrel ($reponame-$_arch)"
         fi
         popd >/dev/null
         /bin/rm "$logpath/$pkgname"
@@ -99,8 +99,8 @@ set_umask
 /bin/mkdir -p "$logpath"
 cd "$WORKDIR"
 
-if /usr/bin/svn export -q "$SVN_PATH/$packagename/repos/$reponame-$arch" $packagename; then
+if /usr/bin/svn export -q "$SVN_PATH/$packagename/repos/$reponame-$_arch" $packagename; then
     create_srcpackage "$packagename"
 else
-    die "\tPackage '$packagename' does not exist in repo '$reponame-$arch'"
+    die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
 fi

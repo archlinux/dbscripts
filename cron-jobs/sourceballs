@@ -85,6 +85,7 @@ for repo in $repos; do
 done
 
 if [ -n "$FAILED_PKGS" ]; then
+    [ -e "$srcbase/failed.txt" ] && /bin/mv "$srcbase/failed.txt" "$srcbase/failed.txt.old"
     echo "The following packages failed:" > "$srcbase/failed.txt"
     echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u >> "$srcbase/failed.txt"
 fi

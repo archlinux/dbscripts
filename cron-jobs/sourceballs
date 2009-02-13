@@ -59,7 +59,8 @@ for repo in $repos; do
         for pkg in *$PKGEXT; do
             pkgname=$(getpkgname $pkg)
             srcpath="$srcbase/"
-            srcpkg="${pkg//-$arch$PKGEXT/$SRCEXT}"
+            srcpkg="${pkg//$PKGEXT/$SRCEXT}"
+            srcpkg="${srcpkg//-$arch/}"
 
             #Don't do anything for package in this 'blacklist'
             if grep $pkgname "$dirname/sourceballs.skip" >/dev/null 2>&1; then

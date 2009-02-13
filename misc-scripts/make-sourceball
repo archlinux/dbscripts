@@ -77,7 +77,7 @@ create_srcpackage() {
             die -e "\tPackage license (${license[@]}) does not require source tarballs. Doing nothing"
         fi
 
-        if ! /usr/bin/makepkg --allsource >"$logpath/$pkgname" 2>&1; then
+        if ! /usr/bin/makepkg --allsource --ignorearch >"$logpath/$pkgname" 2>&1; then
             popd >/dev/null
             /bin/gzip -9 "$logpath/$pkgname"
             die "\tFailed to download source for $pkgname-$pkgver-$pkgrel ($reponame-$_arch)"

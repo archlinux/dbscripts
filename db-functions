@@ -66,6 +66,17 @@ getpkgname() {
 	echo ${tmp%-*-*}
 }
 
+# Get the pkgver-pkgrel of this package
+getpkgver() {
+	local tmp
+
+	tmp=${1##*/}
+	tmp=${tmp%$PKGEXT}
+	tmp=${tmp%$SRCEXT}
+	tmp=${tmp%-$CARCH}
+	echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
+}
+
 check_pkg_arch () { #check_pkg_arch pkgfile arch
 	local arch
 	_arch="$(/usr/bin/bsdtar -xOf "$1" .PKGINFO | /bin/grep "^arch" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"

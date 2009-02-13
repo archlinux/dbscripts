@@ -78,16 +78,41 @@ create_srcpackage() {
         if [ ! -d "$srcpath" ]; then
             mkdir -p "$srcpath"
         fi
-        #Remove old sourceballs
-        for pkg in "$srcpath/$pkgname-"*; do
-            pkg="$(basename $pkg)"
-            if [ "$(getpkgname $pkg)" == "$pkgname" ]; then
-                rm -f "$srcpath/$pkg"
-            fi
-        done
         cp "$pkgname/$pkg_file" "$srcpath"
 
         return 0
+    fi
+}
+
+remove_old() {
+    if [ -d "$1" ]; then
+        pushd "$1" >/dev/null
+        PKGVERS=""
+        for repo in *; do
+            cd "$repo"
+            . "$BUILDSCRIPT"
+            PKGVERS="$PKGVERS $pkgver-$pkgrel"
+            cd ..
+        done
+
+        for pkg in "$srcpath/$pkgname-"*; do
+            pkg="$(basename $pkg)"
+            if [ "$(getpkgname $pkg)" == "$pkgname" ]; then
+                skip=0
+                pver="$(getpkgver $pkg)"
+                for v in $PKGVERS; do
+                    if [ "$v" = "$pver" ]; then
+                        skip=1
+                        break
+                    fi
+                done
+                if [ $skip -ne 1 ]; then 
+                    rm -f "$srcpath/$pkg"
+                fi
+            fi
+        done
+
+        popd >/dev/null
     fi
 }
 
@@ -99,8 +124,9 @@ set_umask
 /bin/mkdir -p "$logpath"
 cd "$WORKDIR"
 
-if /usr/bin/svn export -q "$SVN_PATH/$packagename/repos/$reponame-$_arch" $packagename; then
-    create_srcpackage "$packagename"
+if /usr/bin/svn export -q "$SVN_PATH/$packagename" $packagename; then
+    create_srcpackage "$packagename/repos/$reponame-$_arch"
+    remove_old "$pkgname/repos/"
 else
     die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
 fi

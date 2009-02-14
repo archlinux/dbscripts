@@ -82,7 +82,6 @@ create_srcpackage() {
             /bin/gzip -9 "$logpath/$pkgname"
             die "\tFailed to download source for $pkgname-$pkgver-$pkgrel ($reponame-$_arch)"
         fi
-        popd >/dev/null
         /bin/rm "$logpath/$pkgname"
 
         local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
@@ -91,6 +90,8 @@ create_srcpackage() {
             mkdir -p "$srcpath"
         fi
         cp "$pkgname/$pkg_file" "$srcpath"
+
+        popd >/dev/null
 
         return 0
     fi

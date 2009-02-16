@@ -80,10 +80,10 @@ create_srcpackage() {
         local logfile="$logpath/$pkgname-$reponame-$_arch"
         if ! /usr/bin/makepkg --allsource --ignorearch >"$logfile" 2>&1; then
             popd >/dev/null
-            /bin/gzip -9 "$logfile"
+            /bin/gzip -f -9 "$logfile"
             die "\tFailed to download source for $pkgname-$pkgver-$pkgrel ($reponame-$_arch)"
         fi
-        /bin/rm "$logfile"{,.gz}
+        /bin/rm -f "$logfile"{,.gz}
 
         local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
 

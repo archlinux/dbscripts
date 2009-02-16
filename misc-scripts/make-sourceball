@@ -90,7 +90,7 @@ create_srcpackage() {
         if [ ! -d "$srcpath" ]; then
             mkdir -p "$srcpath"
         fi
-        cp "$pkgname/$pkg_file" "$srcpath"
+        cp "$pkg_file" "$srcpath"
 
         popd >/dev/null
 

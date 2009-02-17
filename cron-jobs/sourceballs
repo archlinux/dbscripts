@@ -49,6 +49,7 @@ getpkgname() {
 
 FAILED_PKGS=""
 
+[ -e "$srcbase/errors.txt" ] && /bin/mv "$srcbase/errors.txt" "$srcbase/errors.txt.old"
 echo "Errors occured during run:" > "$srcbase/errors.txt"
 
 for repo in $repos; do

@@ -77,7 +77,7 @@ create_srcpackage() {
             die -e "\tPackage license (${license[@]}) does not require source tarballs. Doing nothing"
         fi
 
-        local logfile="$logpath/$pkgname-$reponame-$_arch"
+        local logfile="$logpath/$pkgname"
         if ! /usr/bin/makepkg --allsource --ignorearch >"$logfile" 2>&1; then
             popd >/dev/null
             /bin/gzip -f -9 "$logfile"

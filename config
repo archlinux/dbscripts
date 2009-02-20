@@ -1,6 +1,11 @@
 
 FTP_BASE="/srv/ftp"
-SVN_PATH="file:///srv/svn-packages"
+
+SVNREPO_core="file:///srv/svn-packages"
+SVNREPO_extra="file:///srv/svn-packages"
+SVNREPO_testing="file:///srv/svn-packages"
+SVNREPO_community="file:///srv/svn-community"
+
 STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
 ARCHES=(i686 x86_64)

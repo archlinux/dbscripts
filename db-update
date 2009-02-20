@@ -87,6 +87,7 @@ for A in ${ARCHES[@]}; do
 		exit 1
 	fi
 
+	svnpath="$(get_svnpath $reponame)"
 	svnrepo="$reponame-$current_arch"
 
 	repo_lock $reponame $current_arch
@@ -118,7 +119,7 @@ for A in ${ARCHES[@]}; do
 		echo "==> Processing new/updated packages for repository '$reponame'..." >&2
 
 		cd "$WORKDIR"
-		/usr/bin/svn checkout -N $SVN_PATH checkout
+		/usr/bin/svn checkout -N $svnpath checkout
 		cd checkout
 
 		for pkg in $ADDPKGS; do

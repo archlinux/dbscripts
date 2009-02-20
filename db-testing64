@@ -1,3 +1,0 @@
-#!/bin/bash
-
-$(dirname $0)/db-update "testing" "x86_64" 

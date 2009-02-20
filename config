@@ -3,5 +3,6 @@ FTP_BASE="/srv/ftp"
 SVN_PATH="file:///srv/svn-packages"
 STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
+ARCHES=(i686 x86_64)
 # To be used if $BUILDSCRIPT is removed from makepkg.conf
 #BUILDSCRIPT="PKGBUILD"

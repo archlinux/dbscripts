@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -ne 2 ]; then
-	echo "usage: $(basename $0) <reponame> <arch>"
+if [ $# -ne 1 ]; then
+	echo "usage: $(basename $0) <reponame>"
 	exit 1
 fi
 
@@ -10,73 +10,18 @@ fi
 source_makepkg
 
 reponame="$1"
-_arch="$2"
-
-export CARCH="$_arch"
-
-ftppath="$FTP_BASE/$reponame/os/$_arch/"
-svnrepo="$reponame-$_arch"
-stagedir="$STAGING/$reponame"
+current_arch=""
 
 [ "$UID" = "" ] && UID=$(uid)
 
 WORKDIR="$TMPDIR/db-update.$svnrepo.$UID"
 ADDPKGS=""
 
-if [ ! -d "$ftppath" ]; then
-	echo "FTP path for this repo ($reponame) is missing"
-	echo "Please contact a system administrator"
-	exit 1
-fi
-
+stagedir="$STAGING/$reponame"
 if [ ! -d $stagedir ]; then
 	echo "error: staging directory missing: $stagedir" >&2
 	exit 1
 fi
-
-# Get the package name from the filename
-# hackish, but should work for now
-getpkgname() {
-	local tmp
-
-	tmp=${1##*/}
-	tmp=${tmp%$PKGEXT}
-	tmp=${tmp%-$CARCH}
-	echo ${tmp%-*-*}
-}
-
-cleanup() {
-    trap '' 0 2
-	# unlock
-	repo_unlock $reponame $_arch
-	rm -rf "$WORKDIR"
-	[ "$1" ] && exit $1
-}
-
-ctrl_c() {
-	echo "Interrupted" >&2
-	cleanup 0
-}
-
-die() {
-	echo "$*" >&2
-	cleanup 1
-}
-
-trap ctrl_c 2
-trap cleanup 0
-
-repo_lock $reponame $_arch
-
-/bin/mkdir -p "$WORKDIR/build"
-cd "$WORKDIR"
-
-# copy the db file into our working area
-if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
-	/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
-fi
-
-echo "Updating DB for $reponame $_arch"
 
 if [ -d "${stagedir}64" ]; then
 	echo "--------------------------------------------------"
@@ -98,82 +43,143 @@ if [ -d "${stagedir}/add" ]; then
 	/bin/mv "${stagedir}/add/"* "$stagedir/"
 fi
 
-to_add=""
-if [ -d "$stagedir" ]; then
-	ADDPKGS="$(/bin/ls $stagedir/*-${_arch}$PKGEXT 2>/dev/null)"
-fi
+# Get the package name from the filename
+# hackish, but should work for now
+getpkgname() {
+	local tmp
 
-if [ -n "$ADDPKGS" ]; then
+	tmp=${1##*/}
+	tmp=${tmp%$PKGEXT}
+	tmp=${tmp%-$current_arch}
+	echo ${tmp%-*-*}
+}
 
-	echo "==> Copying DB file from '$reponame'..." >&2
+cleanup() {
+    trap '' 0 2
+	# unlock
+	repo_unlock $reponame $current_arch
+	rm -rf "$WORKDIR"
+	[ "$1" ] && exit $1
+}
+
+ctrl_c() {
+	echo "Interrupted" >&2
+	cleanup 0
+}
+
+die() {
+	echo "$*" >&2
+	cleanup 1
+}
+
+trap ctrl_c 2
+trap cleanup 0
+
+for A in ${ARCHES[@]}; do
+	current_arch="$A"
+
+	ftppath="$FTP_BASE/$reponame/os/$current_arch/"
+
+	if [ ! -d "$ftppath" ]; then
+		echo "FTP path for this repo ($reponame) is missing"
+		echo "   -> $ftppath"
+		echo "Please contact a system administrator"
+		exit 1
+	fi
+
+	svnrepo="$reponame-$current_arch"
+
+	repo_lock $reponame $current_arch
+
+	/bin/mkdir -p "$WORKDIR/build"
+	cd "$WORKDIR"
+
+	# copy the db file into our working area
 	if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
 		/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
-	else
-		touch "build/$reponame.db.tar.$DB_COMPRESSION"
 	fi
 
-	echo "==> Processing new/updated packages for repository '$reponame'..." >&2
+	echo "Updating DB for $svnrepo"
 
-	cd "$WORKDIR"
-	/usr/bin/svn checkout -N $SVN_PATH checkout
-	cd checkout
+	to_add=""
+	if [ -d "$stagedir" ]; then
+		ADDPKGS="$(/bin/ls $stagedir/*-${current_arch}$PKGEXT 2>/dev/null)"
+	fi
 
-	for pkg in $ADDPKGS; do
-		_pkgfile=$(basename $pkg)
-		_pkgname="$(getpkgname $pkg)"
+	if [ -n "$ADDPKGS" ]; then
 
-		echo "    Validating package arch ($_arch) $_pkgname"
-		if ! check_pkg_arch "$pkg" "$_arch"; then
-			echo "   ERROR: $_pkgfile was built for the wrong architecture"
+		echo "==> Copying DB file from '$reponame'..." >&2
+		if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
+			/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
 		else
-			echo "    Checking SVN for $_pkgname"
-			/usr/bin/svn up -q $_pkgname
-			if [ -d "$_pkgname/repos/$svnrepo" ]; then
-				. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
-				if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$_arch$PKGEXT" ]; then
-					to_add="$to_add $pkg"
-				else
-					echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
-				fi
-			else
-				echo "    WARNING: Package $_pkgname not found in $svnrepo"
-			fi
+			touch "build/$reponame.db.tar.$DB_COMPRESSION"
 		fi
-	done
+
+		echo "==> Processing new/updated packages for repository '$reponame'..." >&2
+
+		cd "$WORKDIR"
+		/usr/bin/svn checkout -N $SVN_PATH checkout
+		cd checkout
+
+		for pkg in $ADDPKGS; do
+			_pkgfile=$(basename $pkg)
+			_pkgname="$(getpkgname $pkg)"
+
+			echo "    Validating package arch ($current_arch) $_pkgname"
+			if ! check_pkg_arch "$pkg" "$current_arch"; then
+				echo "   ERROR: $_pkgfile was built for the wrong architecture"
+			else
+				echo "    Checking SVN for $_pkgname"
+				/usr/bin/svn up -q $_pkgname
+				if [ -d "$_pkgname/repos/$svnrepo" ]; then
+					. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
+					if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$current_arch$PKGEXT" ]; then
+						to_add="$to_add $pkg"
+					else
+						echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
+					fi
+				else
+					echo "    WARNING: Package $_pkgname not found in $svnrepo"
+				fi
+			fi
+		done
+
+		if [ -n "$to_add" ]; then
+			cd "$WORKDIR/build/"
+			for f in $to_add; do /bin/cp "$f" .; done
+
+			pkgs=""
+			for pkg in $to_add; do pkgs="$pkgs $(basename $pkg)"; done
+
+			/usr/bin/repo-add -q "$reponame.db.tar.$DB_COMPRESSION" $pkgs
+		else
+			rm -f "build/$reponame.db.tar.$DB_COMPRESSION"
+			echo "Errors found when adding packages"
+		fi
+	else
+		echo "No packages to add"
+	fi
+
+	# if non empty, move all build dirs
+	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
+		echo "Copying new files to '$ftppath'"
+		for f in "$WORKDIR/build/"*; do
+			if ! /bin/cp "$f" "$ftppath"; then
+				die "error: failure while copying files to $ftppath"
+			fi
+		done
+
+	else
+		echo "Nothing to copy, no work done"
+	fi
 
 	if [ -n "$to_add" ]; then
-		cd "$WORKDIR/build/"
-		for f in $to_add; do /bin/cp "$f" .; done
-
-		pkgs=""
-		for pkg in $to_add; do pkgs="$pkgs $(basename $pkg)"; done
-
-		/usr/bin/repo-add -q "$reponame.db.tar.$DB_COMPRESSION" $pkgs
-	else
-		rm -f "build/$reponame.db.tar.$DB_COMPRESSION"
-		echo "Errors found when adding packages"
+		echo "Cleaning staging dir"
+		/bin/rm $to_add
 	fi
-else
-	echo "No packages to add"
-fi
 
-# if non empty, move all build dirs
-if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
-	echo "Copying new files to '$ftppath'"
-	for f in "$WORKDIR/build/"*; do
-		if ! /bin/cp "$f" "$ftppath"; then
-			die "error: failure while copying files to $ftppath"
-		fi
-	done
-
-else
-	echo "Nothing to copy, no work done"
-fi
-
-if [ -n "$to_add" ]; then
-	echo "Cleaning staging dir"
-	/bin/rm $to_add
-fi
+	repo_unlock $reponame $current_arch
+done
 
 cleanup
 # vim: set ts=4 sw=4 noet ft=sh:

@@ -74,7 +74,7 @@ create_srcpackage() {
         echo "Creating source tarball for $pkgname-$pkgver-$pkgrel"
 
         if ! chk_license ${license[@]}; then
-            die -e "\tPackage license (${license[@]}) does not require source tarballs. Doing nothing"
+            die "\t$pkgname license (${license[@]}) does not require source tarballs. Doing nothing"
         fi
 
         local logfile="$logpath/$pkgname"

@@ -139,8 +139,8 @@ set_umask
 cd "$WORKDIR"
 
 if /usr/bin/svn export -q "$SVN_PATH/$packagename" $packagename; then
-    create_srcpackage "$packagename/repos/$reponame-$_arch"
     remove_old "$pkgname/repos/"
+    create_srcpackage "$packagename/repos/$reponame-$_arch"
 else
     die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
 fi

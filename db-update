@@ -16,6 +16,7 @@ current_arch=""
 
 WORKDIR="$TMPDIR/db-update.$svnrepo.$UID"
 ADDPKGS=""
+ANYPKGS=""
 
 stagedir="$STAGING/$reponame"
 if [ ! -d $stagedir ]; then
@@ -79,6 +80,7 @@ for A in ${ARCHES[@]}; do
 	current_arch="$A"
 
 	ftppath="$FTP_BASE/$reponame/os/$current_arch/"
+	ftppath_any="$FTP_BASE/$reponame/os/any/"
 
 	if [ ! -d "$ftppath" ]; then
 		echo "FTP path for this repo ($reponame) is missing"
@@ -105,6 +107,7 @@ for A in ${ARCHES[@]}; do
 	to_add=""
 	if [ -d "$stagedir" ]; then
 		ADDPKGS="$(/bin/ls $stagedir/*-${current_arch}$PKGEXT 2>/dev/null)"
+		ANYPKGS="$(/bin/ls $stagedir/*-any$PKGEXT 2>/dev/null)"
 	fi
 
 	if [ -n "$ADDPKGS" ]; then
@@ -145,6 +148,29 @@ for A in ${ARCHES[@]}; do
 			fi
 		done
 
+		for pkg in $ANYPKGS; do
+			_pkgfile=$(basename $pkg)
+			_pkgname="$(getpkgname $pkg)"
+			svnrepo="$reponame-any"
+			echo "    Validating package arch (any) $_pkgname"
+			if ! check_pkg_arch "$pkg" "any"; then
+				echo "   ERROR: $_pkgfile is not architecture independent!"
+			else
+				echo "    Checking SVN for $_pkgname"
+				/usr/bin/svn up -q $_pkgname
+				if [ -d "$_pkgname/repos/$svnrepo" ]; then
+					. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
+					if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-any$PKGEXT" ]; then
+						to_add="$to_add $pkg"
+					else
+						echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
+					fi
+				else
+					echo "    WARNING: Package $_pkgname not found in $svnrepo"
+				fi
+			fi
+		done
+
 		if [ -n "$to_add" ]; then
 			cd "$WORKDIR/build/"
 			for f in $to_add; do /bin/cp "$f" .; done
@@ -164,12 +190,22 @@ for A in ${ARCHES[@]}; do
 	# if non empty, move all build dirs
 	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 		echo "Copying new files to '$ftppath'"
-		for f in "$WORKDIR/build/"*; do
+		for f in "$WORKDIR/build/"*$current_arch$PKGEXT; do
 			if ! /bin/cp "$f" "$ftppath"; then
 				die "error: failure while copying files to $ftppath"
 			fi
 		done
-
+		for f in "$WORKDIR/build/"*any.pkg.tar.gz; do
+			if ! /bin/cp "$f" "$ftppath_any"; then
+				die "error: failure while copying files to $ftppath_any"
+			fi
+			if ! ln -s "$ftppath_any/$f" "$ftppath/$f"; then
+				die "error: failed to make link for $f."
+			fi
+		done
+		if ! /bin/cp "$WORKDIR/build/$reponame.db"* "$ftppath"; then
+			die "failed to move repository $reponame-$A".
+		fi
 	else
 		echo "Nothing to copy, no work done"
 	fi

@@ -76,6 +76,42 @@ die() {
 trap ctrl_c 2
 trap cleanup 0
 
+# Process architecture-independent packages first.
+if [ -d "$stagedir" ]; then
+	ANYPKGS="$(/bin/ls $stagedir/*-any$PKGEXT 2>/dev/null)"
+fi
+
+echo "==> Processing new/updated arch-independent packages for '$reponame'..." >&2
+cd "$WORKDIR"
+svnpath="$(get_svnpath $reponame)"
+/usr/bin/svn checkout -N $svnpath checkout
+cd checkout
+to_add_any=""
+if [ -n "$ANYPKGS" ]; then
+	for pkg in $ANYPKGS; do
+		_pkgfile=$(basename $pkg)
+		_pkgname="$(getpkgname $pkg)"
+		svnrepo="$reponame-any"
+		echo "    Validating package arch (any) $_pkgname"
+		if ! check_pkg_arch "$pkg" "any"; then
+			echo "   ERROR: $_pkgfile is not architecture independent!"
+		else
+			echo "    Checking SVN for $_pkgname"
+			/usr/bin/svn up -q $_pkgname
+			if [ -d "$_pkgname/repos/$svnrepo" ]; then
+				. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
+				if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-any$PKGEXT" ]; then
+					to_add_any="$to_add_any $pkg"
+				else
+					echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
+				fi
+			else
+				echo "    WARNING: Package $_pkgname not found in $svnrepo"
+			fi
+		fi
+	done
+fi
+
 for A in ${ARCHES[@]}; do
 	current_arch="$A"
 
@@ -107,10 +143,9 @@ for A in ${ARCHES[@]}; do
 	to_add=""
 	if [ -d "$stagedir" ]; then
 		ADDPKGS="$(/bin/ls $stagedir/*-${current_arch}$PKGEXT 2>/dev/null)"
-		ANYPKGS="$(/bin/ls $stagedir/*-any$PKGEXT 2>/dev/null)"
 	fi
 
-	if [ -n "$ADDPKGS" ]; then
+	if [ -n "$ADDPKGS" || -n "$ANYPKGS" ]; then
 
 		echo "==> Copying DB file from '$reponame'..." >&2
 		if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
@@ -124,59 +159,38 @@ for A in ${ARCHES[@]}; do
 		cd "$WORKDIR"
 		/usr/bin/svn checkout -N $svnpath checkout
 		cd checkout
+	
+		if [ -n "$ADDPKGS" ]; then
+			for pkg in $ADDPKGS; do
+				_pkgfile=$(basename $pkg)
+				_pkgname="$(getpkgname $pkg)"
 
-		for pkg in $ADDPKGS; do
-			_pkgfile=$(basename $pkg)
-			_pkgname="$(getpkgname $pkg)"
-
-			echo "    Validating package arch ($current_arch) $_pkgname"
-			if ! check_pkg_arch "$pkg" "$current_arch"; then
-				echo "   ERROR: $_pkgfile was built for the wrong architecture"
-			else
-				echo "    Checking SVN for $_pkgname"
-				/usr/bin/svn up -q $_pkgname
-				if [ -d "$_pkgname/repos/$svnrepo" ]; then
-					. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
-					if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$current_arch$PKGEXT" ]; then
-						to_add="$to_add $pkg"
-					else
-						echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
-					fi
+				echo "    Validating package arch ($current_arch) $_pkgname"
+				if ! check_pkg_arch "$pkg" "$current_arch"; then
+					echo "   ERROR: $_pkgfile was built for the wrong architecture"
 				else
-					echo "    WARNING: Package $_pkgname not found in $svnrepo"
-				fi
-			fi
-		done
-
-		for pkg in $ANYPKGS; do
-			_pkgfile=$(basename $pkg)
-			_pkgname="$(getpkgname $pkg)"
-			svnrepo="$reponame-any"
-			echo "    Validating package arch (any) $_pkgname"
-			if ! check_pkg_arch "$pkg" "any"; then
-				echo "   ERROR: $_pkgfile is not architecture independent!"
-			else
-				echo "    Checking SVN for $_pkgname"
-				/usr/bin/svn up -q $_pkgname
-				if [ -d "$_pkgname/repos/$svnrepo" ]; then
-					. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
-					if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-any$PKGEXT" ]; then
-						to_add="$to_add $pkg"
+					echo "    Checking SVN for $_pkgname"
+					/usr/bin/svn up -q $_pkgname
+					if [ -d "$_pkgname/repos/$svnrepo" ]; then
+						. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
+						if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$current_arch$PKGEXT" ]; then
+							to_add="$to_add $pkg"
+						else
+							echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
+						fi
 					else
-						echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
+						echo "    WARNING: Package $_pkgname not found in $svnrepo"
 					fi
-				else
-					echo "    WARNING: Package $_pkgname not found in $svnrepo"
 				fi
-			fi
-		done
+			done
+		fi
 
-		if [ -n "$to_add" ]; then
+		if [ -n "$to_add" || -n "$to_add_any" ]; then
 			cd "$WORKDIR/build/"
-			for f in $to_add; do /bin/cp "$f" .; done
+			for f in $to_add $to_add_any; do /bin/cp "$f" .; done
 
 			pkgs=""
-			for pkg in $to_add; do pkgs="$pkgs $(basename $pkg)"; done
+			for pkg in $to_add $to_add_any; do pkgs="$pkgs $(basename $pkg)"; done
 
 			/usr/bin/repo-add -q "$reponame.db.tar.$DB_COMPRESSION" $pkgs
 		else
@@ -218,5 +232,6 @@ for A in ${ARCHES[@]}; do
 	repo_unlock $reponame $current_arch
 done
 
+/bin/rm $to_add_any
 cleanup
 # vim: set ts=4 sw=4 noet ft=sh:

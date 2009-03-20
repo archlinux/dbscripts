@@ -17,8 +17,8 @@ _arch="$4"
 
 export CARCH="$_arch"
 
-ftppath_from="$FTP_BASE/$repofrom/os/$_arch/"
-ftppath_to="$FTP_BASE/$repoto/os/$_arch/"
+ftppath_from="$FTP_BASE/$repofrom/os/"
+ftppath_to="$FTP_BASE/$repoto/os/"
 svnrepo_from="$repofrom-$_arch"
 svnrepo_to="$repoto-$_arch"
 svnpath="$(get_svnpath $repoto)"
@@ -67,7 +67,7 @@ if [ -d "$packagename/repos/$svnrepo_from" ]; then
     . "$packagename/repos/$svnrepo_from/$BUILDSCRIPT"
     _pkgfile="$pkgname-$pkgver-$pkgrel-$_arch$PKGEXT"
 
-    if [ ! -f "$ftppath_from/$_pkgfile" ]; then
+    if [ ! -f "$ftppath_from/${_arch}/$_pkgfile" ]; then
         die "error: package file '$_pkgfile' not found in repo '$repofrom'"
     fi
 
@@ -86,23 +86,37 @@ if [ -d "$packagename/repos/$svnrepo_from" ]; then
     [ -d build/ ] || mkdir build
     cd build/
 
-    # copy the db file into our working area
-    if [ -f "$ftppath_from/$repofrom.db.tar.$DB_COMPRESSION" ]; then
-        /bin/cp "$ftppath_from/$repofrom.db.tar.$DB_COMPRESSION" .
-        /usr/bin/repo-remove -q "$repofrom.db.tar.$DB_COMPRESSION" $packagename || die "Error in repo-remove"
-        #use '*' to move the old DB too
-        mv $repofrom.db.tar.$DB_COMPRESSION* $ftppath_from
-        echo "    Package files will be cleaned up automatically"
-    fi
+	if [ "${_arch}" == "any" ]; then
+		arches="i686 x86_64"
+	else
+		arches="${_arch}"
+	fi
 
-    if [ -f "$ftppath_to/$repoto.db.tar.$DB_COMPRESSION" ]; then
-        /bin/cp "$ftppath_to/$repoto.db.tar.$DB_COMPRESSION" .
-    fi
+    for architecture in $arches; do
+		# copy the db file into our working area
+		if [ -f "$ftppath_from/$architecture/$repofrom.db.tar.$DB_COMPRESSION" ]; then
+		    /bin/cp "$ftppath_from/$architecture/$repofrom.db.tar.$DB_COMPRESSION" .
+		    /usr/bin/repo-remove -q "$repofrom.db.tar.$DB_COMPRESSION" $packagename || die "Error in repo-remove"
+		    #use '*' to move the old DB too
+		    mv $repofrom.db.tar.$DB_COMPRESSION* "$ftppath_from/$architecture"
+		    echo "    Package files will be cleaned up automatically"
+		fi
 
-    /bin/cp "$ftppath_from/$_pkgfile" .
-    /usr/bin/repo-add -q "$repoto.db.tar.$DB_COMPRESSION" $_pkgfile || die "Error in repo-add"
-    #use '*' to move the old DB too
-    mv $repoto.db.tar.$DB_COMPRESSION* $_pkgfile $ftppath_to
+		if [ -f "$ftppath_to/$architecture/$repoto.db.tar.$DB_COMPRESSION" ]; then
+		    /bin/cp "$ftppath_to/$architecture/$repoto.db.tar.$DB_COMPRESSION" .
+		fi
+
+		/bin/cp "$ftppath_from/$architecture/$_pkgfile" .
+		/usr/bin/repo-add -q "$repoto.db.tar.$DB_COMPRESSION" $_pkgfile || die "Error in repo-add"
+		#use '*' to move the old DB too
+		mv $repoto.db.tar.$DB_COMPRESSION* $ftppath_to/$architecture
+		if [ "${_arch}" == "any" ]; then
+			mv ${_pkgfile} $ftppath_to/any
+			ln -s $ftppath_to/any/${_pkgfile} $ftppath_to/$architecture/
+		else
+			mv ${_pkgfile} $ftppath_to/$architecture
+		fi
+	done
 else
     die "Error: $packagename is not in repo $repofrom"
 fi

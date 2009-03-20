@@ -10,6 +10,7 @@ arch=$2
 
 ##### Arch specific stuff. TODO make this configurable #####
 ftppath="/srv/ftp/$reponame/os/$arch/"
+ftppath_base="/srv/ftp/$reponame/os"
 ############################################################
 
 if [ ! -d "$ftppath" ]; then
@@ -78,11 +79,18 @@ for pkg in *$PKGEXT; do
     EXTRAFILES="$EXTRAFILES $pkg"
 done 
 
+cd "$ftppath_base/any"
+for pkg in *$PKGEXT; do
+	if [ ! -h $ftppath_base/i686/$pkg && ! -h $ftppath_base/x86_64/$pkg ]; then
+		ARCHINDEPFILES="$ARCHINDEPFILES $pkg"
+	fi
+done
+
 cd "$ftppath"
 rm -rf ${TMPDIR}
 
 #Make sure we've done *something* before outputting anything
-if [ -z "$DELETEFILES$MISSINGFILES$EXTRAFILES" ]; then
+if [ -z "$DELETEFILES$MISSINGFILES$EXTRAFILES$ARCHINDEPFILES" ]; then
     exit 0
 fi
 
@@ -113,6 +121,15 @@ if [ -n "$EXTRAFILES" ]; then
     done
 fi
 
+if [ -n "$ARCHINDEPFILES" ]; then
+	echo "    The following architecture independent packages"
+	echo "    are not symlinked in the architecture repositories."
+	echo "    They will be moved to /srv/package/cleanup"
+    for f in $ARCHINDEPFILES; do
+        echo "        $f"
+    done
+fi
+
 if [ -n "${DELETEFILES}" ]; then
     mv ${DELETEFILES} /srv/package-cleanup/
     echo ""
@@ -122,3 +139,10 @@ if [ -n "${EXTRAFILES}" ]; then
     mv ${EXTRAFILES} /srv/package-cleanup/
     echo ""
 fi
+
+cd "$ftppath_base/any"
+if [ -n "${ARCHINDEPFILES}" ]; then
+    mv ${ARCHINDEPFILES} /srv/package-cleanup/
+    echo ""
+fi
+

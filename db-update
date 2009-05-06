@@ -81,7 +81,8 @@ if [ -d "$stagedir" ]; then
 	ANYPKGS="$(/bin/ls $stagedir/*-any$PKGEXT 2>/dev/null)"
 fi
 
-echo "==> Processing new/updated arch-independent packages for '$reponame'..." >&2
+pkgtotal=$(echo "$ANYPKGS" | wc -w)
+echo "==> Processing $pkgtotal new/updated arch-independent packages for '$reponame'..." >&2
 cd "$WORKDIR"
 svnpath="$(get_svnpath $reponame)"
 /usr/bin/svn checkout -N $svnpath checkout
@@ -152,7 +153,8 @@ for A in ${ARCHES[@]}; do
 			/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
 		fi
 
-		echo "==> Processing new/updated packages for repository '$reponame'..." >&2
+		pkgtotal=$(echo "$ADDPKGS $ANYPKGS" | wc -w)
+		echo "==> Processing $pkgtotal new/updated packages for repository '$reponame'..." >&2
 
 		cd "$WORKDIR"
 		/usr/bin/svn checkout -N $svnpath checkout

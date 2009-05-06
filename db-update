@@ -14,7 +14,7 @@ current_arch=""
 
 [ "$UID" = "" ] && UID=$(uid)
 
-WORKDIR="$TMPDIR/db-update.$svnrepo.$UID"
+WORKDIR="$TMPDIR/db-update.$reponame.$UID"
 ADDPKGS=""
 ANYPKGS=""
 

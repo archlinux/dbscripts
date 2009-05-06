@@ -8,6 +8,6 @@ SVNREPO_community="file:///srv/svn-community"
 
 STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
-ARCHES=(i686 x86_64 any)
+ARCHES=(i686 x86_64)
 # To be used if $BUILDSCRIPT is removed from makepkg.conf
 #BUILDSCRIPT="PKGBUILD"

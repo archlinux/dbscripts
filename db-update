@@ -150,8 +150,6 @@ for A in ${ARCHES[@]}; do
 		echo "==> Copying DB file from '$reponame'..." >&2
 		if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
 			/bin/cp "$ftppath/$reponame.db.tar.$DB_COMPRESSION" build/
-		else
-			touch "build/$reponame.db.tar.$DB_COMPRESSION"
 		fi
 
 		echo "==> Processing new/updated packages for repository '$reponame'..." >&2

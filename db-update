@@ -231,7 +231,8 @@ for A in ${ARCHES[@]}; do
 
 	repo_unlock $reponame $current_arch
 done
-
-/bin/rm $to_add_any
+if [ -n "$to_add_any" ]; then
+	/bin/rm $to_add_any
+fi
 cleanup
 # vim: set ts=4 sw=4 noet ft=sh:

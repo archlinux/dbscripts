@@ -10,13 +10,16 @@ fi
 /usr/bin/renice +10 -p $$ > /dev/null
 
 cd /srv/ftp
+/bin/chown -R ftp:ftp-arch core/os/any
 /bin/chown -R ftp:ftp-arch core/os/i686
 /bin/chown -R ftp:ftp-arch core/os/x86_64
+/bin/chown -R ftp:ftp-extra {extra,testing}/os/any
 /bin/chown -R ftp:ftp-extra {extra,testing}/os/i686
 /bin/chown -R ftp:ftp-extra {extra,testing}/os/x86_64
 /bin/chown -R ftp:aur community
 
 for d in core extra testing community; do
+    /bin/chmod -R g+w $d/os/any
     /bin/chmod -R g+w $d/os/i686
     /bin/chmod -R g+w $d/os/x86_64
 done

@@ -145,7 +145,7 @@ for A in ${ARCHES[@]}; do
 		ADDPKGS="$(/bin/ls $stagedir/*-${current_arch}$PKGEXT 2>/dev/null)"
 	fi
 
-	if [ -n "$ADDPKGS" || -n "$ANYPKGS" ]; then
+	if [ -n "$ADDPKGS" -o -n "$ANYPKGS" ]; then
 
 		echo "==> Copying DB file from '$reponame'..." >&2
 		if [ -f "$ftppath/$reponame.db.tar.$DB_COMPRESSION" ]; then
@@ -183,7 +183,7 @@ for A in ${ARCHES[@]}; do
 			done
 		fi
 
-		if [ -n "$to_add" || -n "$to_add_any" ]; then
+		if [ -n "$to_add" -o -n "$to_add_any" ]; then
 			cd "$WORKDIR/build/"
 			for f in $to_add $to_add_any; do /bin/cp "$f" .; done
 

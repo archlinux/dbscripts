@@ -194,7 +194,7 @@ def get_repo_hierarchy(repo):
 		return ['core','extra','community']
 
 def verify_archs(name,archs):
-	valid_archs = ['i686', 'x86_64']
+	valid_archs = ['any', 'i686', 'x86_64']
 	invalid_archs = []
 	for arch in archs:
 		if arch not in valid_archs:
@@ -292,7 +292,7 @@ def print_usage():
 	print "Options:"
 	print "  --abs-tree=<path>             Check the specified tree (default : /var/abs)"
 	print "  --repos=<r1,r2,...>           Check the specified repos (default : core,extra)"
-	print "  --arch=<i686|x86_64>          Check the specified arch (default : i686)"
+	print "  --arch=<any|i686|x86_64>      Check the specified arch (default : i686)"
 	print "  -h, --help                    Show this help and exit"
 	print ""
 	print "Examples:"

@@ -56,6 +56,12 @@ parse() {
 }
 
 find_pkgbuilds() {
+    #Skip over some dirs
+    local d="$(basename $1)"
+    if [ "$d" = "CVS" -o "$d" = ".svn" ]; then
+        return
+    fi
+
 	if [ -f $1/PKGBUILD ]; then
 		parse $1
 		return

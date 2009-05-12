@@ -204,19 +204,23 @@ for A in ${ARCHES[@]}; do
 	# if non empty, move all build dirs
 	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 		echo "Copying new files to '$ftppath'"
-		for f in "$WORKDIR/build/"*$current_arch$PKGEXT; do
-			if ! /bin/cp "$f" "$ftppath"; then
-				die "error: failure while copying files to $ftppath"
-			fi
-		done
-		for f in "$WORKDIR/build/"*any.pkg.tar.gz; do
-			if ! /bin/cp "$f" "$ftppath_any"; then
-				die "error: failure while copying files to $ftppath_any"
-			fi
-			if ! ln -s "$ftppath_any/$f" "$ftppath/$f"; then
-				die "error: failed to make link for $f."
-			fi
-		done
+		if [ $(/bin/ls "$WORKDIR/build/"*$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
+			for f in "$WORKDIR/build/"*$current_arch$PKGEXT; do
+				if ! /bin/cp "$f" "$ftppath"; then
+					die "error: failure while copying files to $ftppath"
+				fi
+			done
+		fi
+		if [ $(/bin/ls "$WORKDIR/build/"*any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
+			for f in "$WORKDIR/build/"*any$PKGEXT; do
+				if ! /bin/cp "$f" "$ftppath_any"; then
+					die "error: failure while copying files to $ftppath_any"
+				fi
+				if ! ln -s "$ftppath_any/$f" "$ftppath/$f"; then
+					die "error: failed to make link for $f."
+				fi
+			done
+		fi
 		if ! /bin/cp "$WORKDIR/build/$reponame.db"* "$ftppath"; then
 			die "failed to move repository $reponame-$A".
 		fi

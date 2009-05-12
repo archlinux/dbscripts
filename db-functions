@@ -99,8 +99,8 @@ get_svnpath () { #get_svnpath reponame
 
 	eval repopath=${var}
 	if [ -z "$repopath" ]; then
-		echo "ERROR: SVN path not defined for '${1}'" >2
-		echo "       Please check SVNREPO_${1} config setting" >2
+		echo "ERROR: SVN path not defined for '${1}'" 2>
+		echo "       Please check SVNREPO_${1} config setting" 2>
 	fi
 	
 	echo "$repopath"

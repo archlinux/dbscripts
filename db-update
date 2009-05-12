@@ -83,6 +83,7 @@ fi
 
 pkgtotal=$(echo "$ANYPKGS" | wc -w)
 echo "==> Processing $pkgtotal new/updated arch-independent packages for '$reponame'..." >&2
+mkdir -p $WORKDIR
 cd "$WORKDIR"
 svnpath="$(get_svnpath $reponame)"
 /usr/bin/svn checkout -N $svnpath checkout

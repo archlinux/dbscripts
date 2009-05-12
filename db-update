@@ -217,8 +217,9 @@ for A in ${ARCHES[@]}; do
 				if ! /bin/cp "$f" "$ftppath_any"; then
 					die "error: failure while copying files to $ftppath_any"
 				fi
-				if ! ln -s "$ftppath_any/$f" "$ftppath/$f"; then
-					die "error: failed to make link for $f."
+				bf=$(basename $f)
+				if ! ln -s "$ftppath_any/$bf" "$ftppath/$bf"; then
+					die "error: failed to make link for $bf."
 				fi
 			done
 		fi

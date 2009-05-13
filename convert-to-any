@@ -1,7 +1,8 @@
 #!/bin/bash
-# Converts an existing package into an
-# architecture-independent package and updates
-# the repositories accordingly.
+#
+# Converts an existing architecture-independent package
+# for i686 or x86_64 into a package with "arch = any"
+#
 
 # -- Abhishek Dasgupta <abhidg@gmail.com>
 

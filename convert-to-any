@@ -5,22 +5,13 @@
 
 # -- Abhishek Dasgupta <abhidg@gmail.com>
 
-. "$(dirname $0)/db-functions"
 [ "$UID" = "" ] && UID=$(uid)
+OUTDIR="$(pwd)"
+WORKDIR="/tmp/convert-to-any.$UID"
 
 if [ $# -ne 1 ]; then
-    echo "Syntax: $(basename $0) <reponame/pkgname>"
+    echo "Syntax: $(basename $0) <package-file>"
     exit 1
-fi
-
-repo=$(echo $1 | sed "s#\(.*\)/.*#\1#g")
-pkg=$(echo $1 | sed "s#.*/\(.*\)#\1#g")
-
-if [ -f "$(dirname $0)/config" ]; then
-    . "$(dirname $0)/config"
-else
-    TMPDIR=/srv/tmp
-    FTP_BASE=/srv/ftp
 fi
 
 if [ -f /etc/makepkg.conf ]; then
@@ -31,14 +22,8 @@ else
     PKGEXT=".pkg.tar.gz"
 fi
 
-repo_lock $repo any
-WORKDIR="$TMPDIR/convert-to-any.$pkg.$UID"
-ftppath="$FTP_BASE/$repo/os"
-
 cleanup() {
     trap '' 0 2
-    # unlock
-    repo_unlock $repo any
     rm -rf "$WORKDIR"
     [ "$1" ] && exit $1
 }
@@ -53,56 +38,32 @@ die() {
     cleanup 1
 }
 
-# Enter the temporary build directory
-# and convert the i686 package into an
-# architecture-independent package.
 mkdir -p "$WORKDIR/build"
-pushd "$WORKDIR/build" >/dev/null
 
-oldpkgname=$ftppath/i686/$pkg*
-if [ -f "$oldpkgname" ]; then
-    cp "$oldpkgname" .
-else
-    die "E: Package $oldpkgname not found in $ftppath/i686"
+oldpkgname="$1"
+
+if [ -z "$oldpkgname" ]; then
+    die "convert-to-any: which package to convert?"
 fi
 
-for architecture in i686 x86_64; do
-    if [ -f "$ftppath/$architecture/$repo.db.tar.$DB_COMPRESSION" ]; then
-        cp $ftppath/$architecture/$repo.db.tar.$DB_COMPRESSION \
-        $repo-$architecture.db.tar.$DB_COMPRESSION
-    else
-        touch $repo-$architecture.db.tar.$DB_COMPRESSION
-    fi
-done
+pkg="$(basename $oldpkgname)"
+newpkgname=$(echo $pkg | sed "s/-\(i686\|x86_64\)$PKGEXT/-any$PKGEXT/")
 
-if [ ! -d "$ftppath/any" ]; then mkdir -p "$ftppath/any"; fi
+if ! cp "$oldpkgname" "$WORKDIR/build/$pkg"; then
+    die "convert-to-any: failed to copy package to $WORKDIR"
+fi
+pushd "$WORKDIR/build" >/dev/null
 
 # Conversion of i686 package into "any" package.
-echo -n "Extracting $pkg..."
 mkdir -p package
-tar zxf $pkg*i686$PKGEXT -C package
-echo " done."
+if ! tar zxf "$pkg" -C package; then
+	die "convert-to-any: error in extracting $oldpkgname"
+fi
 
-sed -i "s/arch = i686/arch = any/g" package/.PKGINFO
-newpkgname=$(ls $pkg*i686$PKGEXT | sed "s/i686/any/g")
+sed -i "s/arch = \(i686\|x86_64\)/arch = any/g" package/.PKGINFO
 pushd package >/dev/null
-tar czf "$newpkgname" * .PKGINFO
+tar czf "$OUTDIR/$newpkgname" * .PKGINFO
 popd >/dev/null
-mv "package/$newpkgname" .
-echo "Created $newpkgname."
 
-# New package is ready, move it into place and update db.
-mv "$newpkgname" "$ftppath/any/"
-for architecture in i686 x86_64; do
-    #       rm -f $ftppath/$architecture/$pkg*$PKGEXT
-    ln -s "$ftppath/any/$newpkgname" "$ftppath/$architecture/$newpkgname"
-    repo-remove -q $repo-$architecture.db.tar.$DB_COMPRESSION $pkg
-    repo-add -q $repo-$architecture.db.tar.$DB_COMPRESSION $newpkgname
-    mv $repo-$architecture.db.tar.$DB_COMPRESSION "$ftppath/os/$architecture"
-    echo "Updated $repo-$architecture for $pkg."
-done
-
-echo -n "Cleaning up..."
 popd >/dev/null
 cleanup
-echo " done."

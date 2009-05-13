@@ -18,9 +18,8 @@ fi
 if [ -f /etc/makepkg.conf ]; then
     . /etc/makepkg.conf
 else
-    echo "W: /etc/makepkg.conf does not exist."
-    DB_COMPRESSION=gz
-    PKGEXT=".pkg.tar.gz"
+    echo "E: /etc/makepkg.conf does not exist."
+    exit 1
 fi
 
 cleanup() {
@@ -57,13 +56,13 @@ pushd "$WORKDIR/build" >/dev/null
 
 # Conversion of i686 package into "any" package.
 mkdir -p package
-if ! fakeroot tar zxf "$pkg" -C package; then
+if ! fakeroot bsdtar zxf "$pkg" -C package; then
 	die "convert-to-any: error in extracting $oldpkgname"
 fi
 
 sed -i "s/arch = \(i686\|x86_64\)/arch = any/g" package/.PKGINFO
 pushd package >/dev/null
-fakeroot tar czf "$OUTDIR/$newpkgname" .PKGINFO *
+fakeroot bsdtar czf "$OUTDIR/$newpkgname" .PKGINFO *
 popd >/dev/null
 
 popd >/dev/null

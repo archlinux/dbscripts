@@ -17,7 +17,7 @@ source_makepkg () {
 		#Get some config info
 		. /etc/makepkg.conf
 	else
-		echo "/etc/makepkg.conf does not exist!"
+		echo "error: /etc/makepkg.conf does not exist!"
 		exit 1
 	fi
 }

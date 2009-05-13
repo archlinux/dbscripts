@@ -1,10 +1,16 @@
 #!/bin/bash
 
 reposdir=/srv/ftp/
-#targetdir=/home/pierre/public_html/test-repo/
 targetdir=$reposdir
 repos="core extra testing community"
 arches="i686 x86_64"
+
+if [ -f /etc/makepkg.conf ]; then
+    . /etc/makepkg.conf
+else
+    echo "Error: /etc/makepkg.conf does not exist."
+    exit 1
+fi
 
 if [ -f "/tmp/createFileList.lock" ]; then
     echo "Error: createFileList allready in progress."
@@ -22,7 +28,7 @@ getpkgname() {
     local tmp
 
     tmp=${1##*/}
-    tmp=${tmp%.pkg.tar.gz}
+    tmp=${tmp%$PKGEXT}
     tmp=${tmp%-i686}
     tmp=${tmp%-x86_64}
     tmp=${tmp%-any}
@@ -31,7 +37,7 @@ getpkgname() {
 
 cd $reposdir
 for repo in $repos; do
-    REPO_DB_FILE=${repo}.files.tar.gz
+    REPO_DB_FILE=${repo}.files.tar.${DB_COMPRESSION}
     for arch in $arches; do
         repodir=${repo}/os/${arch}/
         cached="no"
@@ -44,7 +50,7 @@ for repo in $repos; do
         fi
 
         # create file lists
-        for pkg in $repodir*.pkg.tar.gz; do
+        for pkg in $repodir*${PKGEXT}; do
             basename=$(basename $pkg)
             pkgname=$(getpkgname $basename)
             tmppkgdir=${TMPDIR}/${repodir}${pkgname}/
@@ -69,7 +75,7 @@ for repo in $repos; do
             cd ${TMPDIR}/${repodir}
             [ -f "${pkgdir}${REPO_DB_FILE}.old" ] && rm "${pkgdir}${REPO_DB_FILE}.old"
             [ -f "${pkgdir}${REPO_DB_FILE}" ] && mv "${pkgdir}${REPO_DB_FILE}" "${pkgdir}${REPO_DB_FILE}.old"
-            bsdtar --exclude=*.tar.gz -czf ${pkgdir}${REPO_DB_FILE} *
+            bsdtar --exclude=*.tar.${DB_COMPRESSION} -cf ${pkgdir}${REPO_DB_FILE} *
         fi
 
         cd $reposdir

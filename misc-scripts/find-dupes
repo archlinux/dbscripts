@@ -39,7 +39,7 @@ getpkgname() {
 
 showdupes() {
     done=""
-    for i in *.pkg.tar.gz; do
+    for i in *${PKGEXT}; do
         pkgname=$(getpkgname $i)
         if [ "$pkgname" = "$1" ]; then
             lastmod="$(stat -c %y $i | cut -d. -f1)"
@@ -60,7 +60,7 @@ echo "Scanning for duplicate packages in '$reponame' ($arch)"
 DUPES=""
 lastpkg=""
 
-for pkg in *.pkg.tar.gz; do
+for pkg in *${PKGEXT}; do
     pkgname="$(getpkgname $pkg)"
     if [ "$lastpkg" = "$pkgname" ]; then
         DUPES="$DUPES $pkgname"

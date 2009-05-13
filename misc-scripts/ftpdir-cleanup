@@ -49,11 +49,11 @@ EXTRAFILES=""
 TMPDIR=$(mktemp -d /tmp/cleanup.XXXXXX) || exit 1
 
 cd "${TMPDIR}"
-/bin/tar xzf "$ftppath/$reponame.db.tar.$DB_COMPRESSION"
+bsdtar xf "$ftppath/$reponame.db.tar.$DB_COMPRESSION"
 
 for pkg in *; do
   filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
-  [ -z "${filename}" ] && filename="${pkg}.pkg.tar.gz"
+  [ -z "${filename}" ] && filename="${pkg}${PKGEXT}"
 
   if [ ! -f "${ftppath}/${filename}" ]; then
     MISSINGFILES="${MISSINGFILES} ${filename}"

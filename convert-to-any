@@ -57,13 +57,13 @@ pushd "$WORKDIR/build" >/dev/null
 
 # Conversion of i686 package into "any" package.
 mkdir -p package
-if ! tar zxf "$pkg" -C package; then
+if ! fakeroot tar zxf "$pkg" -C package; then
 	die "convert-to-any: error in extracting $oldpkgname"
 fi
 
 sed -i "s/arch = \(i686\|x86_64\)/arch = any/g" package/.PKGINFO
 pushd package >/dev/null
-tar czf "$OUTDIR/$newpkgname" * .PKGINFO
+fakeroot tar czf "$OUTDIR/$newpkgname" .PKGINFO *
 popd >/dev/null
 
 popd >/dev/null

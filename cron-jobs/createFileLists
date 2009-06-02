@@ -35,6 +35,13 @@ getpkgname() {
     echo $tmp
 }
 
+case "${DB_COMPRESSION}" in
+	gz)  TAR_OPT="z" ;;
+	bz2) TAR_OPT="j" ;;
+	xz)  TAR_OPT="J" ;;
+	*) echo "${DB_COMPRESSION} is not a valid archive compression" && exit 1 ;;
+esac
+
 cd $reposdir
 for repo in $repos; do
     REPO_DB_FILE=${repo}.files.tar.${DB_COMPRESSION}
@@ -75,7 +82,7 @@ for repo in $repos; do
             cd ${TMPDIR}/${repodir}
             [ -f "${pkgdir}${REPO_DB_FILE}.old" ] && rm "${pkgdir}${REPO_DB_FILE}.old"
             [ -f "${pkgdir}${REPO_DB_FILE}" ] && mv "${pkgdir}${REPO_DB_FILE}" "${pkgdir}${REPO_DB_FILE}.old"
-            bsdtar --exclude=*.tar.${DB_COMPRESSION} -cf ${pkgdir}${REPO_DB_FILE} *
+            bsdtar --exclude=*.tar.${DB_COMPRESSION} -c${TAR_OPT}f ${pkgdir}${REPO_DB_FILE} *
         fi
 
         cd $reposdir

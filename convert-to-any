@@ -62,7 +62,13 @@ fi
 
 sed -i "s/arch = \(i686\|x86_64\)/arch = any/g" package/.PKGINFO
 pushd package >/dev/null
-fakeroot bsdtar cf "$OUTDIR/$newpkgname" .PKGINFO *
+case "$newpkgname" in
+	*tar.gz)  TAR_OPT="z" ;;
+	*tar.bz2) TAR_OPT="j" ;;
+	*tar.xz)  TAR_OPT="J" ;;
+	*) die "$newpkgname does not have a valid archive extension." ;;
+esac
+fakeroot bsdtar c${TAR_OPT}f "$OUTDIR/$newpkgname" .PKGINFO *
 popd >/dev/null
 
 popd >/dev/null

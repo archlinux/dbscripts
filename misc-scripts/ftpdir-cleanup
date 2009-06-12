@@ -69,7 +69,7 @@ for pkg in *; do
 done
 
 cd "$ftppath"
-for pkg in *$PKGEXT; do
+for pkg in *$arch$PKGEXT; do
     pkgname="$(getpkgname $pkg)"
     for p in ${TMPDIR}/${pkgname}-*; do
         if [ -d "${p}" -a "$(getpkgname $(basename ${p}))" = "${pkgname}" ]; then
@@ -81,7 +81,7 @@ done
 
 cd "$ftppath_base/any"
 for pkg in *$PKGEXT; do
-	if [ ! -h $ftppath_base/i686/$pkg && ! -h $ftppath_base/x86_64/$pkg ]; then
+	if [ ! -h $ftppath_base/i686/$pkg -a ! -h $ftppath_base/x86_64/$pkg ]; then
 		ARCHINDEPFILES="$ARCHINDEPFILES $pkg"
 	fi
 done

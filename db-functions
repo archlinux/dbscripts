@@ -54,32 +54,48 @@ repo_unlock () { #repo_unlock repo-name arch
 	restore_umask
 }
 
-# Get the package name from the filename
-# hackish, but should work for now
-getpkgname() {
-	local tmp
+# Get the package base or name
+getpkgbase() {
+	local _base
 
-	tmp=${1##*/}
-	tmp=${tmp%$PKGEXT}
-	tmp=${tmp%$SRCEXT}
-	tmp=${tmp%-$CARCH}
-	echo ${tmp%-*-*}
+	_base="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | sort | /bin/grep -m 1 -E "^pkg(base|name)" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
+	if [ -z "$_base" ]; then
+		echo "ERROR: Package '$1' has no pkgbase or pkgname in the PKGINFO. Fail!"
+		exit 1
+	fi
+
+	echo "$_base"
+}
+
+# Get the package name
+getpkgname() {
+	local _name
+
+	_name="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | /bin/grep -m 1 "^pkgname" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
+	if [ -z "$_name" ]; then
+		echo "ERROR: Package '$1' has no pkgname in the PKGINFO. Fail!"
+		exit 1
+	fi
+
+	echo "$_name"
 }
 
 # Get the pkgver-pkgrel of this package
 getpkgver() {
-	local tmp
+	local _ver
 
-	tmp=${1##*/}
-	tmp=${tmp%$PKGEXT}
-	tmp=${tmp%$SRCEXT}
-	tmp=${tmp%-$CARCH}
-	echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
+	_ver="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | /bin/grep -m 1 "^pkgver" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
+	if [ -z "$_ver" ]; then
+		echo "ERROR: Package '$1' has no pkgver in the PKGINFO. Fail!"
+		exit 1
+	fi
+
+	echo "$_ver"
 }
 
 check_pkg_arch () { #check_pkg_arch pkgfile arch
 	local _arch
-	_arch="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | /bin/grep "^arch" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
+	_arch="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | /bin/grep -m 1 "^arch" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
 
 	if [ -z "$_arch" ]; then
 		echo "ERROR: Package '$1' has no arch in the PKGINFO. Fail!"

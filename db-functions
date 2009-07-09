@@ -78,8 +78,8 @@ getpkgver() {
 }
 
 check_pkg_arch () { #check_pkg_arch pkgfile arch
-	local arch
-	_arch="$(/usr/bin/bsdtar -xOf "$1" .PKGINFO | /bin/grep "^arch" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
+	local _arch
+	_arch="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | /bin/grep "^arch" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
 
 	if [ -z "$_arch" ]; then
 		echo "ERROR: Package '$1' has no arch in the PKGINFO. Fail!"

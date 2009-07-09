@@ -44,17 +44,6 @@ if [ -d "${stagedir}/add" ]; then
 	/bin/mv "${stagedir}/add/"* "$stagedir/"
 fi
 
-# Get the package name from the filename
-# hackish, but should work for now
-getpkgname() {
-	local tmp
-
-	tmp=${1##*/}
-	tmp=${tmp%$PKGEXT}
-	tmp=${tmp%-$current_arch}
-	echo ${tmp%-*-*}
-}
-
 cleanup() {
     trap '' 0 2
 	# unlock

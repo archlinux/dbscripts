@@ -82,22 +82,23 @@ if [ -n "$ANYPKGS" ]; then
 	for pkg in $ANYPKGS; do
 		_pkgfile=$(basename $pkg)
 		_pkgname="$(getpkgname $pkg)"
+		_pkgbase="$(getpkgbase $pkg)"
 		svnrepo="$reponame-any"
 		echo "    Validating package arch (any) $_pkgname"
 		if ! check_pkg_arch "$pkg" "any"; then
 			echo "   ERROR: $_pkgfile is not architecture independent!"
 		else
-			echo "    Checking SVN for $_pkgname"
-			/usr/bin/svn up -q $_pkgname
-			if [ -d "$_pkgname/repos/$svnrepo" ]; then
-				. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
-				if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-any$PKGEXT" ]; then
+			echo "    Checking SVN for $_pkgbase"
+			/usr/bin/svn up -q $_pkgbase
+			if [ -d "$_pkgbase/repos/$svnrepo" ]; then
+				. "$_pkgbase/repos/$svnrepo/$BUILDSCRIPT"
+				if [ "$_pkgfile" = "$_pkgname-$pkgver-$pkgrel-any$PKGEXT" ]; then
 					to_add_any="$to_add_any $pkg"
 				else
 					echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
 				fi
 			else
-				echo "    WARNING: Package $_pkgname not found in $svnrepo"
+				echo "    WARNING: Package $_pkgbase not found in $svnrepo"
 			fi
 		fi
 	done
@@ -154,22 +155,23 @@ for A in ${ARCHES[@]}; do
 			for pkg in $ADDPKGS; do
 				_pkgfile=$(basename $pkg)
 				_pkgname="$(getpkgname $pkg)"
+				_pkgbase="$(getpkgbase $pkg)"
 
 				echo "    Validating package arch ($current_arch) $_pkgname"
 				if ! check_pkg_arch "$pkg" "$current_arch"; then
 					echo "   ERROR: $_pkgfile was built for the wrong architecture"
 				else
-					echo "    Checking SVN for $_pkgname"
-					/usr/bin/svn up -q $_pkgname
-					if [ -d "$_pkgname/repos/$svnrepo" ]; then
-						. "$_pkgname/repos/$svnrepo/$BUILDSCRIPT"
-						if [ "$_pkgfile" = "$pkgname-$pkgver-$pkgrel-$current_arch$PKGEXT" ]; then
+					echo "    Checking SVN for $_pkgbase"
+					/usr/bin/svn up -q $_pkgbase
+					if [ -d "$_pkgbase/repos/$svnrepo" ]; then
+						. "$_pkgbase/repos/$svnrepo/$BUILDSCRIPT"
+						if [ "$_pkgfile" = "$_pkgname-$pkgver-$pkgrel-$current_arch$PKGEXT" ]; then
 							to_add="$to_add $pkg"
 						else
 							echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
 						fi
 					else
-						echo "    WARNING: Package $_pkgname not found in $svnrepo"
+						echo "    WARNING: Package $_pkgbase not found in $svnrepo"
 					fi
 				fi
 			done

@@ -1,8 +1,7 @@
 #!/bin/bash
 
-#TODO add community
-repos="core extra testing"
-arches="i686 x86_64"
+repos="core extra testing community"
+arches="any i686 x86_64"
 
 LOCKFILE="/tmp/.ftpdircleanup.lock"
 

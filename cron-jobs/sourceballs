@@ -56,6 +56,10 @@ for repo in $repos; do
     for arch in $arches; do
         export CARCH="$arch"
         ftppath="$ftpbase/$repo/os/$arch"
+        if [ ! -d "$ftppath" ]; then
+            echo "FTP path does not exist: $ftppath" >2
+            continue
+        fi
         cd $ftppath
         for pkg in *$PKGEXT; do
             pkgname=$(getpkgname $pkg)

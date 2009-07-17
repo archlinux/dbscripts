@@ -1,12 +1,13 @@
 #!/bin/bash
 
-if [ $# -ne 2 ]; then
-	echo "usage: $(basename $0) <reponame> <arch>"
+if [ $# -ne 3 ]; then
+	echo "usage: $(basename $0) <reponame> <arch> <dest-dir>"
 	exit 1
 fi
 
 reponame=$1
 arch=$2
+dest=$3
 
 ##### Arch specific stuff. TODO make this configurable #####
 ftppath="/srv/ftp/$reponame/os/$arch/"
@@ -98,7 +99,7 @@ echo "Scan complete for $reponame ($arch) at ${ftppath}"
 
 if [ -n "$DELETEFILES" ]; then
     echo "    The following files are out of date"
-    echo "    They will be moved to /srv/package-cleanup"
+    echo "    They will be moved to '$dest'"
     for f in $DELETEFILES; do
         echo "        $f"
     done
@@ -115,7 +116,7 @@ fi
 
 if [ -n "$EXTRAFILES" ]; then
     echo "    The following files are in the repo but not the db"
-    echo "    They will be moved to /srv/package-cleanup"
+    echo "    They will be moved to '$dest'"
     for f in $EXTRAFILES; do
         echo "        $f"
     done
@@ -124,25 +125,25 @@ fi
 if [ -n "$ARCHINDEPFILES" ]; then
 	echo "    The following architecture independent packages"
 	echo "    are not symlinked in the architecture repositories."
-	echo "    They will be moved to /srv/package/cleanup"
+	echo "    They will be moved to '$dest'"
     for f in $ARCHINDEPFILES; do
         echo "        $f"
     done
 fi
 
 if [ -n "${DELETEFILES}" ]; then
-    mv ${DELETEFILES} /srv/package-cleanup/
+    mv ${DELETEFILES} "$dest"
     echo ""
 fi
 
 if [ -n "${EXTRAFILES}" ]; then
-    mv ${EXTRAFILES} /srv/package-cleanup/
+    mv ${EXTRAFILES} "$dest"
     echo ""
 fi
 
 cd "$ftppath_base/any"
 if [ -n "${ARCHINDEPFILES}" ]; then
-    mv ${ARCHINDEPFILES} /srv/package-cleanup/
+    mv ${ARCHINDEPFILES} "$dest"
     echo ""
 fi
 

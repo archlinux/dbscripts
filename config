@@ -6,6 +6,8 @@ SVNREPO_extra="file:///srv/svn-packages"
 SVNREPO_testing="file:///srv/svn-packages"
 SVNREPO_community="file:///srv/svn-community"
 
+CLEANUP_DESTDIR="/srv/package-cleanup"
+
 STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
 ARCHES=(i686 x86_64)

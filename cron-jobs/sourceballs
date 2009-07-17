@@ -2,8 +2,8 @@
 
 ftpbase="/srv/ftp"
 srcbase="/srv/ftp/sources"
-repos="core extra testing"
-arches="i686 x86_64"
+repos="core extra testing community"
+arches="any i686 x86_64"
 
 LOCKFILE="/tmp/.sourceball.lock"
 

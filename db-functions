@@ -66,14 +66,13 @@ _grep_pkginfo() {
 }
 
 
-# Get the package base or name
+# Get the package base or name as fallback
 getpkgbase() {
 	local _base
 
-	_base="$(_grep_pkginfo "$1" "^pkg(base|name)")"
+	_base="$(_grep_pkginfo "$1" "^pkgbase")"
 	if [ -z "$_base" ]; then
-		echo "ERROR: Package '$1' has no pkgbase or pkgname in the PKGINFO. Fail!"
-		exit 1
+		echo $(getpkgname "$1")
 	fi
 
 	echo "$_base"

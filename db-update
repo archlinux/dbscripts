@@ -106,8 +106,8 @@ fi
 
 for current_arch in ${ARCHES[@]}; do
 
-	ftppath="$FTP_BASE/$reponame/os/$current_arch/"
-	ftppath_any="$FTP_BASE/$reponame/os/any/"
+	ftppath="$FTP_BASE/$reponame/os/$current_arch"
+	ftppath_any="$FTP_BASE/$reponame/os/any"
 
 	if [ ! -d "$ftppath" ]; then
 		echo "FTP path for this repo ($reponame) is missing"
@@ -197,7 +197,7 @@ for current_arch in ${ARCHES[@]}; do
 		if [ $(/bin/ls "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
 			echo "Copying new files to '$ftppath'"
 			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
-				if ! /bin/cp "$f" "$ftppath"; then
+				if ! /bin/cp "$f" "$ftppath/"; then
 					die "error: failure while copying files to $ftppath"
 				fi
 			done

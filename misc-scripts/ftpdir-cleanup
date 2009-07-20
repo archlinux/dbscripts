@@ -107,7 +107,7 @@ for mf in $missfiles; do
     af_satisfied=0
     if [ -e "${ftppath_base}/any/${mf}" ]; then
         echo "Restoring missing 'any' symlink: ${mf}"
-        ln -s "${ftppath_base}/any/${mf}" "${ftppath}"
+        ln -s "../any/${mf}" "${ftppath}"
     else
         MISSINGFILES="${MISSINGFILES} ${mf}"
     fi

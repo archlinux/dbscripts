@@ -112,7 +112,7 @@ if [ -d "$packagename/repos/$svnrepo_from" ]; then
 		mv $repoto.db.tar.$DB_COMPRESSION* $ftppath_to/$architecture
 		if [ "${_arch}" == "any" ]; then
 			mv ${_pkgfile} $ftppath_to/any
-			ln -s $ftppath_to/any/${_pkgfile} $ftppath_to/$architecture/
+			ln -s ../any/${_pkgfile} $ftppath_to/$architecture/
 		else
 			mv ${_pkgfile} $ftppath_to/$architecture
 		fi

@@ -209,7 +209,7 @@ for current_arch in ${ARCHES[@]}; do
 					die "error: failure while copying files to $ftppath_any"
 				fi
 				bf=$(basename $f)
-				if ! ln -s "$ftppath_any/$bf" "$ftppath/$bf"; then
+				if ! ln -s "../any/$bf" "$ftppath/$bf"; then
 					die "error: failed to make link for $bf."
 				fi
 			done

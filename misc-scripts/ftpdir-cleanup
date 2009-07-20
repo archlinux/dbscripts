@@ -32,6 +32,7 @@ getpkgname() {
 	tmp=${1##*/}
 	tmp=${tmp%$PKGEXT}
 	tmp=${tmp%-$arch}
+	tmp=${tmp%-any}
 	echo ${tmp%-*-*}
 }
 
@@ -40,7 +41,8 @@ getpkgname_ver() {
 
 	tmp=${1##*/}
 	tmp=${tmp%$PKGEXT}
-	echo ${tmp%-$arch}
+	tmp=${tmp%-$arch}
+	echo ${tmp%-any}
 }
 
 MISSINGFILES=""
@@ -56,7 +58,7 @@ for pkg in *; do
   filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
   [ -z "${filename}" ] && filename="${pkg}${PKGEXT}"
 
-  if [ ! -f "${ftppath}/${filename}" ]; then
+  if [ ! -e "${ftppath}/${filename}" ]; then
     MISSINGFILES="${MISSINGFILES} ${filename}"
   else
     pkgname="$(getpkgname ${filename})"

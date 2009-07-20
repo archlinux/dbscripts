@@ -98,32 +98,17 @@ if [ -z "$DELETEFILES$MISSINGFILES$EXTRAFILES$ARCHINDEPFILES" ]; then
     exit 0
 fi
 
-#Do a quick check. If we have a MISSINGFILE and an ARCHINDEPFILE of the same
-#name to remove, then let's restore the symlink.
-
-archfiles="$ARCHINDEPFILES"
-ARCHINDEPFILES=""
-for af in $archfiles; do
-    af_satisfied=0
-    for mf in $MISSINGFILES; do
-        if [ "${af}" = "${mf}" ]; then
-            ln -s "${ftppath_base}/any/${af}" "${ftppath}"
-            af_satisfied=1
-        fi
-
-    done
-    if [ $af_satisfied -eq 0 ]; then
-        ARCHINDEPFILES="${ARCHINDEPFILES} ${af}"
-    fi
-done
-#rescan missing files now
+# Do a quick check to see if a missing ARCHINDEPFILE is in the any dir
+# If it is, and the file is MISSING, restore it
 missfiles="$MISSINGFILES"
 MISSINGFILES=""
 for mf in $missfiles; do
-    if [ ! -e "${ftppath}/${mf}" ]; then
-        MISSINGFILES="${MISSINGFILES} ${mf}"
+    af_satisfied=0
+    if [ -e "${ftppath_base}/any/${mf}" ]; then
+        echo "Restoring missing 'any' symlink: ${mf}"
+        ln -s "${ftppath_base}/any/${mf}" "${ftppath}"
     else
-        echo "Missing file has been restored: $mf"
+        MISSINGFILES="${MISSINGFILES} ${mf}"
     fi
 done
 

@@ -231,5 +231,5 @@ done
 if [ -n "$to_add_any" ]; then
 	/bin/rm $to_add_any
 fi
-cleanup
+rm -rf $WORKDIR
 # vim: set ts=4 sw=4 noet ft=sh:

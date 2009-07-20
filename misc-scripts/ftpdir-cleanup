@@ -10,9 +10,10 @@ arch=$2
 dest=$3
 
 ##### Arch specific stuff. TODO make this configurable #####
-ftppath="/srv/ftp/$reponame/os/$arch/"
 ftppath_base="/srv/ftp/$reponame/os"
 ############################################################
+
+ftppath="$ftppath_base/$arch"
 
 if [ ! -d "$ftppath" ]; then
     echo "FTP path '$ftppath' does not exist"
@@ -32,7 +33,6 @@ getpkgname() {
 	tmp=${1##*/}
 	tmp=${tmp%$PKGEXT}
 	tmp=${tmp%-$arch}
-	tmp=${tmp%-any}
 	echo ${tmp%-*-*}
 }
 
@@ -41,8 +41,7 @@ getpkgname_ver() {
 
 	tmp=${1##*/}
 	tmp=${tmp%$PKGEXT}
-	tmp=${tmp%-$arch}
-	echo ${tmp%-any}
+	echo ${tmp%-$arch}
 }
 
 MISSINGFILES=""
@@ -82,12 +81,14 @@ for pkg in *$arch$PKGEXT; do
     EXTRAFILES="$EXTRAFILES $pkg"
 done 
 
-cd "$ftppath_base/any"
-for pkg in *$PKGEXT; do
-	if [ ! -h $ftppath_base/i686/$pkg -a ! -h $ftppath_base/x86_64/$pkg ]; then
-		ARCHINDEPFILES="$ARCHINDEPFILES $pkg"
-	fi
-done
+if [ -d "$ftppath_base/any" ]; then
+    cd "$ftppath_base/any"
+    for pkg in *$PKGEXT; do
+        if [ ! -h $ftppath_base/i686/$pkg -a ! -h $ftppath_base/x86_64/$pkg ]; then
+            ARCHINDEPFILES="$ARCHINDEPFILES $pkg"
+        fi
+    done
+fi
 
 cd "$ftppath"
 rm -rf ${TMPDIR}
@@ -96,6 +97,35 @@ rm -rf ${TMPDIR}
 if [ -z "$DELETEFILES$MISSINGFILES$EXTRAFILES$ARCHINDEPFILES" ]; then
     exit 0
 fi
+
+#Do a quick check. If we have a MISSINGFILE and an ARCHINDEPFILE of the same
+#name to remove, then let's restore the symlink.
+
+archfiles="$ARCHINDEPFILES"
+ARCHINDEPFILES=""
+for af in $archfiles; do
+    af_satisfied=0
+    for mf in $MISSINGFILES; do
+        if [ "${af}" = "${mf}" ]; then
+            ln -s "${ftppath_base}/any/${af}" "${ftppath}"
+            af_satisfied=1
+        fi
+
+    done
+    if [ $af_satisfied -eq 0 ]; then
+        ARCHINDEPFILES="${ARCHINDEPFILES} ${af}"
+    fi
+done
+#rescan missing files now
+missfiles="$MISSINGFILES"
+MISSINGFILES=""
+for mf in $missfiles; do
+    if [ ! -e "${ftppath}/${mf}" ]; then
+        MISSINGFILES="${MISSINGFILES} ${mf}"
+    else
+        echo "Missing file has been restored: $mf"
+    fi
+done
 
 echo "Scan complete for $reponame ($arch) at ${ftppath}"
 

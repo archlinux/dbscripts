@@ -40,6 +40,9 @@ repo_lock () { #repo_lock repo-name arch
 		exit 1
 	else
 		/bin/touch "$LOCKFILE"
+		if [ ! -f "$LOCKFILE" ]; then
+			echo "error: could not create repo lock... something went wrong!"
+		fi
 		set_umask
 	fi
 }

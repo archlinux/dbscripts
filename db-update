@@ -104,8 +104,7 @@ if [ -n "$ANYPKGS" ]; then
 	done
 fi
 
-for A in ${ARCHES[@]}; do
-	current_arch="$A"
+for current_arch in ${ARCHES[@]}; do
 
 	ftppath="$FTP_BASE/$reponame/os/$current_arch/"
 	ftppath_any="$FTP_BASE/$reponame/os/any/"
@@ -195,8 +194,8 @@ for A in ${ARCHES[@]}; do
 
 	# if non empty, move all build dirs
 	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
-		echo "Copying new files to '$ftppath'"
 		if [ $(/bin/ls "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
+			echo "Copying new files to '$ftppath'"
 			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
 				if ! /bin/cp "$f" "$ftppath"; then
 					die "error: failure while copying files to $ftppath"
@@ -216,7 +215,7 @@ for A in ${ARCHES[@]}; do
 			done
 		fi
 		if ! /bin/cp "$WORKDIR/build/$reponame.db"* "$ftppath/"; then
-			die "failed to move repository $reponame-$A".
+			die "failed to move repository $reponame-$current_arch".
 		fi
 	else
 		echo "Nothing to copy, no work done"

@@ -72,7 +72,7 @@ getpkgbase() {
 
 	_base="$(_grep_pkginfo "$1" "^pkgbase")"
 	if [ -z "$_base" ]; then
-		echo $(getpkgname "$1")
+		getpkgname "$1"
 	fi
 
 	echo "$_base"

@@ -196,15 +196,16 @@ for A in ${ARCHES[@]}; do
 	# if non empty, move all build dirs
 	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 		echo "Copying new files to '$ftppath'"
-		if [ $(/bin/ls "$WORKDIR/build/"*$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
-			for f in "$WORKDIR/build/"*$current_arch$PKGEXT; do
+		if [ $(/bin/ls "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
+			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
 				if ! /bin/cp "$f" "$ftppath"; then
 					die "error: failure while copying files to $ftppath"
 				fi
 			done
 		fi
-		if [ $(/bin/ls "$WORKDIR/build/"*any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
-			for f in "$WORKDIR/build/"*any$PKGEXT; do
+		if [ $(/bin/ls "$WORKDIR/build/"*-any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
+			echo "Copying new files to '$ftppath_any' and symlinking"
+			for f in "$WORKDIR/build/"*-any$PKGEXT; do
 				if ! /bin/cp "$f" "$ftppath_any"; then
 					die "error: failure while copying files to $ftppath_any"
 				fi
@@ -214,7 +215,7 @@ for A in ${ARCHES[@]}; do
 				fi
 			done
 		fi
-		if ! /bin/cp "$WORKDIR/build/$reponame.db"* "$ftppath"; then
+		if ! /bin/cp "$WORKDIR/build/$reponame.db"* "$ftppath/"; then
 			die "failed to move repository $reponame-$A".
 		fi
 	else
@@ -228,8 +229,10 @@ for A in ${ARCHES[@]}; do
 
 	repo_unlock $reponame $current_arch
 done
+
 if [ -n "$to_add_any" ]; then
 	/bin/rm $to_add_any
 fi
+
 rm -rf $WORKDIR
 # vim: set ts=4 sw=4 noet ft=sh:

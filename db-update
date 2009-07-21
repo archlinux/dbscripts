@@ -46,7 +46,6 @@ fi
 
 cleanup() {
     trap '' 0 2
-	# unlock
 	repo_unlock $reponame $current_arch
 	rm -rf "$WORKDIR"
 	[ "$1" ] && exit $1
@@ -54,7 +53,7 @@ cleanup() {
 
 ctrl_c() {
 	echo "Interrupted" >&2
-	cleanup 0
+	cleanup 1
 }
 
 die() {
@@ -233,5 +232,6 @@ if [ -n "$to_add_any" ]; then
 	/bin/rm $to_add_any
 fi
 
+trap '' 0 2
 rm -rf $WORKDIR
 # vim: set ts=4 sw=4 noet ft=sh:

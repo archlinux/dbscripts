@@ -1,24 +1,21 @@
 #!/bin/bash
 
-if [ $# -ne 3 ]; then
-	echo "usage: $(basename $0) <reponame> <arch> <dest-dir>"
+if [ $# -ne 2 ]; then
+	echo "usage: $(basename $0) <reponame> <dest-dir>"
 	exit 1
 fi
 
 reponame=$1
-arch=$2
-dest=$3
+dest=$2
 
-##### Arch specific stuff. TODO make this configurable #####
-ftppath_base="/srv/ftp/$reponame/os"
 ############################################################
 
-ftppath="$ftppath_base/$arch"
-
-if [ ! -d "$ftppath" ]; then
-    echo "FTP path '$ftppath' does not exist"
+if [ ! -f "$(dirname $0)/../config" ]; then
+    echo "$(dirname $0)/../config not found! Aborting"
     exit 1
 fi
+
+. "$(dirname $0)/../config" 
 
 if [ ! -f /etc/makepkg.conf ]; then
     echo "/etc/makepkg.conf not found! Aborting"
@@ -28,140 +25,176 @@ fi
 . /etc/makepkg.conf
 
 getpkgname() {
-	local tmp
+  local tmp
 
-	tmp=${1##*/}
-	tmp=${tmp%$PKGEXT}
-	tmp=${tmp%-$arch}
-	echo ${tmp%-*-*}
+  tmp=${1##*/}
+  tmp=${tmp%$PKGEXT}
+  for arch in ${ARCHES[@]}; do
+    tmp=${tmp%-$arch}
+  done
+	tmp=${tmp%-any}
+  echo ${tmp%-*-*}
 }
 
-getpkgname_ver() {
-	local tmp
+TMPDIR=$(mktemp -d /tmp/cleanup-.XXXXXX) || exit 1
 
-	tmp=${1##*/}
-	tmp=${tmp%$PKGEXT}
-	echo ${tmp%-$arch}
-}
+ftppath_base="$FTP_BASE/$reponame/$FTP_OS_SUFFIX"
 
-MISSINGFILES=""
-DELETEFILES=""
-EXTRAFILES=""
+for arch in ${ARCHES[@]}; do
 
-TMPDIR=$(mktemp -d /tmp/cleanup.XXXXXX) || exit 1
+  ftppath="$ftppath_base/$arch"
+  MISSINGFILES=""
+  DELETEFILES=""
+  DELETESYMLINKS=""
+  EXTRAFILES=""
 
-cd "${TMPDIR}"
-bsdtar xf "$ftppath/$reponame.db.tar.$DB_COMPRESSION"
-
-for pkg in *; do
-  filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
-  [ -z "${filename}" ] && filename="${pkg}${PKGEXT}"
-
-  if [ ! -e "${ftppath}/${filename}" ]; then
-    MISSINGFILES="${MISSINGFILES} ${filename}"
-  else
-    pkgname="$(getpkgname ${filename})"
-    for otherfile in ${ftppath}/${pkgname}-*; do
-      otherfile="$(basename ${otherfile})"
-      if [ "${otherfile}" != "${filename}" -a "${pkgname}" = "$(getpkgname ${otherfile})" ]; then
-        DELETEFILES="${DELETEFILES} ${otherfile}"
-      fi
-    done
+  if [ ! -d "$ftppath" ]; then
+      echo "FTP path '$ftppath' does not exist"
+      exit 1
   fi
+
+
+  cd "${TMPDIR}"
+  bsdtar xf "$ftppath/$reponame.db.tar.$DB_COMPRESSION"
+
+  for pkg in *; do
+    filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
+    [ -z "${filename}" ] && filename="${pkg}${PKGEXT}"
+
+    if [ ! -e "${ftppath}/${filename}" ]; then
+      MISSINGFILES="${MISSINGFILES} ${filename}"
+    else
+      pkgname="$(getpkgname ${filename})"
+      for otherfile in ${ftppath}/${pkgname}-*; do
+        otherfile="$(basename ${otherfile})"
+        if [ "${otherfile}" != "${filename}" -a "${pkgname}" = "$(getpkgname ${otherfile})" ]; then
+          if [ -h "${otherfile}" ]; then
+            DELETESYMLINKS="${DELETESYMLINKS} ${otherfile}"
+          else
+            DELETEFILES="${DELETEFILES} ${otherfile}"
+          fi
+        fi
+      done
+    fi
+  done
+
+  cd "$ftppath"
+  for pkg in *$arch$PKGEXT; do
+      pkgname="$(getpkgname $pkg)"
+      for p in ${TMPDIR}/${pkgname}-*; do
+          if [ -d "${p}" -a "$(getpkgname $(basename ${p}))" = "${pkgname}" ]; then
+              continue 2
+          fi
+      done
+      EXTRAFILES="$EXTRAFILES $pkg"
+  done 
+
+  cd "$ftppath"
+  rm -rf ${TMPDIR}
+
+  # Do a quick check to see if a missing ARCHINDEPFILE is in the any dir
+  # If it is, and the file is MISSING, restore it
+  missfiles="$MISSINGFILES"
+  MISSINGFILES=""
+  for mf in $missfiles; do
+      af_satisfied=0
+      if [ -e "${ftppath_base}/any/${mf}" ]; then
+          echo "Restoring missing 'any' symlink: ${mf}"
+          ln -s "../any/${mf}" "${ftppath}"
+      else
+          MISSINGFILES="${MISSINGFILES} ${mf}"
+      fi
+  done
+
+  echo "Scan complete for $reponame ($arch) at ${ftppath}"
+
+  #Make sure we've done *something* before outputting anything
+  if [ -z "$DELETEFILES$DELETESYMLINKS$MISSINGFILES$EXTRAFILES" ]; then
+      continue
+  fi
+
+  if [ -n "$DELETEFILES" ]; then
+      echo "    The following files are out of date"
+      echo "    They will be moved to '$dest'"
+      for f in $DELETEFILES; do
+          echo "        $f"
+      done
+      echo ""
+  fi
+
+  if [ -n "$DELETESYMLINKS" ]; then
+      echo "    The following symlinks are out of date"
+      echo "    They will be deleted"
+      for f in $DELETESYMLINKS; do
+          echo "        $f"
+      done
+      echo ""
+  fi
+
+  if [ -n "$MISSINGFILES" ]; then
+      echo "    The following files are missing in the repo"
+      for f in $MISSINGFILES; do
+          echo "        $f"
+      done
+      echo ""
+  fi
+
+  if [ -n "$EXTRAFILES" ]; then
+      echo "    The following files are in the repo but not the db"
+      echo "    They will be moved to '$dest'"
+      for f in $EXTRAFILES; do
+          echo "        $f"
+      done
+  fi
+
+  if [ -n "${DELETEFILES}" ]; then
+      mv ${DELETEFILES} "$dest"
+      echo ""
+  fi
+
+  if [ -n "${DELETESYMLINKS}" ]; then
+      rm -f ${DELETESYMLINKS}
+      echo ""
+  fi
+
+  if [ -n "${EXTRAFILES}" ]; then
+      mv ${EXTRAFILES} "$dest"
+      echo ""
+  fi
+
 done
 
-cd "$ftppath"
-for pkg in *$arch$PKGEXT; do
-    pkgname="$(getpkgname $pkg)"
-    for p in ${TMPDIR}/${pkgname}-*; do
-        if [ -d "${p}" -a "$(getpkgname $(basename ${p}))" = "${pkgname}" ]; then
-            continue 2
-        fi
-    done
-    EXTRAFILES="$EXTRAFILES $pkg"
-done 
+ARCHINDEPFILES=""
 
 if [ -d "$ftppath_base/any" ]; then
+    echo "Checking arch-independent files..."
     cd "$ftppath_base/any"
     for pkg in *$PKGEXT; do
         [ -f "$pkg" ] || continue # in case we get a file named "*.pkg.tar.gz"
+        ### TODO loop over arch in ${ARCHES[@]} ... something like this:
+        # teststring=""
+        # for arch in ${ARCHES[@]}; do
+        #   teststring="$teststring -a ! -h $ftppath_base/$arch/$pkg"
+        # done
+        # teststring=$(echo $teststring | sed 's/^ -a//')
+        # if [ eval "$teststring" ]; then
         if [ ! -h "$ftppath_base/i686/$pkg" -a ! -h "$ftppath_base/x86_64/$pkg" ]; then
             ARCHINDEPFILES="$ARCHINDEPFILES $pkg"
         fi
     done
 fi
 
-cd "$ftppath"
-rm -rf ${TMPDIR}
-
-#Make sure we've done *something* before outputting anything
-if [ -z "$DELETEFILES$MISSINGFILES$EXTRAFILES$ARCHINDEPFILES" ]; then
-    exit 0
-fi
-
-# Do a quick check to see if a missing ARCHINDEPFILE is in the any dir
-# If it is, and the file is MISSING, restore it
-missfiles="$MISSINGFILES"
-MISSINGFILES=""
-for mf in $missfiles; do
-    af_satisfied=0
-    if [ -e "${ftppath_base}/any/${mf}" ]; then
-        echo "Restoring missing 'any' symlink: ${mf}"
-        ln -s "../any/${mf}" "${ftppath}"
-    else
-        MISSINGFILES="${MISSINGFILES} ${mf}"
-    fi
-done
-
-echo "Scan complete for $reponame ($arch) at ${ftppath}"
-
-if [ -n "$DELETEFILES" ]; then
-    echo "    The following files are out of date"
-    echo "    They will be moved to '$dest'"
-    for f in $DELETEFILES; do
-        echo "        $f"
-    done
-    echo ""
-fi
-
-if [ -n "$MISSINGFILES" ]; then
-    echo "    The following files are missing in the repo"
-    for f in $MISSINGFILES; do
-        echo "        $f"
-    done
-    echo ""
-fi
-
-if [ -n "$EXTRAFILES" ]; then
-    echo "    The following files are in the repo but not the db"
-    echo "    They will be moved to '$dest'"
-    for f in $EXTRAFILES; do
-        echo "        $f"
-    done
-fi
-
 if [ -n "$ARCHINDEPFILES" ]; then
-	echo "    The following architecture independent packages"
-	echo "    are not symlinked in the architecture repositories."
-	echo "    They will be moved to '$dest'"
+  echo "    The following architecture independent packages"
+  echo "    are not symlinked in the architecture repositories."
+  echo "    They will be moved to '$dest'"
     for f in $ARCHINDEPFILES; do
         echo "        $f"
     done
 fi
 
-if [ -n "${DELETEFILES}" ]; then
-    mv ${DELETEFILES} "$dest"
-    echo ""
+if [ -d "$ftppath_base/any" -a -n "${ARCHINDEPFILES}" ]; then
+  cd "$ftppath_base/any"
+  mv ${ARCHINDEPFILES} "$dest"
+  echo ""
 fi
-
-if [ -n "${EXTRAFILES}" ]; then
-    mv ${EXTRAFILES} "$dest"
-    echo ""
-fi
-
-cd "$ftppath_base/any"
-if [ -n "${ARCHINDEPFILES}" ]; then
-    mv ${ARCHINDEPFILES} "$dest"
-    echo ""
-fi
-

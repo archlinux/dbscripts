@@ -1,13 +1,12 @@
 #!/bin/bash
 
 repos="core extra testing community"
-arches="i686 x86_64"
 
 LOCKFILE="/tmp/.ftpdircleanup.lock"
 
 cleanup () {
 	rm -f "$LOCKFILE"
-    exit 0
+  exit 0
 }
 
 ctrl_c() {
@@ -32,9 +31,7 @@ trap ctrl_c 2
 . $(dirname $0)/../config
 
 for repo in $repos; do
-    for arch in $arches; do
-        $(dirname $0)/../misc-scripts/ftpdir-cleanup $repo $arch $CLEANUP_DESTDIR
-    done
+    $(dirname $0)/../misc-scripts/ftpdir-cleanup $repo $CLEANUP_DESTDIR
 done
 
 cleanup

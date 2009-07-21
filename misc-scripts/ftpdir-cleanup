@@ -36,12 +36,12 @@ getpkgname() {
   echo ${tmp%-*-*}
 }
 
-TMPDIR=$(mktemp -d /tmp/cleanup-.XXXXXX) || exit 1
 
 ftppath_base="$FTP_BASE/$reponame/$FTP_OS_SUFFIX"
 
 for arch in ${ARCHES[@]}; do
 
+  TMPDIR=$(mktemp -d /tmp/cleanup-XXXXXX) || exit 1
   ftppath="$ftppath_base/$arch"
   MISSINGFILES=""
   DELETEFILES=""
@@ -53,8 +53,11 @@ for arch in ${ARCHES[@]}; do
       exit 1
   fi
 
+  if ! cd "${TMPDIR}" ; then
+      echo "Failed to cd to ${TMPDIR}"
+      exit 1
+  fi
 
-  cd "${TMPDIR}"
   bsdtar xf "$ftppath/$reponame.db.tar.$DB_COMPRESSION"
 
   for pkg in *; do

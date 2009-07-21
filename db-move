@@ -97,9 +97,7 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 		# copy the db file into our working area
 		if [ -f "$ftppath_from/$architecture/$repofrom.db.tar.$DB_COMPRESSION" ]; then
 		    /bin/cp "$ftppath_from/$architecture/$repofrom.db.tar.$DB_COMPRESSION" .
-		    for i in ${pkgname[@]}; do
-			/usr/bin/repo-remove -q "$repofrom.db.tar.$DB_COMPRESSION" $i || die "Error in repo-remove $i"
-		    done
+		    /usr/bin/repo-remove -q "$repofrom.db.tar.$DB_COMPRESSION" ${pkgname[@]} || die "Error in repo-remove"
 		    #use '*' to move the old DB too
 		    mv $repofrom.db.tar.$DB_COMPRESSION* "$ftppath_from/$architecture"
 		    echo "    Package files will be cleaned up automatically"
@@ -116,18 +114,15 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 		done
 		#use '*' to move the old DB too
 		mv $repoto.db.tar.$DB_COMPRESSION* $ftppath_to/$architecture
-		if [ "${_arch}" == "any" ]; then
-			for i in ${pkgname[@]}; do
-				_pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
-				mv ${_pkgfile} $ftppath_to/any
-				ln -s ../any/${_pkgfile} $ftppath_to/$architecture/
-			done
-		else
-			for i in ${pkgname[@]}; do
-				_pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
-				mv ${_pkgfile} $ftppath_to/$architecture
-			done
-		fi
+        for i in ${pkgname[@]}; do
+            _pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
+            if [ "${_arch}" == "any" ]; then
+                mv ${_pkgfile} $ftppath_to/any
+                ln -s ../any/${_pkgfile} $ftppath_to/$architecture/
+            else
+                mv ${_pkgfile} $ftppath_to/$architecture
+            fi
+        done
 	done
 else
     die "Error: $packagebase is not in repo $repofrom"

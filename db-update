@@ -69,15 +69,17 @@ if [ -d "$stagedir" ]; then
 	ANYPKGS="$(/bin/ls $stagedir/*-any$PKGEXT 2>/dev/null)"
 fi
 
-pkgtotal=$(echo "$ANYPKGS" | wc -w)
-echo "==> Processing $pkgtotal new/updated arch-independent packages for '$reponame'..." >&2
 mkdir -p $WORKDIR
 cd "$WORKDIR"
-svnpath="$(get_svnpath $reponame)"
-/usr/bin/svn checkout -N $svnpath checkout
-cd checkout
-to_add_any=""
+
 if [ -n "$ANYPKGS" ]; then
+	pkgtotal=$(echo "$ANYPKGS" | wc -w)
+	echo "==> Processing $pkgtotal new/updated arch-independent packages for '$reponame'..." >&2
+
+	svnpath="$(get_svnpath $reponame)"
+	/usr/bin/svn checkout -N $svnpath checkout
+	cd checkout
+	to_add_any=""
 	for pkg in $ANYPKGS; do
 		_pkgfile=$(basename $pkg)
 		_pkgname="$(getpkgname $pkg)"

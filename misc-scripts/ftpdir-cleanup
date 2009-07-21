@@ -113,6 +113,7 @@ for arch in ${ARCHES[@]}; do
 
   #Make sure we've done *something* before outputting anything
   if [ -z "$DELETEFILES$DELETESYMLINKS$MISSINGFILES$EXTRAFILES" ]; then
+      echo "(nothing to do for $arch)"
       continue
   fi
 
@@ -180,7 +181,7 @@ if [ -d "$ftppath_base/any" ]; then
         #   teststring="$teststring -a ! -h $ftppath_base/$arch/$pkg"
         # done
         # teststring=$(echo $teststring | sed 's/^ -a//')
-        # if [ eval "$teststring" ]; then
+        # if [ $teststring ]; then
         if [ ! -h "$ftppath_base/i686/$pkg" -a ! -h "$ftppath_base/x86_64/$pkg" ]; then
             ARCHINDEPFILES="$ARCHINDEPFILES $pkg"
         fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -ne 3 ]; then
-	echo "usage: $(basename $0) <pkgname> <reponame> <arch>"
+	echo "usage: $(basename $0) <pkgname|packagebase> <reponame> <arch>"
 	exit 1
 fi
 
@@ -9,7 +9,7 @@ fi
 
 source_makepkg
 
-packagename="$1"
+packagebase="$1"
 reponame="$2"
 arch="$3"
 
@@ -49,17 +49,23 @@ repo_lock $reponame $arch
 /bin/mkdir -p "$WORKDIR"
 
 
-echo "==> Removing package '$packagename' from '$reponame'..." >&2
+echo "==> Removing package '$packagebase' from '$reponame'..." >&2
 
 cd "$WORKDIR"
 /usr/bin/svn checkout -N $svnpath checkout
 cd checkout
 
-/usr/bin/svn up -q $packagename
-if [ -d "$packagename/repos/$svnrepo" ]; then
+/usr/bin/svn up -q $packagebase
+if [ -d "$packagebase/repos/$svnrepo" ]; then
 	echo "    Removing from subversion"
-	/usr/bin/svn rm --force -q "$packagename/repos/$svnrepo"
-	/usr/bin/svn commit -q -m "$(basename $0): $packagename removed by $(id -un)"
+	. "$packagebase/repos/$svnrepo/$BUILDSCRIPT"
+	/usr/bin/svn rm --force -q "$packagebase/repos/$svnrepo"
+	/usr/bin/svn commit -q -m "$(basename $0): $packagebase removed by $(id -un)"
+else
+	echo "    Warning: $packagebase not found in $svnrepo"
+	echo "             Removing split packages is not supported"
+	echo "             You need to specify each sub package instead"
+	pkgname=$packagebase
 fi
 
 cd "$WORKDIR"
@@ -82,7 +88,7 @@ for architecture in $arches; do
 
 	echo "    Removing from $reponame DB file ($architecture)"
 	cd build/
-	/usr/bin/repo-remove -q "$reponame.db.tar.$DB_COMPRESSION" $packagename
+	/usr/bin/repo-remove -q "$reponame.db.tar.$DB_COMPRESSION" ${pkgname[@]}
 
 	/bin/mv "$reponame.db.tar.$DB_COMPRESSION" "$ftppath/$architecture"
 

@@ -1,8 +1,7 @@
 #!/bin/bash
-# Originally from Pierre's testing2extra script
 
 if [ $# -ne 4 ]; then
-	echo "usage: $(basename $0) <pkgname> <repo-from> <repo-to> <arch>"
+	echo "usage: $(basename $0) <pkgname|packagebase> <repo-from> <repo-to> <arch>"
 	exit 1
 fi
 
@@ -10,7 +9,7 @@ fi
 
 source_makepkg
 
-packagename="$1"
+packagebase="$1"
 repofrom="$2"
 repoto="$3"
 _arch="$4"
@@ -62,24 +61,26 @@ cd "$WORKDIR"
 /usr/bin/svn checkout -N $svnpath checkout
 cd checkout
 
-/usr/bin/svn up -q $packagename
-if [ -d "$packagename/repos/$svnrepo_from" ]; then
-    . "$packagename/repos/$svnrepo_from/$BUILDSCRIPT"
-    _pkgfile="$pkgname-$pkgver-$pkgrel-$_arch$PKGEXT"
+/usr/bin/svn up -q $packagebase
+if [ -d "$packagebase/repos/$svnrepo_from" ]; then
+    . "$packagebase/repos/$svnrepo_from/$BUILDSCRIPT"
+    
+    for i in ${pkgname[@]}; do
+        _pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
+        if [ ! -f "$ftppath_from/${_arch}/$_pkgfile" ]; then
+            die "error: package file '$_pkgfile' not found in repo '$repofrom'"
+        fi
+    done
 
-    if [ ! -f "$ftppath_from/${_arch}/$_pkgfile" ]; then
-        die "error: package file '$_pkgfile' not found in repo '$repofrom'"
-    fi
-
-    if [ -d "$packagename/repos/$svnrepo_to" ]; then
+    if [ -d "$packagebase/repos/$svnrepo_to" ]; then
         echo "    Removing existing package from subversion"
-        /usr/bin/svn rm --force -q "$packagename/repos/$svnrepo_to"
-        /usr/bin/svn commit -q -m "$(basename $0): $packagename removed by $(id -un) for move to $repoto"
+        /usr/bin/svn rm --force -q "$packagebase/repos/$svnrepo_to"
+        /usr/bin/svn commit -q -m "$(basename $0): $packagebase removed by $(id -un) for move to $repoto"
     fi
 
     echo "    Moving svn entries"
-    /usr/bin/svn mv -r HEAD "$packagename/repos/$svnrepo_from" "$packagename/repos/$svnrepo_to"
-    /usr/bin/svn commit -m "$(basename $0): moved $packagename from [$repofrom] to [$repoto] ($_arch)"
+    /usr/bin/svn mv -r HEAD "$packagebase/repos/$svnrepo_from" "$packagebase/repos/$svnrepo_to"
+    /usr/bin/svn commit -m "$(basename $0): moved $packagebase from [$repofrom] to [$repoto] ($_arch)"
 
     echo "    Moving package file and updating DBs"
     cd "$WORKDIR"
@@ -96,7 +97,7 @@ if [ -d "$packagename/repos/$svnrepo_from" ]; then
 		# copy the db file into our working area
 		if [ -f "$ftppath_from/$architecture/$repofrom.db.tar.$DB_COMPRESSION" ]; then
 		    /bin/cp "$ftppath_from/$architecture/$repofrom.db.tar.$DB_COMPRESSION" .
-		    /usr/bin/repo-remove -q "$repofrom.db.tar.$DB_COMPRESSION" $packagename || die "Error in repo-remove"
+		    /usr/bin/repo-remove -q "$repofrom.db.tar.$DB_COMPRESSION" ${pkgname[@]} || die "Error in repo-remove"
 		    #use '*' to move the old DB too
 		    mv $repofrom.db.tar.$DB_COMPRESSION* "$ftppath_from/$architecture"
 		    echo "    Package files will be cleaned up automatically"
@@ -106,19 +107,25 @@ if [ -d "$packagename/repos/$svnrepo_from" ]; then
 		    /bin/cp "$ftppath_to/$architecture/$repoto.db.tar.$DB_COMPRESSION" .
 		fi
 
-		/bin/cp "$ftppath_from/$architecture/$_pkgfile" .
-		/usr/bin/repo-add -q "$repoto.db.tar.$DB_COMPRESSION" $_pkgfile || die "Error in repo-add"
+		for i in ${pkgname[@]}; do
+			_pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
+			/bin/cp "$ftppath_from/$architecture/$_pkgfile" .
+			/usr/bin/repo-add -q "$repoto.db.tar.$DB_COMPRESSION" $_pkgfile || die "Error in repo-add $_pkgfile"
+		done
 		#use '*' to move the old DB too
 		mv $repoto.db.tar.$DB_COMPRESSION* $ftppath_to/$architecture
-		if [ "${_arch}" == "any" ]; then
-			mv ${_pkgfile} $ftppath_to/any
-			ln -s ../any/${_pkgfile} $ftppath_to/$architecture/
-		else
-			mv ${_pkgfile} $ftppath_to/$architecture
-		fi
+        for i in ${pkgname[@]}; do
+            _pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
+            if [ "${_arch}" == "any" ]; then
+                mv ${_pkgfile} $ftppath_to/any
+                ln -s ../any/${_pkgfile} $ftppath_to/$architecture/
+            else
+                mv ${_pkgfile} $ftppath_to/$architecture
+            fi
+        done
 	done
 else
-    die "Error: $packagename is not in repo $repofrom"
+    die "Error: $packagebase is not in repo $repofrom"
 fi
 
 cleanup

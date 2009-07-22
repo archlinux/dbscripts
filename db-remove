@@ -17,7 +17,6 @@ export CARCH="$arch"
 
 ftppath="$FTP_BASE/$reponame/os"
 svnrepo="$reponame-$arch"
-svnpath="$(get_svnpath $reponame)"
 
 [ "$UID" = "" ] && UID=$(uid)
 
@@ -52,7 +51,7 @@ repo_lock $reponame $arch
 echo "==> Removing package '$packagebase' from '$reponame'..." >&2
 
 cd "$WORKDIR"
-/usr/bin/svn checkout -N $svnpath checkout
+/usr/bin/svn checkout -N $SVNREPO checkout
 cd checkout
 
 /usr/bin/svn up -q $packagebase

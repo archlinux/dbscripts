@@ -20,11 +20,6 @@ ftppath_from="$FTP_BASE/$repofrom/os/"
 ftppath_to="$FTP_BASE/$repoto/os/"
 svnrepo_from="$repofrom-$_arch"
 svnrepo_to="$repoto-$_arch"
-svnpath="$(get_svnpath $repoto)"
-if [ "$svnpath" != "$(get_svnpath $repofrom)" ]; then
-    echo "ERROR: Cannot move packages across SVN repos"
-    echo "       A move must be within the same svn repo"
-fi
 
 [ "$UID" = "" ] && UID=$(uid)
 
@@ -58,7 +53,7 @@ repo_lock $repofrom $_arch
 /bin/mkdir -p "$WORKDIR"
 
 cd "$WORKDIR"
-/usr/bin/svn checkout -N $svnpath checkout
+/usr/bin/svn checkout -N $SVNREPO checkout
 cd checkout
 
 /usr/bin/svn up -q $packagebase

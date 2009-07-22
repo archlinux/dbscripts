@@ -13,7 +13,6 @@ case "$0" in
     ;;
 esac
 WORKDIR="$TMPDIR/testing2x.$UID"
-svnpath="$(get_svnpath testing)"
 
 cleanup() {
     trap '' 0 2
@@ -31,7 +30,7 @@ trap cleanup 0
 
 /bin/mkdir "${WORKDIR}"
 cd "${WORKDIR}"
-/usr/bin/svn checkout -N $svnpath checkout
+/usr/bin/svn checkout -N $SVNREPO checkout
 cd checkout
 
 for pkg in $*; do

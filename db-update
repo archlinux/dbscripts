@@ -76,8 +76,7 @@ if [ -n "$ANYPKGS" ]; then
 	pkgtotal=$(echo "$ANYPKGS" | wc -w)
 	echo "==> Processing $pkgtotal new/updated arch-independent packages for '$reponame'..." >&2
 
-	svnpath="$(get_svnpath $reponame)"
-	/usr/bin/svn checkout -N $svnpath checkout
+	/usr/bin/svn checkout -N $SVNREPO checkout
 	cd checkout
 	to_add_any=""
 	for pkg in $ANYPKGS; do
@@ -117,7 +116,6 @@ for current_arch in ${ARCHES[@]}; do
 		exit 1
 	fi
 
-	svnpath="$(get_svnpath $reponame)"
 	svnrepo="$reponame-$current_arch"
 
 	repo_lock $reponame $current_arch
@@ -148,7 +146,7 @@ for current_arch in ${ARCHES[@]}; do
 		echo "==> Processing $pkgtotal new/updated packages for repository '$reponame'..." >&2
 
 		cd "$WORKDIR"
-		/usr/bin/svn checkout -N $svnpath checkout
+		/usr/bin/svn checkout -N $SVNREPO checkout
 		cd checkout
 	
 		if [ -n "$ADDPKGS" ]; then

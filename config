@@ -2,10 +2,7 @@
 FTP_BASE="/srv/ftp"
 FTP_OS_SUFFIX="os"
 
-SVNREPO_core="file:///srv/svn-packages"
-SVNREPO_extra="file:///srv/svn-packages"
-SVNREPO_testing="file:///srv/svn-packages"
-SVNREPO_community="file:///srv/svn-community"
+SVNREPO="file:///srv/svn-packages"
 
 CLEANUP_DESTDIR="/srv/package-cleanup"
 

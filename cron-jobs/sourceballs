@@ -3,7 +3,8 @@
 ftpbase="/srv/ftp"
 srcbase="/srv/ftp/sources"
 repos="core extra testing community"
-arches="any i686 x86_64"
+
+. $(dirname $0)/../config
 
 LOCKFILE="/tmp/.sourceball.lock"
 
@@ -40,7 +41,7 @@ getpkgname() {
 
 	tmp=${1##*/}
 	tmp=${tmp%$PKGEXT}
-    for a in $arches; do
+    for a in ${ARCHES[@]}; do
         tmp=${tmp%-$a}
     done
 	echo ${tmp%-*-*}
@@ -53,7 +54,7 @@ FAILED_PKGS=""
 echo "Errors occured during run:" > "$srcbase/errors.txt"
 
 for repo in $repos; do
-    for arch in $arches; do
+    for arch in ${ARCHES[@]}; do
         export CARCH="$arch"
         ftppath="$ftpbase/$repo/os/$arch"
         if [ ! -d "$ftppath" ]; then

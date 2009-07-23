@@ -3,7 +3,8 @@
 reposdir=/srv/ftp/
 targetdir=$reposdir
 repos="core extra testing community"
-arches="i686 x86_64"
+
+. $(dirname $0)/../config
 
 if [ -f /etc/makepkg.conf ]; then
     . /etc/makepkg.conf
@@ -45,7 +46,7 @@ esac
 cd $reposdir
 for repo in $repos; do
     REPO_DB_FILE=${repo}.files.tar.${DB_COMPRESSION}
-    for arch in $arches; do
+    for arch in ${ARCHES[@]}; do
         repodir=${repo}/os/${arch}/
         cached="no"
 

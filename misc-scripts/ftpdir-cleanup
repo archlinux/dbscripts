@@ -173,14 +173,16 @@ if [ -d "$ftppath_base/any" ]; then
     cd "$ftppath_base/any"
     for pkg in *$PKGEXT; do
         [ -f "$pkg" ] || continue # in case we get a file named "*.pkg.tar.gz"
-        ### TODO loop over arch in ${ARCHES[@]} ... something like this:
-        # teststring=""
-        # for arch in ${ARCHES[@]}; do
-        #   teststring="$teststring -a ! -h $ftppath_base/$arch/$pkg"
-        # done
-        # teststring=$(echo $teststring | sed 's/^ -a//')
-        # if [ $teststring ]; then
-        if [ ! -h "$ftppath_base/i686/$pkg" -a ! -h "$ftppath_base/x86_64/$pkg" ]; then
+        found=0
+        #check for any existing symlinks
+        for arch in ${ARCHES[@]}; do
+            if [ -h "$ftppath_base/$arch/$pkg" ]; then
+                found=1
+                break
+            fi
+        done
+        if [ $found -eq 0 ]; then
+            # We found no symlinks to this, delete it
             ARCHINDEPFILES="$ARCHINDEPFILES $pkg"
         fi
     done

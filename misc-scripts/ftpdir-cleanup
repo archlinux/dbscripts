@@ -109,13 +109,12 @@ for arch in ${ARCHES[@]}; do
       fi
   done
 
-  echo "Scan complete for $reponame ($arch) at ${ftppath}"
-
   #Make sure we've done *something* before outputting anything
   if [ -z "$DELETEFILES$DELETESYMLINKS$MISSINGFILES$EXTRAFILES" ]; then
-      echo "(nothing to do for $arch)"
       continue
   fi
+
+  echo "Scan complete for $reponame ($arch) at ${ftppath}"
 
   if [ -n "$DELETEFILES" ]; then
       echo "    The following files are out of date"
@@ -171,7 +170,6 @@ done
 ARCHINDEPFILES=""
 
 if [ -d "$ftppath_base/any" ]; then
-    echo "Checking arch-independent files..."
     cd "$ftppath_base/any"
     for pkg in *$PKGEXT; do
         [ -f "$pkg" ] || continue # in case we get a file named "*.pkg.tar.gz"

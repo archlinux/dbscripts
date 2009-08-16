@@ -13,6 +13,7 @@ packagebase="$1"
 repofrom="$2"
 repoto="$3"
 _arch="$4"
+DB_COMPRESSION='gz'
 
 export CARCH="$_arch"
 

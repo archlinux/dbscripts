@@ -11,6 +11,7 @@ source_makepkg
 
 reponame="$1"
 current_arch=""
+DB_COMPRESSION='gz'
 
 [ "$UID" = "" ] && UID=$(uid)
 

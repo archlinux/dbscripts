@@ -12,6 +12,7 @@ source_makepkg
 packagebase="$1"
 reponame="$2"
 arch="$3"
+DB_COMPRESSION='gz'
 
 export CARCH="$arch"
 

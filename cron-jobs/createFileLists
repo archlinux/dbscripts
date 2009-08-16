@@ -3,6 +3,7 @@
 reposdir=/srv/ftp/
 targetdir=$reposdir
 repos="core extra testing community"
+DB_COMPRESSION="gz"
 
 . $(dirname $0)/../config
 

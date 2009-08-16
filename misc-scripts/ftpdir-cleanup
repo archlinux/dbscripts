@@ -83,6 +83,9 @@ for arch in ${ARCHES[@]}; do
 
   cd "$ftppath"
   for pkg in *$arch$PKGEXT; do
+      if [ "$pkg" = "*$arch$PKGEXT" ]; then
+          continue
+      fi
       pkgname="$(getpkgname $pkg)"
       for p in ${TMPDIR}/${pkgname}-*; do
           if [ -d "${p}" -a "$(getpkgname $(basename ${p}))" = "${pkgname}" ]; then

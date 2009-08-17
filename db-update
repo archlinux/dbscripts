@@ -7,8 +7,6 @@ fi
 
 . "$(dirname $0)/db-functions"
 
-source_makepkg
-
 reponame="$1"
 current_arch=""
 

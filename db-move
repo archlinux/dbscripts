@@ -7,14 +7,10 @@ fi
 
 . "$(dirname $0)/db-functions"
 
-source_makepkg
-
 packagebase="$1"
 repofrom="$2"
 repoto="$3"
 _arch="$4"
-
-export CARCH="$_arch"
 
 ftppath_from="$FTP_BASE/$repofrom/os/"
 ftppath_to="$FTP_BASE/$repoto/os/"

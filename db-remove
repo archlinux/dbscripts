@@ -7,13 +7,9 @@ fi
 
 . "$(dirname $0)/db-functions"
 
-source_makepkg
-
 packagebase="$1"
 reponame="$2"
 arch="$3"
-
-export CARCH="$arch"
 
 ftppath="$FTP_BASE/$reponame/os"
 svnrepo="$reponame-$arch"

@@ -12,15 +12,6 @@ if [ -f "$BASEDIR/config" ]; then
 fi
 
 # Useful functions
-source_makepkg () {
-	if [ -f "/etc/makepkg.conf" ]; then
-		#Get some config info
-		. /etc/makepkg.conf
-	else
-		echo "error: /etc/makepkg.conf does not exist!"
-		exit 1
-	fi
-}
 
 UMASK=""
 set_umask () {

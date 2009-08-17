@@ -15,12 +15,7 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-if [ -f /etc/makepkg.conf ]; then
-    . /etc/makepkg.conf
-else
-    echo "E: /etc/makepkg.conf does not exist."
-    exit 1
-fi
+. "$(dirname $0)/db-functions"
 
 cleanup() {
     trap '' 0 2

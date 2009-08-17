@@ -2,8 +2,6 @@
 
 . "$(dirname $0)/db-functions"
 
-source_makepkg
-
 case "$0" in
     *64)
     _arch="x86_64"

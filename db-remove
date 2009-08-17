@@ -12,7 +12,6 @@ source_makepkg
 packagebase="$1"
 reponame="$2"
 arch="$3"
-DB_COMPRESSION='gz'
 
 export CARCH="$arch"
 
@@ -79,8 +78,8 @@ fi
 
 # copy the db file into our working area
 for architecture in $arches; do
-	if [ -f "$ftppath/$architecture/$reponame.db.tar.$DB_COMPRESSION" ]; then
-		/bin/cp "$ftppath/$architecture/$reponame.db.tar.$DB_COMPRESSION" build/
+	if [ -f "$ftppath/$architecture/$reponame$DBEXT" ]; then
+		/bin/cp "$ftppath/$architecture/$reponame$DBEXT" build/
 	else
 		echo "No database found at '$ftppath/$architecture', nothing more to do"
 		exit 0
@@ -88,9 +87,9 @@ for architecture in $arches; do
 
 	echo "    Removing from $reponame DB file ($architecture)"
 	cd build/
-	/usr/bin/repo-remove -q "$reponame.db.tar.$DB_COMPRESSION" ${pkgname[@]}
+	/usr/bin/repo-remove -q "$reponame$DBEXT" ${pkgname[@]}
 
-	/bin/mv "$reponame.db.tar.$DB_COMPRESSION" "$ftppath/$architecture"
+	/bin/mv "$reponame$DBEXT" "$ftppath/$architecture"
 
 	echo "Package files will be cleaned up automatically"
 	cd ..

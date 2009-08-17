@@ -11,3 +11,4 @@ TMPDIR="/srv/tmp"
 ARCHES=(i686 x86_64)
 # To be used if $BUILDSCRIPT is removed from makepkg.conf
 #BUILDSCRIPT="PKGBUILD"
+DBEXT=".db.tar.gz"

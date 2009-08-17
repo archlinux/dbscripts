@@ -13,7 +13,6 @@ packagebase="$1"
 repofrom="$2"
 repoto="$3"
 _arch="$4"
-DB_COMPRESSION='gz'
 
 export CARCH="$_arch"
 
@@ -91,25 +90,25 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 
     for architecture in $arches; do
 		# copy the db file into our working area
-		if [ -f "$ftppath_from/$architecture/$repofrom.db.tar.$DB_COMPRESSION" ]; then
-		    /bin/cp "$ftppath_from/$architecture/$repofrom.db.tar.$DB_COMPRESSION" .
-		    /usr/bin/repo-remove -q "$repofrom.db.tar.$DB_COMPRESSION" ${pkgname[@]} || die "Error in repo-remove"
+		if [ -f "$ftppath_from/$architecture/$repofrom$DBEXT" ]; then
+		    /bin/cp "$ftppath_from/$architecture/$repofrom$DBEXT" .
+		    /usr/bin/repo-remove -q "$repofrom$DBEXT" ${pkgname[@]} || die "Error in repo-remove"
 		    #use '*' to move the old DB too
-		    mv $repofrom.db.tar.$DB_COMPRESSION* "$ftppath_from/$architecture"
+		    mv $repofrom$DBEXT"$ftppath_from/$architecture"
 		    echo "    Package files will be cleaned up automatically"
 		fi
 
-		if [ -f "$ftppath_to/$architecture/$repoto.db.tar.$DB_COMPRESSION" ]; then
-		    /bin/cp "$ftppath_to/$architecture/$repoto.db.tar.$DB_COMPRESSION" .
+		if [ -f "$ftppath_to/$architecture/$repoto$DBEXT" ]; then
+		    /bin/cp "$ftppath_to/$architecture/$repoto$DBEXT" .
 		fi
 
 		for i in ${pkgname[@]}; do
 			_pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
 			/bin/cp "$ftppath_from/$architecture/$_pkgfile" .
-			/usr/bin/repo-add -q "$repoto.db.tar.$DB_COMPRESSION" $_pkgfile || die "Error in repo-add $_pkgfile"
+			/usr/bin/repo-add -q "$repoto$DBEXT" $_pkgfile || die "Error in repo-add $_pkgfile"
 		done
 		#use '*' to move the old DB too
-		mv $repoto.db.tar.$DB_COMPRESSION* $ftppath_to/$architecture
+		mv $repoto$DBEXT* $ftppath_to/$architecture
         for i in ${pkgname[@]}; do
             _pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
             if [ "${_arch}" == "any" ]; then

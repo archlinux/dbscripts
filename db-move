@@ -90,7 +90,7 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 		    /bin/cp "$ftppath_from/$architecture/$repofrom$DBEXT" .
 		    /usr/bin/repo-remove -q "$repofrom$DBEXT" ${pkgname[@]} || die "Error in repo-remove"
 		    #use '*' to move the old DB too
-		    mv $repofrom$DBEXT"$ftppath_from/$architecture"
+		    mv $repofrom$DBEXT* "$ftppath_from/$architecture"
 		    echo "    Package files will be cleaned up automatically"
 		fi
 

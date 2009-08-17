@@ -95,7 +95,7 @@ for arch in ${ARCHES[@]}; do
 
   cd "$ftppath"
   for pkg in *$arch$PKGEXT; do
-      if [ "$pkg" = "*$arch$PKGEXT" ]; then
+      if [ ! -e "$pkg" ]; then
           continue
       fi
       pkgname="$(getpkgname $pkg)"

@@ -45,26 +45,26 @@ for repo in $repos; do
         fi
         cd $ftppath
         for pkg in *$PKGEXT; do
-            pkgname=$(getpkgname $pkg)
+            pkgbase=$(getpkgbase $pkg)
             srcpath="$srcbase/"
             srcpkg="${pkg//$PKGEXT/$SRCEXT}"
             srcpkg="${srcpkg//-$arch/}"
 
             #Don't do anything for package in this 'blacklist'
-            if grep "^$pkgname\$" "$dirname/sourceballs.skip" >/dev/null 2>&1; then
+            if grep "^$pkgbase\$" "$dirname/sourceballs.skip" >/dev/null 2>&1; then
                 continue
             fi
 
             #Use this file to 'whitelist' or force building some sourceballs,
             # skipping the license check
             force=""
-            if grep "^$pkgname\$" "$dirname/sourceballs.force" >/dev/null 2>&1; then
+            if grep "^$pkgbase\$" "$dirname/sourceballs.force" >/dev/null 2>&1; then
                 force="-f"
             fi
 
             if [ ! -f "$srcpath$srcpkg" ]; then
                 if ! $dirname/../misc-scripts/make-sourceball $force \
-                    $pkgname $repo $arch 2>>"$srcbase/errors.txt"; then
+                    $pkgbase $repo $arch 2>>"$srcbase/errors.txt"; then
                     FAILED_PKGS="$FAILED_PKGS $pkg"
                 fi
             fi

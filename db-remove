@@ -9,10 +9,10 @@ fi
 
 packagebase="$1"
 reponame="$2"
-arch="$3"
+_arch="$3"
 
 ftppath="$FTP_BASE/$reponame/os"
-svnrepo="$reponame-$arch"
+svnrepo="$reponame-$_arch"
 
 [ "$UID" = "" ] && UID=$(uid)
 
@@ -21,7 +21,7 @@ WORKDIR="$TMPDIR/db-remove.$svnrepo.$UID"
 cleanup() {
     trap '' 0 2
 	# unlock
-	repo_unlock $reponame $arch
+	repo_unlock $reponame $_arch
 	rm -rf "$WORKDIR"
 	[ "$1" ] && exit $1
 }
@@ -39,7 +39,7 @@ die() {
 trap ctrl_c 2
 trap cleanup 0
 
-repo_lock $reponame $arch
+repo_lock $reponame $_arch
 
 /bin/mkdir -p "$WORKDIR"
 
@@ -66,10 +66,10 @@ fi
 cd "$WORKDIR"
 [ -d build/ ] || mkdir build
 
-if [ "$arch" == "any" ]; then
+if [ "$_arch" == "any" ]; then
 	arches="i686 x86_64"
 else
-	arches="$arch"
+	arches="$_arch"
 fi
 
 # copy the db file into our working area

@@ -8,12 +8,6 @@ repos="core extra testing community"
 
 LOCKFILE="/tmp/.sourceball.lock"
 
-if [ ! -f /etc/makepkg.conf ]; then
-    echo "/etc/makepkg.conf not found! Aborting"
-    exit 1
-fi
-
-. /etc/makepkg.conf
 cleanup () {
 	rm -f "$LOCKFILE"
     exit 0

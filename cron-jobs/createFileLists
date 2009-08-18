@@ -7,13 +7,6 @@ DB_COMPRESSION="gz"
 
 . $(dirname $0)/../config
 
-if [ -f /etc/makepkg.conf ]; then
-    . /etc/makepkg.conf
-else
-    echo "Error: /etc/makepkg.conf does not exist."
-    exit 1
-fi
-
 if [ -f "/tmp/createFileList.lock" ]; then
     echo "Error: createFileList allready in progress."
     exit 1

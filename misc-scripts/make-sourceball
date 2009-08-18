@@ -9,10 +9,8 @@ if [ $# -ne 3 -a $# -ne 4 ]; then
     exit 1
 fi
 
-BASEDIR="$(dirname $0)/../"
-. "$BASEDIR/db-functions"
-
-source_makepkg
+. "$(dirname $0)/../config"
+. "$(dirname $0)/../db-functions"
 
 FORCE=0
 if [ "$1" = "-f" ]; then

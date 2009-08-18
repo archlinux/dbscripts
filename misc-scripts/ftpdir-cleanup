@@ -18,13 +18,6 @@ fi
 
 . "$(dirname $0)/../config" 
 
-if [ ! -f /etc/makepkg.conf ]; then
-    echo "/etc/makepkg.conf not found! Aborting"
-    exit 1
-fi
-
-. /etc/makepkg.conf
-
 getpkgname() {
   local tmp
 

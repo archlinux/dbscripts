@@ -4,7 +4,7 @@ ftpbase="/srv/ftp"
 srcbase="/srv/ftp/sources"
 repos="core extra testing community"
 
-. $(dirname $0)/../config
+. "$(dirname $0)/../db-functions"
 
 LOCKFILE="/tmp/.sourceball.lock"
 
@@ -29,18 +29,6 @@ trap ctrl_c 2
 /bin/touch "$LOCKFILE"
 
 dirname="$(/bin/readlink -f $(/usr/bin/dirname $0))"
-
-getpkgname() {
-	local tmp
-
-	tmp=${1##*/}
-	tmp=${tmp%$PKGEXT}
-    for a in ${ARCHES[@]}; do
-        tmp=${tmp%-$a}
-    done
-	echo ${tmp%-*-*}
-}
-
 
 FAILED_PKGS=""
 

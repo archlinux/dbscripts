@@ -9,7 +9,6 @@ if [ $# -ne 3 -a $# -ne 4 ]; then
     exit 1
 fi
 
-. "$(dirname $0)/../config"
 . "$(dirname $0)/../db-functions"
 
 FORCE=0

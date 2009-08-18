@@ -28,7 +28,7 @@ trap ctrl_c 2
 /usr/bin/renice +10 -p $$ > /dev/null
 
 #Get our destination dir
-. $(dirname $0)/../config
+. "$(dirname $0)/../db-functions"
 
 for repo in $repos; do
     $(dirname $0)/../misc-scripts/ftpdir-cleanup $repo $CLEANUP_DESTDIR

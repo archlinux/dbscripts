@@ -139,7 +139,7 @@ set_umask
 /bin/mkdir -p "$logpath"
 cd "$WORKDIR"
 
-if /usr/bin/svn export -q "$SVN_PATH/$packagename" $packagename; then
+if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
     remove_old "$pkgname/repos/"
     create_srcpackage "$packagename/repos/$reponame-$_arch"
 else

@@ -3,7 +3,6 @@
 reposdir=/srv/ftp/
 targetdir=$reposdir
 repos="core extra testing community"
-DB_COMPRESSION="gz"
 
 . $(dirname $0)/../config
 
@@ -30,16 +29,18 @@ getpkgname() {
     echo $tmp
 }
 
-case "${DB_COMPRESSION}" in
-	gz)  TAR_OPT="z" ;;
-	bz2) TAR_OPT="j" ;;
-	xz)  TAR_OPT="J" ;;
-	*) echo "${DB_COMPRESSION} is not a valid archive compression" && exit 1 ;;
+case "${DBEXT}" in
+	*.gz)  TAR_OPT="z" ;;
+	*.bz2) TAR_OPT="j" ;;
+	*.xz)  TAR_OPT="J" ;;
+	*) echo "Unknown compression type for DBEXT=${DBEXT}" && exit 1 ;;
 esac
+
+FILESEXT="${DBEXT//db/files}"
 
 cd $reposdir
 for repo in $repos; do
-    REPO_DB_FILE=${repo}.files.tar.${DB_COMPRESSION}
+    REPO_DB_FILE=${repo}$FILESEXT
     for arch in ${ARCHES[@]}; do
         repodir=${repo}/os/${arch}/
         cached="no"
@@ -77,7 +78,7 @@ for repo in $repos; do
             cd ${TMPDIR}/${repodir}
             [ -f "${pkgdir}${REPO_DB_FILE}.old" ] && rm "${pkgdir}${REPO_DB_FILE}.old"
             [ -f "${pkgdir}${REPO_DB_FILE}" ] && mv "${pkgdir}${REPO_DB_FILE}" "${pkgdir}${REPO_DB_FILE}.old"
-            bsdtar --exclude=*.tar.${DB_COMPRESSION} -c${TAR_OPT}f ${pkgdir}${REPO_DB_FILE} *
+            bsdtar --exclude=*${DBEXT//\.db/} -c${TAR_OPT}f ${pkgdir}${REPO_DB_FILE} *
         fi
 
         cd $reposdir

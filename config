@@ -12,3 +12,4 @@ ARCHES=(i686 x86_64)
 BUILDSCRIPT="PKGBUILD"
 DBEXT=".db.tar.gz"
 PKGEXT=".pkg.tar.gz"
+SRCEXT=".src.tar.gz"

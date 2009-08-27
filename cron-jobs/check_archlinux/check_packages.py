@@ -182,10 +182,49 @@ def verify_deps(name,repo,deps):
 					break
 			if not pkgdep:
 				pkgdep = pkglist[0]
-				hierarchy.append(repo + "/" + name + " depends on " + pkgdep.repo + "/" + pkgdep.name)
+				hierarchy.append((repo,name,pkgdep))
+
 			pkg_deps.append(pkgdep)
 
 	return (pkg_deps,missdeps,hierarchy)
+
+def compute_deplist_aux(pkg,deplist):
+	newdeplist = []
+	list = []
+	if pkgdeps.has_key(pkg):
+		list.extend(pkgdeps[pkg])
+	if makepkgdeps.has_key(pkg):
+		list.extend(makepkgdeps[pkg])
+	for dep in list:
+		if dep not in deplist:
+			newdeplist.append(dep)
+			deplist.append(dep)
+	for dep in newdeplist:
+		deplist2 = compute_deplist_aux(dep,deplist)
+		for dep2 in deplist2:
+			if dep2 not in deplist:
+				deplist.append(dep2)
+	return deplist
+
+def compute_deplist(pkg):
+	return compute_deplist_aux(pkg,[])
+
+def check_hierarchy(deph):
+	hierarchy = []
+	for (repo,name,pkgdep) in deph:
+		deplist = compute_deplist(pkgdep)
+		valid_repos = get_repo_hierarchy(repo)
+		extdeps = []
+		for dep in deplist:
+			if dep.repo not in valid_repos:
+				extdeps.append(dep.name)
+		string = repo + "/" + name + " depends on " + pkgdep.repo + "/" + pkgdep.name + " ("
+		string += "%s extra (make)deps to pull" % len(extdeps)
+		if 0 < len(extdeps) < 10:
+			string += " : " +  ' '.join(extdeps)
+		string += ")"
+		hierarchy.append(string)
+	return hierarchy
 
 def get_repo_hierarchy(repo):
 	repo_hierarchy = {'core': ['core'], \
@@ -373,19 +412,24 @@ for name,pkg in packages.iteritems():
 	pkg.deps = [dep for dep in pkg.deps if not p.match(dep)]
 	pkg.makedeps = [dep for dep in pkg.makedeps if not p.match(dep)]
 
+deph,makedeph = [],[]
+
 print "==> checking dependencies"
 for name,pkg in repopkgs.iteritems():
 	(deps,missdeps,hierarchy) = verify_deps(name,pkg.repo,pkg.deps)
 	pkgdeps[pkg] = deps
 	missing_deps.extend(missdeps)
-	dep_hierarchy.extend(hierarchy)
+	deph.extend(hierarchy)
 
 print "==> checking makedepends"
 for name,pkg in repopkgs.iteritems():
 	(makedeps,missdeps,hierarchy) = verify_deps(name,pkg.repo,pkg.makedeps)
 	makepkgdeps[pkg] = makedeps
 	missing_makedeps.extend(missdeps)
-	makedep_hierarchy.extend(hierarchy)
+	makedeph.extend(hierarchy)
+
+dep_hierarchy = check_hierarchy(deph)
+makedep_hierarchy = check_hierarchy(makedeph)
 
 print "==> checking for circular dependencies"
 # make sure pkgdeps is filled for every package

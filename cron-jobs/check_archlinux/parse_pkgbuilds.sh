@@ -5,23 +5,35 @@
 
 exit() { return; }
 
-parse() {
-	unset pkgname pkgver pkgrel
-	unset depends makedepends conflicts provides
-	ret=0
-	dir=$1
-	pkgbuild=$dir/PKGBUILD
-	source $pkgbuild &>/dev/null || ret=$?
+variables=('pkgname' 'pkgver' 'pkgrel' 'depends' 'makedepends' 'provides' 'conflicts' )
+readonly -a variables
 
-	# ensure $pkgname and $pkgver variables were found
-	if [ $ret -ne 0 -o -z "$pkgname" -o -z "$pkgver" ]; then
-		echo -e "%INVALID%\n$pkgbuild\n"
-		return 1
-	fi 
+backup_package_variables() {
+	for var in ${variables[@]}; do
+		indirect="${var}_backup"
+		eval "${indirect}=(\${$var[@]})"
+	done
+}
 
+restore_package_variables() {
+	for var in ${variables[@]}; do
+		indirect="${var}_backup"
+		if [ -n "${!indirect}" ]; then
+			eval "${var}=(\${$indirect[@]})"
+		else
+			unset ${var}
+		fi
+	done
+}
+
+print_info() {
 	echo -e "%NAME%\n$pkgname\n"
 	echo -e "%VERSION%\n$pkgver-$pkgrel\n"
 	echo -e "%PATH%\n$dir\n"
+
+	if [ -n "$pkgbase" ]; then
+		echo -e "%BASE%\n$pkgbase\n"
+	fi
 
 	if [ -n "$arch" ]; then
 		echo "%ARCH%"
@@ -52,6 +64,50 @@ parse() {
 		for i in ${provides[@]}; do echo $i; done
 		echo ""
 	fi
+}
+
+source_pkgbuild() {
+	ret=0
+	dir=$1
+	pkgbuild=$dir/PKGBUILD
+	for var in ${variables[@]}; do
+		unset ${var}
+	done
+	source $pkgbuild &>/dev/null || ret=$?
+
+	# ensure $pkgname and $pkgver variables were found
+	if [ $ret -ne 0 -o -z "$pkgname" -o -z "$pkgver" ]; then
+		echo -e "%INVALID%\n$pkgbuild\n"
+		return 1
+	fi
+
+	if [ "${#pkgname[@]}" -gt "1" ]; then
+		for pkg in ${pkgname[@]}; do
+			if [ "$(type -t package_${pkg})" != "function" ]; then
+				echo -e "%INVALID%\n$pkgbuild\n"
+				return 1
+			else
+				backup_package_variables
+				pkgname=$pkg
+				while IFS= read -r line; do
+					var=${line%%=*}
+					var="${var#"${var%%[![:space:]]*}"}"   # remove leading whitespace characters
+					for realvar in ${variables[@]}; do
+						if [ "$var" == "$realvar" ]; then
+							eval $line
+							break
+						fi
+					done
+				done < <(type package_${pkg})
+				print_info
+				restore_package_variables
+			fi
+		done
+	else
+		echo
+		print_info
+	fi
+
 	return 0
 }
 
@@ -63,7 +119,7 @@ find_pkgbuilds() {
     fi
 
 	if [ -f $1/PKGBUILD ]; then
-		parse $1
+		source_pkgbuild $1
 		return
 	fi
 	empty=1

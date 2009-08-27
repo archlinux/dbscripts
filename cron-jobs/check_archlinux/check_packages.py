@@ -38,6 +38,7 @@ checked_deps = []
 class PacmanPackage:
 	def __init__(self):
 		self.name,self.version = "",""
+		self.base = ""
 		self.path,self.repo = "",""
 		self.deps,self.makedeps = [],[]
 		self.provides,self.conflicts = [],[]
@@ -77,6 +78,8 @@ def parse_data(repo,data):
 			if packages.has_key(pkg.name):
 				dup = packages[pkg.name]
 			packages[pkg.name] = pkg
+		elif attrname == "base":
+			pkg.base = line
 		elif attrname == "version":
 			pkg.version = line
 		elif attrname == "path":
@@ -356,7 +359,7 @@ for name,pkg in packages.iteritems():
 print "==> checking mismatches"
 for name,pkg in repopkgs.iteritems():
 	pkgdirname = pkg.path.split("/")[-1]
-	if name != pkgdirname:
+	if name != pkgdirname and pkg.base != pkgdirname:
 		mismatches.append(name + " vs. " + pkg.path)
 
 print "==> checking archs"

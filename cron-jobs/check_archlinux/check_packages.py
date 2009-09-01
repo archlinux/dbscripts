@@ -51,10 +51,11 @@ class Depend:
 		self.mod = mod
 
 def parse_pkgbuilds(repos,arch):
-	for repo in repos:
-		data = commands.getoutput(os.path.dirname(sys.argv[0]) + '/parse_pkgbuilds.sh '
-				+ arch + ' ' + absroot + '/' +  repo)
-		parse_data(repo,data)
+	for absroot in absroots:
+		for repo in repos:
+			data = commands.getoutput(os.path.dirname(sys.argv[0]) + '/parse_pkgbuilds.sh '
+					+ arch + ' ' + absroot + '/' +  repo)
+			parse_data(repo,data)
 
 def parse_data(repo,data):
 	attrname = None
@@ -332,9 +333,9 @@ def print_usage():
 	print "Usage: ./check_packages.py [OPTION]"
 	print ""
 	print "Options:"
-	print "  --abs-tree=<path>             Check the specified tree (default : /var/abs)"
+	print "  --abs-tree=<path[,path]>      Check the specified tree(s) (default : /var/abs)"
 	print "  --repos=<r1,r2,...>           Check the specified repos (default : core,extra)"
-	print "  --arch=<any|i686|x86_64>      Check the specified arch (default : i686)"
+	print "  --arch=<i686|x86_64>          Check the specified arch (default : i686)"
 	print "  -h, --help                    Show this help and exit"
 	print ""
 	print "Examples:"
@@ -345,7 +346,7 @@ def print_usage():
 	print ""
 
 ## Default path to the abs root directory
-absroot = "/var/abs"
+absroots = ["/var/abs"]
 ## Default list of repos to check
 repos = ['core', 'extra']
 ## Default arch
@@ -359,7 +360,7 @@ except getopt.GetoptError:
 if opts != []:
 	for o, a in opts:
 		if o in ("--abs-tree"):
-			absroot = a
+			absroot = a.split(',')
 		elif o in ("--repos"):
 			repos = a.split(",")
 		elif o in ("--arch"):
@@ -371,14 +372,15 @@ if opts != []:
 			print_usage()
 			sys.exit()
 
-if not os.path.isdir(absroot):
-	print "Error : the abs tree " + absroot + " does not exist"
-	sys.exit()
-for repo in repos:
-	repopath = absroot + "/" + repo
-	if not os.path.isdir(repopath):
-		print "Error : the repository " + repo + " does not exist in " + absroot
+for absroot in absroots:
+	if not os.path.isdir(absroot):
+		print "Error : the abs tree " + absroot + " does not exist"
 		sys.exit()
+	for repo in repos:
+		repopath = absroot + "/" + repo
+		if not os.path.isdir(repopath):
+			print "Error : the repository " + repo + " does not exist in " + absroot
+			sys.exit()
 # repos which need to be loaded
 loadrepos = set([])
 for repo in repos:

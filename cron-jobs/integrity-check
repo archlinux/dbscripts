@@ -9,5 +9,5 @@ fi
 
 $basedir/check_archlinux/check_packages.py \
     --repos="$1" \
-    --abs-tree="/srv/abs/rsync/$2" --arch="$2" |\
+    --abs-tree="/srv/abs/rsync/$2,/srv/abs/rsync/any" --arch="$2" |\
     $basedir/devlist-mailer "Integrity Check $2: $1" "$3"

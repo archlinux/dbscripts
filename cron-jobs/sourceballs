@@ -36,7 +36,7 @@ FAILED_PKGS=""
 echo "Errors occured during run:" > "$srcbase/errors.txt"
 
 for repo in $repos; do
-    for arch in ${ARCHES[@]}; do
+    for arch in ${ARCHES[@]} any; do
         export CARCH="$arch"
         ftppath="$ftpbase/$repo/os/$arch"
         if [ ! -d "$ftppath" ]; then

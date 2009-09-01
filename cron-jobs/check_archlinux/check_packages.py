@@ -16,8 +16,10 @@
 #      a non-core package)
 #   8. Circular dependencies
 
-import os,re,commands,getopt,sys,alpm
+import os,re,commands,getopt,sys,tarfile,alpm
 import pdb
+
+DBEXT='.db.tar.gz'
 
 packages = {} # pkgname : PacmanPackage
 provisions = {} # provision : PacmanPackage
@@ -25,6 +27,9 @@ pkgdeps,makepkgdeps = {},{} # pkgname : list of the PacmanPackage dependencies
 invalid_pkgbuilds = []
 missing_pkgbuilds = []
 dups = []
+
+dbonly = []
+absonly = []
 
 mismatches = []
 missing_deps = []
@@ -101,6 +106,17 @@ def parse_data(repo,data):
 			if not provisions.has_key(provname):
 				provisions[provname] = []
 			provisions[provname].append(pkg)
+
+def parse_dbs(repos,arch):
+	dbpkgs = {}
+	for repo in repos:
+		pkgs = set([])
+		db = tarfile.open(os.path.join(repodir,repo,'os',arch,repo + DBEXT))
+		for line in db.getnames():
+			if not '/' in line:
+				pkgs.add(line.rsplit('-',2)[0])
+		dbpkgs[repo] = pkgs
+	return(dbpkgs)
 
 def splitdep(dep):
 	name = dep
@@ -317,6 +333,8 @@ def print_results():
 	print_result(dep_hierarchy, "Repo Hierarchy for Dependencies")
 	print_result(makedep_hierarchy, "Repo Hierarchy for Makedepends")
 	print_result(circular_deps, "Circular Dependencies")
+	print_result(dbonly, "Packages found in db, but not in tree")
+	print_result(absonly,"Packages found in tree, but not in db")
 	print_subheading("Summary")
 	print "Missing PKGBUILDs:                    ", len(missing_pkgbuilds)
 	print "Invalid PKGBUILDs:                    ", len(invalid_pkgbuilds)
@@ -326,6 +344,8 @@ def print_results():
 	print "Missing (make)dependencies:           ", len(missing_deps)+len(missing_makedeps)
 	print "Repo hierarchy problems:              ", len(dep_hierarchy)+len(makedep_hierarchy)
 	print "Circular dependencies:                ", len(circular_deps)
+	print "In db, but not in tree:               ", len(dbonly)
+	print "In tree, but not in db:               ", len(absonly)
 	print ""
 
 def print_usage():
@@ -336,6 +356,7 @@ def print_usage():
 	print "  --abs-tree=<path[,path]>      Check the specified tree(s) (default : /var/abs)"
 	print "  --repos=<r1,r2,...>           Check the specified repos (default : core,extra)"
 	print "  --arch=<i686|x86_64>          Check the specified arch (default : i686)"
+	print "  --repo-dir=<path>             Check the dbs at the specified path (default : /srv/ftp)"
 	print "  -h, --help                    Show this help and exit"
 	print ""
 	print "Examples:"
@@ -351,9 +372,12 @@ absroots = ["/var/abs"]
 repos = ['core', 'extra']
 ## Default arch
 arch = "i686"
+## Default repodir
+repodir = "/srv/ftp"
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "", ["abs-tree=", "repos=", "arch="])
+	opts, args = getopt.getopt(sys.argv[1:], "", ["abs-tree=", "repos=",
+	"arch=", "repo-dir="])
 except getopt.GetoptError:
 	print_usage()
 	sys.exit()
@@ -365,6 +389,8 @@ if opts != []:
 			repos = a.split(",")
 		elif o in ("--arch"):
 			arch = a
+		elif o in ("--repo-dir"):
+			repodir = a
 		else:
 			print_usage()
 			sys.exit()
@@ -381,6 +407,17 @@ for absroot in absroots:
 		if not os.path.isdir(repopath):
 			print "Error : the repository " + repo + " does not exist in " + absroot
 			sys.exit()
+if not os.path.isdir(repodir):
+	print "Error: the repository directory %s does not exist" % repodir
+	sys.exit()
+for repo in repos:
+	path = os.path.join(repodir,repo,'os',arch,repo + DBEXT)
+	if not os.path.isfile(path):
+		print "Error : repo DB %s : File not found" % path
+		sys.exit()
+	if not tarfile.is_tarfile(path):
+		print "Error : Cant open repo DB %s, not a valid tar file" % path
+		sys.exit()
 # repos which need to be loaded
 loadrepos = set([])
 for repo in repos:
@@ -396,6 +433,9 @@ repopkgs = {}
 for name,pkg in packages.iteritems():
 	if pkg.repo in repos:
 		repopkgs[name] = pkg
+
+print "==> parsing db files"
+dbpkgs = parse_dbs(repos,arch)
 
 print "==> checking mismatches"
 for name,pkg in repopkgs.iteritems():
@@ -440,5 +480,16 @@ for name,pkg in packages.iteritems():
 		(deps,missdeps,_) = verify_deps(name,pkg.repo,pkg.deps)
 		pkgdeps[pkg] = deps
 find_scc(repopkgs.values())
+
+print "==> checking for differences between db files and pkgbuilds"
+for repo in repos:
+	for pkg in dbpkgs[repo]:
+		if not (pkg in repopkgs.keys() and repopkgs[pkg].repo == repo):
+			dbonly.append("%s/%s" % (repo,pkg))
+dbonly.sort()
+for name,pkg in repopkgs.iteritems():
+	if not name in dbpkgs[pkg.repo]:
+		absonly.append("%s/%s" % (pkg.repo,name))
+absonly.sort()
 
 print_results()

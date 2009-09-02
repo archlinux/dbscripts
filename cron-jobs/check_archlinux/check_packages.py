@@ -189,7 +189,7 @@ def verify_deps(name,repo,deps):
 	for dep in deps:
 		pkglist = verify_dep(dep)
 		if pkglist == []:
-			missdeps.append(name + " --> '" + dep + "'")
+			missdeps.append(repo + "/" + name + " --> '" + dep + "'")
 		else:
 			valid_repos = get_repo_hierarchy(repo)
 			pkgdep = None
@@ -252,12 +252,12 @@ def get_repo_hierarchy(repo):
 	else:
 		return ['core','extra','community']
 
-def verify_archs(name,archs):
+def verify_archs(name,repo,archs):
 	valid_archs = ['any', 'i686', 'x86_64']
 	invalid_archs = []
 	for arch in archs:
 		if arch not in valid_archs:
-			invalid_archs.append(name + " --> " + arch)
+			invalid_archs.append(repo + "/" + name + " --> " + arch)
 	return invalid_archs
 
 def find_scc(packages):
@@ -295,7 +295,7 @@ def tarjan(pkg):
 			return
 		path = pkg.name
 		while pkg != dep:
-			path = dep.name + ">" + path
+			path = dep.repo + "/" + dep.name + ">" + path
 			dep = S.pop()
 		path = dep.name + ">" + path
 		if pkg.repo in repos:
@@ -318,6 +318,7 @@ def print_missdeps(pkgname,missdeps) :
 
 def print_result(list, subheading):
 	if len(list) > 0:
+		list.sort()
 		print_subheading(subheading)
 		for item in list:
 			print item
@@ -445,7 +446,7 @@ for name,pkg in repopkgs.iteritems():
 
 print "==> checking archs"
 for name,pkg in repopkgs.iteritems():
-	archs = verify_archs(name,pkg.archs)
+	archs = verify_archs(name,pkg.repo,pkg.archs)
 	invalid_archs.extend(archs)
 
 # ugly hack to strip the weird kblic- deps
@@ -486,10 +487,8 @@ for repo in repos:
 	for pkg in dbpkgs[repo]:
 		if not (pkg in repopkgs.keys() and repopkgs[pkg].repo == repo):
 			dbonly.append("%s/%s" % (repo,pkg))
-dbonly.sort()
 for name,pkg in repopkgs.iteritems():
 	if not name in dbpkgs[pkg.repo]:
 		absonly.append("%s/%s" % (pkg.repo,name))
-absonly.sort()
 
 print_results()

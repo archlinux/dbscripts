@@ -205,26 +205,22 @@ def verify_deps(name,repo,deps):
 
 	return (pkg_deps,missdeps,hierarchy)
 
-def compute_deplist_aux(pkg,deplist):
-	newdeplist = []
-	list = []
-	if pkgdeps.has_key(pkg):
-		list.extend(pkgdeps[pkg])
-	if makepkgdeps.has_key(pkg):
-		list.extend(makepkgdeps[pkg])
-	for dep in list:
-		if dep not in deplist:
-			newdeplist.append(dep)
-			deplist.append(dep)
-	for dep in newdeplist:
-		deplist2 = compute_deplist_aux(dep,deplist)
-		for dep2 in deplist2:
-			if dep2 not in deplist:
-				deplist.append(dep2)
-	return deplist
-
 def compute_deplist(pkg):
-	return compute_deplist_aux(pkg,[])
+	list = []
+	stack = [pkg]
+	while stack != []:
+		dep = stack.pop()
+		if pkgdeps.has_key(dep):
+			for dep2 in pkgdeps[dep]:
+				if dep2 not in list:
+					list.append(dep2)
+					stack.append(dep2)
+		if makepkgdeps.has_key(dep):
+			for dep2 in makepkgdeps[dep]:
+				if dep2 not in list:
+					list.append(dep2)
+					stack.append(dep2)
+	return list
 
 def check_hierarchy(deph):
 	hierarchy = []
@@ -471,6 +467,7 @@ for name,pkg in repopkgs.iteritems():
 	missing_makedeps.extend(missdeps)
 	makedeph.extend(hierarchy)
 
+print "==> checking hierarchy"
 dep_hierarchy = check_hierarchy(deph)
 makedep_hierarchy = check_hierarchy(makedeph)
 

@@ -58,9 +58,13 @@ class Depend:
 def parse_pkgbuilds(repos,arch):
 	for absroot in absroots:
 		for repo in repos:
-			data = commands.getoutput(os.path.dirname(sys.argv[0]) + '/parse_pkgbuilds.sh '
-					+ arch + ' ' + absroot + '/' +  repo)
-			parse_data(repo,data)
+			cmd = os.path.dirname(os.path.realpath(sys.argv[0])) + '/parse_pkgbuilds.sh '
+			cmd += arch + ' ' + absroot + '/' + repo
+			(status,output) = commands.getstatusoutput(cmd)
+			if status != 0:
+				print "Error : failed to run '%s'" % cmd
+				sys.exit()
+			parse_data(repo,output)
 
 def parse_data(repo,data):
 	attrname = None

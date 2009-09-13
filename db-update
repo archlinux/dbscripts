@@ -11,7 +11,18 @@ fi
 reponame="$1"
 current_arch=""
 
-[ "$UID" = "" ] && UID=$(uid)
+# ensure we should be playing with this DB on this server
+repos="$(get_repos_for_host)"
+found=0
+for r in $repos; do
+	if [ "$r" = "$reponame" ]; then
+		found=1
+	fi
+done
+if [ $found -ne 1 ]; then
+	echo "error: you shouldn't be updating $reponame on this server!"
+	exit 1
+fi
 
 WORKDIR="$TMPDIR/db-update.$reponame.$UID"
 ADDPKGS=""

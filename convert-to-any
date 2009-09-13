@@ -16,6 +16,7 @@ if [ $# -ne 1 ]; then
 fi
 
 . "$(dirname $0)/db-functions"
+. "$(dirname $0)/config"
 
 cleanup() {
     trap '' 0 2

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 . "$(dirname $0)/db-functions"
+. "$(dirname $0)/config"
 
 case "$0" in
     *64)

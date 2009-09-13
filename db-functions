@@ -3,14 +3,6 @@
 # Random integrity things
 [ "$UID" = "" ] && UID=$(uid)
 
-if [ -z "$BASEDIR" ]; then
-	BASEDIR="$(dirname $0)"
-fi
-
-if [ -f "$BASEDIR/config" ]; then
-	. "$BASEDIR/config"
-fi
-
 # Useful functions
 
 UMASK=""

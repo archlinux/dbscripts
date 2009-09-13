@@ -10,6 +10,7 @@ if [ $# -ne 3 -a $# -ne 4 ]; then
 fi
 
 . "$(dirname $0)/../db-functions"
+. "$(dirname $0)/../config"
 
 FORCE=0
 if [ "$1" = "-f" ]; then

@@ -5,6 +5,7 @@ targetdir=$reposdir
 repos="core extra testing community"
 
 . "$(dirname $0)/../db-functions"
+. "$(dirname $0)/../config"
 
 if [ -f "/tmp/createFileList.lock" ]; then
     echo "Error: createFileList allready in progress."

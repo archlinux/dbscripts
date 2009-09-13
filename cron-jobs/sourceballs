@@ -5,6 +5,7 @@ srcbase="/srv/ftp/sources"
 repos="core extra testing community"
 
 . "$(dirname $0)/../db-functions"
+. "$(dirname $0)/../config"
 
 LOCKFILE="/tmp/.sourceball.lock"
 

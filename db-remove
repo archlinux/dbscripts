@@ -6,6 +6,7 @@ if [ $# -ne 3 ]; then
 fi
 
 . "$(dirname $0)/db-functions"
+. "$(dirname $0)/config"
 
 packagebase="$1"
 reponame="$2"

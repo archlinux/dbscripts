@@ -11,6 +11,7 @@ dest=$2
 ############################################################
 
 . "$(dirname $0)/../db-functions" 
+. "$(dirname $0)/../config"
 
 getpkgname() {
   local tmp

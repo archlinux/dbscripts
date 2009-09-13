@@ -30,10 +30,8 @@ get_dir_owner() {
 cd /srv/ftp
 for d in $(get_repos_for_host); do
     owner="$(get_dir_owner $d)"
-    echo /bin/chown -R $owner $d/os/{any,i686,x86_64}
-    #/bin/chown -R $owner $d/os/{any,i686,x86_64}
-    echo /bin/chmod -R g+w $d/os/{any,i686,x86_64}
-    #/bin/chmod -R g+w $d/os/{any,i686,x86_64}
+    /bin/chown -R $owner $d/os/{any,i686,x86_64}
+    /bin/chmod -R g+w $d/os/{any,i686,x86_64}
 done
 
 /bin/chmod 555 /srv/ftp

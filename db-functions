@@ -102,5 +102,12 @@ check_pkg_arch () { #check_pkg_arch pkgfile arch
 	fi
 }
 
+get_repos_for_host() {
+	if [ "$(hostname)" = "sigurd" ]; then
+		echo "community community-testing"
+	else
+		echo "core extra testing"
+	fi
+}
 
 # vim: set ts=4 sw=4 noet ft=sh:

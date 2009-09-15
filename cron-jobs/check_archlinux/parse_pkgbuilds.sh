@@ -5,18 +5,19 @@
 
 exit() { return; }
 
-variables=('pkgname' 'pkgver' 'pkgrel' 'depends' 'makedepends' 'provides' 'conflicts' )
-readonly -a variables
+splitpkg_overrides=('depends' 'optdepends' 'provides' 'conflicts')
+variables=('pkgname' 'pkgbase' 'pkgver' 'pkgrel' 'makedepends' 'arch' ${splitpkg_overrides[@]})
+readonly -a variables splitpkg_overrides
 
 backup_package_variables() {
-	for var in ${variables[@]}; do
+	for var in ${splitpkg_overrides[@]}; do
 		indirect="${var}_backup"
 		eval "${indirect}=(\${$var[@]})"
 	done
 }
 
 restore_package_variables() {
-	for var in ${variables[@]}; do
+	for var in ${splitpkg_overrides[@]}; do
 		indirect="${var}_backup"
 		if [ -n "${!indirect}" ]; then
 			eval "${var}=(\${$indirect[@]})"
@@ -82,6 +83,7 @@ source_pkgbuild() {
 	fi
 
 	if [ "${#pkgname[@]}" -gt "1" ]; then
+		pkgbase=${pkgbase:-${pkgname[0]}}
 		for pkg in ${pkgname[@]}; do
 			if [ "$(type -t package_${pkg})" != "function" ]; then
 				echo -e "%INVALID%\n$pkgbuild\n"

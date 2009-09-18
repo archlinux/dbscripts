@@ -385,7 +385,7 @@ except getopt.GetoptError:
 if opts != []:
 	for o, a in opts:
 		if o in ("--abs-tree"):
-			absroot = a.split(',')
+			absroots = a.split(',')
 		elif o in ("--repos"):
 			repos = a.split(",")
 		elif o in ("--arch"):

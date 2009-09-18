@@ -82,7 +82,7 @@ for arch in ${ARCHES[@]}; do
   done
 
   cd "$ftppath"
-  for pkg in *$arch$PKGEXT; do
+  for pkg in *$PKGEXT; do
       if [ ! -e "$pkg" ]; then
           continue
       fi

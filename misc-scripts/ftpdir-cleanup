@@ -13,19 +13,6 @@ dest=$2
 . "$(dirname $0)/../db-functions" 
 . "$(dirname $0)/../config"
 
-getpkgname() {
-  local tmp
-
-  tmp=${1##*/}
-  tmp=${tmp%$PKGEXT}
-  for arch in ${ARCHES[@]}; do
-    tmp=${tmp%-$arch}
-  done
-	tmp=${tmp%-any}
-  echo ${tmp%-*-*}
-}
-
-
 ftppath_base="$FTP_BASE/$reponame/$FTP_OS_SUFFIX"
 
 for arch in ${ARCHES[@]}; do
@@ -60,16 +47,17 @@ for arch in ${ARCHES[@]}; do
     exit 1
   fi
 
-  for pkg in *; do
+  cd "$ftppath"
+
+  for pkg in $TMPDIR/*; do
     filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
     [ -z "${filename}" ] && filename="${pkg}${PKGEXT}"
 
-    if [ ! -e "${ftppath}/${filename}" ]; then
+    if [ ! -e "${filename}" ]; then
       MISSINGFILES="${MISSINGFILES} ${filename}"
     else
       pkgname="$(getpkgname ${filename})"
-      for otherfile in ${ftppath}/${pkgname}-*; do
-        otherfile="$(basename ${otherfile})"
+      for otherfile in ${pkgname}-*; do
         if [ "${otherfile}" != "${filename}" -a "${pkgname}" = "$(getpkgname ${otherfile})" ]; then
           if [ -h "${otherfile}" ]; then
             DELETESYMLINKS="${DELETESYMLINKS} ${otherfile}"
@@ -81,7 +69,6 @@ for arch in ${ARCHES[@]}; do
     fi
   done
 
-  cd "$ftppath"
   for pkg in *$PKGEXT; do
       if [ ! -e "$pkg" ]; then
           continue
@@ -95,7 +82,6 @@ for arch in ${ARCHES[@]}; do
       EXTRAFILES="$EXTRAFILES $pkg"
   done 
 
-  cd "$ftppath"
   rm -rf ${TMPDIR}
 
   # Do a quick check to see if a missing ARCHINDEPFILE is in the any dir

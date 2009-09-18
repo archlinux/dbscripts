@@ -3,11 +3,13 @@
 basedir="$(dirname $0)"
 
 if [ $# -ne 3 ]; then
-    echo "usage: $(basename $0) <repo>[,<repo>,...] <arch> <mailto>" >&2
+    echo "usage: $(basename $0) <repo>[,<repo>,...] <mailto>" >&2
     exit 1
 fi
 
-$basedir/check_archlinux/check_packages.py \
-    --repos="$1" \
-    --abs-tree="/srv/abs/rsync/$2,/srv/abs/rsync/any" --arch="$2" |\
-    $basedir/devlist-mailer "Integrity Check $2: $1" "$3"
+for arch in i686 x86_64; do
+    $basedir/check_archlinux/check_packages.py \
+        --repos="$1" \
+        --abs-tree="/srv/abs/rsync/$arch,/srv/abs/rsync/any" --arch="$arch" |\
+        $basedir/devlist-mailer "Integrity Check $arch: $1" "$3"
+done

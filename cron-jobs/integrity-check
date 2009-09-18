@@ -2,7 +2,7 @@
 
 basedir="$(dirname $0)"
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 2 ]; then
     echo "usage: $(basename $0) <repo>[,<repo>,...] <mailto>" >&2
     exit 1
 fi

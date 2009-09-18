@@ -103,7 +103,6 @@ for arch in ${ARCHES[@]}; do
   missfiles="$MISSINGFILES"
   MISSINGFILES=""
   for mf in $missfiles; do
-      af_satisfied=0
       if [ -e "${ftppath_base}/any/${mf}" ]; then
           echo "Restoring missing 'any' symlink: ${mf}"
           ln -s "../any/${mf}" "${ftppath}"

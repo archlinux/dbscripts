@@ -75,17 +75,7 @@ trap ctrl_c 2
 trap cleanup 0
 
 # Remove any package from $stagedir that is already in the FTP repository
-for f in $stagedir/*-any$PKGEXT; do
-	bf=$(basename $f)
-	ftppath_any="$FTP_BASE/$reponame/os/any"
-	if [[ -f $ftppath_any/$bf ]]; then
-		echo "    WARNING: Package file $bf already exists in FTP repo"
-		echo "    Removing from $stagedir"
-		/bin/rm $f
-	fi
-done
-
-for current_arch in ${ARCHES[@]}; do
+for current_arch in ${ARCHES[@]} any; do
 	ftppath="$FTP_BASE/$reponame/os/$current_arch"
 	for f in $stagedir/*-$current_arch$PKGEXT; do
 		bf=$(basename $f)

@@ -75,9 +75,11 @@ for arch in ${ARCHES[@]}; do
       fi
       pkgname="$(getpkgname $pkg)"
       for p in ${TMPDIR}/${pkgname}-*; do
-          if [ -d "${p}" -a "$(getpkgname $(basename ${p}))" = "${pkgname}" ]; then
+          [ ! -d "${p}" ] || continue 2
+          dbpkgname=$(grep -A1 '^%FILENAME%$' "${p}/desc" | tail -n1)
+          if [ "${dbpkgname}" = "${pkgname}" ]; then
               continue 2
-          fi
+          fi                                                                                                                                               
       done
       EXTRAFILES="$EXTRAFILES $pkg"
   done 

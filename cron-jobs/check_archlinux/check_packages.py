@@ -22,8 +22,9 @@ import pdb
 DBEXT='.db.tar.gz'
 
 packages = {} # pkgname : PacmanPackage
+repopkgs = {} # pkgname : PacmanPackage
 provisions = {} # provision : PacmanPackage
-pkgdeps,makepkgdeps = {},{} # pkgname : list of the PacmanPackage dependencies
+pkgdeps,makepkgdeps = {},{} # PacmanPackage : list of the PacmanPackage dependencies
 invalid_pkgbuilds = []
 missing_pkgbuilds = []
 dups = []
@@ -87,7 +88,8 @@ def parse_data(repo,data):
 			dup = None
 			if packages.has_key(pkg.name):
 				dup = packages[pkg.name]
-			packages[pkg.name] = pkg
+			else:
+				packages[pkg.name] = pkg
 		elif attrname == "base":
 			pkg.base = line
 		elif attrname == "version":
@@ -106,10 +108,6 @@ def parse_data(repo,data):
 			pkg.conflicts.append(line)
 		elif attrname == "provides":
 			pkg.provides.append(line)
-			provname=line.split("=")[0]
-			if not provisions.has_key(provname):
-				provisions[provname] = []
-			provisions[provname].append(pkg)
 
 def parse_dbs(repos,arch):
 	dbpkgs = {}
@@ -278,11 +276,9 @@ def tarjan(pkg):
 	index += 1
 	checked_deps.append(pkg)
 	S.append(pkg)
+	deps = []
 	if pkgdeps.has_key(pkg):
 		deps = pkgdeps[pkg]
-	else:
-		print pkg.name
-		deps = []
 	for dep in deps:
 		if not pkgindex.has_key(dep):
 			tarjan(dep)
@@ -430,7 +426,15 @@ print "\nPerforming integrity checks..."
 print "==> parsing pkgbuilds"
 parse_pkgbuilds(loadrepos,arch)
 
-repopkgs = {}
+# fill provisions
+for name,pkg in packages.iteritems():
+	for prov in pkg.provides:
+		provname=prov.split("=")[0]
+		if not provisions.has_key(provname):
+			provisions[provname] = []
+		provisions[provname].append(pkg)
+
+# fill repopkgs
 for name,pkg in packages.iteritems():
 	if pkg.repo in repos:
 		repopkgs[name] = pkg

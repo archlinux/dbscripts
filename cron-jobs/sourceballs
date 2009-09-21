@@ -11,6 +11,7 @@ LOCKFILE="/tmp/.sourceball.lock"
 
 cleanup () {
 	rm -f "$LOCKFILE"
+    restore_umask
     exit 0
 }
 
@@ -26,6 +27,8 @@ fi
 
 trap cleanup 0
 trap ctrl_c 2
+
+set_umask
 
 /bin/touch "$LOCKFILE"
 

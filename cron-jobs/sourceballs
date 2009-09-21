@@ -49,6 +49,7 @@ for repo in $repos; do
         fi
         cd $ftppath
         for pkg in *$PKGEXT; do
+            [ -f "$pkg" ] || continue
             pkgbase=$(getpkgbase $pkg)
             srcpath="$srcbase/"
             srcpkg="${pkg//$PKGEXT/$SRCEXT}"

@@ -110,7 +110,7 @@ remove_old() {
         done
 
         for pkg in "$srcpath/$pkgname-"*; do
-            pkg="$(basename $pkg)"
+            [ -f "$pkg" ] || continue
             if [ "$(getpkgname $pkg)" == "$pkgname" ]; then
                 skip=0
                 pver="$(getpkgver $pkg)"
@@ -121,7 +121,7 @@ remove_old() {
                     fi
                 done
                 if [ $skip -ne 1 ]; then 
-                    rm -f "$srcpath/$pkg"
+                    rm -f "$pkg"
                 fi
             fi
         done

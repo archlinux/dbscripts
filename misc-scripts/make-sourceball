@@ -69,12 +69,12 @@ create_srcpackage() {
         pushd "$1" >/dev/null
         . "$BUILDSCRIPT"
 
-        echo "Creating source tarball for $packagename-$pkgver-$pkgrel"
-
         if ! chk_license ${license[@]}; then
             #Removed so as not to clutter failed.txt
             #echo -e "\t$packagename license (${license[@]}) does not require source tarballs" >&2
             cleanup 0
+        else
+            echo "Creating source tarball for $packagename-$pkgver-$pkgrel"
         fi
 
         local logfile="$logpath/$packagename"

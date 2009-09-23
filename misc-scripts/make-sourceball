@@ -43,6 +43,27 @@ die() {
     cleanup 1
 }
 
+pkgname_from_src() {
+    local tmp
+    tmp=${1##*/}
+    tmp=${tmp%$SRCEXT}
+    for a in ${ARCHES[@]}; do
+        tmp=${tmp%-$a}
+    done
+    tmp=${tmp%-any}
+    echo ${tmp%-*-*}
+}
+
+pkgver_from_src() {
+    tmp=${1##*/}
+    tmp=${tmp%$SRCEXT}
+    for a in ${ARCHES[@]}; do
+        tmp=${tmp%-$a}
+    done
+    tmp=${tmp%-any}
+    echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
+}
+
 #usage: chk_license ${license[@]}"
 chk_license() {
     #The -f flag skips this check
@@ -109,11 +130,11 @@ remove_old() {
             cd ..
         done
 
-        for pkg in "$srcpath/$packagename-"*; do
-            [ -f "$pkg" ] || continue
-            if [ "$(getpkgname $pkg)" == "$packagename" ]; then
+        for srcpkg in "$srcpath/$packagename-"*; do
+            [ -f "$srcpkg" ] || continue
+            if [ "$(pkgname_from_src $srcpkg)" == "$packagename" ]; then
                 skip=0
-                pver="$(getpkgver $pkg)"
+                pver="$(pkgver_from_src $srcpkg)"
                 for v in $PKGVERS; do
                     if [ "$v" = "$pver" ]; then
                         skip=1
@@ -121,7 +142,7 @@ remove_old() {
                     fi
                 done
                 if [ $skip -ne 1 ]; then 
-                    rm -f "$pkg"
+                    rm -f "$srcpkg"
                 fi
             fi
         done

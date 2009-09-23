@@ -69,23 +69,23 @@ create_srcpackage() {
         pushd "$1" >/dev/null
         . "$BUILDSCRIPT"
 
-        echo "Creating source tarball for $pkgname-$pkgver-$pkgrel"
+        echo "Creating source tarball for $packagename-$pkgver-$pkgrel"
 
         if ! chk_license ${license[@]}; then
             #Removed so as not to clutter failed.txt
-            #echo -e "\t$pkgname license (${license[@]}) does not require source tarballs" >&2
+            #echo -e "\t$packagename license (${license[@]}) does not require source tarballs" >&2
             cleanup 0
         fi
 
-        local logfile="$logpath/$pkgname"
+        local logfile="$logpath/$packagename"
         if ! /usr/bin/makepkg --allsource --ignorearch >"$logfile" 2>&1; then
             popd >/dev/null
             /bin/gzip -f -9 "$logfile"
-            die "\tFailed to download source for $pkgname-$pkgver-$pkgrel ($reponame-$_arch)"
+            die "\tFailed to download source for $packagename-$pkgver-$pkgrel ($reponame-$_arch)"
         fi
         /bin/rm -f "$logfile"{,.gz}
 
-        local pkg_file="${pkgname}-${pkgver}-${pkgrel}${SRCEXT}"
+        local pkg_file="${packagename}-${pkgver}-${pkgrel}${SRCEXT}"
 
         if [ ! -d "$srcpath" ]; then
             mkdir -p "$srcpath"
@@ -109,9 +109,9 @@ remove_old() {
             cd ..
         done
 
-        for pkg in "$srcpath/$pkgname-"*; do
+        for pkg in "$srcpath/$packagename-"*; do
             [ -f "$pkg" ] || continue
-            if [ "$(getpkgname $pkg)" == "$pkgname" ]; then
+            if [ "$(getpkgname $pkg)" == "$packagename" ]; then
                 skip=0
                 pver="$(getpkgver $pkg)"
                 for v in $PKGVERS; do
@@ -139,7 +139,7 @@ set_umask
 cd "$WORKDIR"
 
 if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
-    remove_old "$pkgname/repos/"
+    remove_old "$packagename/repos/"
     create_srcpackage "$packagename/repos/$reponame-$_arch"
 else
     die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"

@@ -41,7 +41,6 @@ echo "Errors occured during run:" > "$srcbase/errors.txt"
 
 for repo in $repos; do
     for arch in ${ARCHES[@]} any; do
-        export CARCH="$arch"
         ftppath="$ftpbase/$repo/os/$arch"
         if [ ! -d "$ftppath" ]; then
             echo "FTP path does not exist: $ftppath" >2
@@ -54,6 +53,8 @@ for repo in $repos; do
             srcpath="$srcbase/"
             srcpkg="${pkg//$PKGEXT/$SRCEXT}"
             srcpkg="${srcpkg//-$arch/}"
+            srcpkgname="${srcpkg%-*-*$SRCEXT}"
+            srcpkgbase="${srcpkg/$srcpkgname/$pkgbase}"
 
             #Don't do anything for package in this 'blacklist'
             if grep "^$pkgbase\$" "$dirname/sourceballs.skip" >/dev/null 2>&1; then
@@ -67,7 +68,7 @@ for repo in $repos; do
                 force="-f"
             fi
 
-            if [ ! -f "$srcpath$srcpkg" ]; then
+            if [ ! \( -f "$srcpath$srcpkg" -o -f "$srcpath$srcpkgbase" \) ]; then
                 if ! $dirname/../misc-scripts/make-sourceball $force \
                     $pkgbase $repo $arch 2>>"$srcbase/errors.txt"; then
                     FAILED_PKGS="$FAILED_PKGS $pkg"

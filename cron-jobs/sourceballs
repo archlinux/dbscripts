@@ -61,6 +61,11 @@ for repo in $repos; do
                 continue
             fi
 
+            #This pkgbase has already failed. No sense in trying it again this run
+            if echo $FAILED_PKGS | grep "\<$pkgbase\>" >&/dev/null; then
+                continue
+            fi
+
             #Use this file to 'whitelist' or force building some sourceballs,
             # skipping the license check
             force=""
@@ -71,7 +76,7 @@ for repo in $repos; do
             if [ ! \( -f "$srcpath$srcpkg" -o -f "$srcpath$srcpkgbase" \) ]; then
                 if ! $dirname/../misc-scripts/make-sourceball $force \
                     $pkgbase $repo $arch 2>>"$srcbase/errors.txt"; then
-                    FAILED_PKGS="$FAILED_PKGS $pkg"
+                    FAILED_PKGS="$FAILED_PKGS $pkgbase"
                 fi
             fi
         done
@@ -80,7 +85,7 @@ done
 
 if [ -n "$FAILED_PKGS" ]; then
     [ -e "$srcbase/failed.txt" ] && /bin/mv "$srcbase/failed.txt" "$srcbase/failed.txt.old"
-    echo "The following packages failed:" > "$srcbase/failed.txt"
+    echo "The following package bases failed:" > "$srcbase/failed.txt"
     echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u >> "$srcbase/failed.txt"
 fi
 

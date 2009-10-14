@@ -117,7 +117,7 @@ remove_old() {
                     fi
                 done
                 if [ $skip -ne 1 ]; then 
-                    rm -f "$srcpkg"
+                    mv "$srcpkg" $SOURCE_CLEANUP_DESTDIR
                 fi
             fi
         done

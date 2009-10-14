@@ -110,4 +110,20 @@ get_repos_for_host() {
 	fi
 }
 
+#usage: chk_license ${license[@]}"
+chk_license() {
+    local l
+    for l in "$@"; do
+        l="$(echo $l | tr '[:upper:]' '[:lower:]')"
+        for allowed in ${ALLOWED_LICENSES[@]}; do
+            allowed="$(echo $allowed | tr '[:upper:]' '[:lower:]')"
+            if [ "$l" = "$allowed" ]; then
+                return 0
+            fi
+        done
+    done
+
+    return 1
+}
+
 # vim: set ts=4 sw=4 noet ft=sh:

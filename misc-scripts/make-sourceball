@@ -61,33 +61,11 @@ pkgver_from_src() {
     echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
 }
 
-#usage: chk_license ${license[@]}"
-chk_license() {
-    #The -f flag skips this check
-    if [ $FORCE = 1 ]; then
-        return 0
-    fi
-
-    local l
-    for l in "$@"; do
-        l="$(echo $l | tr '[:upper:]' '[:lower:]')"
-        for allowed in ${ALLOWED_LICENSES[@]}; do
-            allowed="$(echo $allowed | tr '[:upper:]' '[:lower:]')"
-            if [ "$l" = "$allowed" ]; then
-                return 0
-            fi
-        done
-    done
-
-    return 1
-}
-
 create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
         . "$BUILDSCRIPT"
-
-        if ! chk_license ${license[@]}; then
+	if ! [ $FORCE == 1 ] && ! chk_license ${license[@]} ; then
             #Removed so as not to clutter failed.txt
             #echo -e "\t$packagename license (${license[@]}) does not require source tarballs" >&2
             cleanup 0

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Allowed licenses: build only for licenses in this array
-ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2')
-
 if [ $# -ne 3 -a $# -ne 4 ]; then
     echo "usage: $(basename $0) [-f] <packagename> <repo> <arch>"
     echo "  -f  Force building. Skip license checks"

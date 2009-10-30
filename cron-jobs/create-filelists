@@ -45,8 +45,7 @@ for repo in $repos; do
 
         # create file lists
         for pkg in $repodir*${PKGEXT}; do
-            basename="$(basename "$pkg")"
-            pkgname="$(getpkgname "$basename")"
+            pkgname="$(getpkgname "$pkg")"
             tmppkgdir="${TMPDIR}/${repodir}/${pkgname}"
             mkdir -p "$tmppkgdir"
             if [ -f "${CACHEDIR}/${repodir}/${pkgname}/files" ]; then

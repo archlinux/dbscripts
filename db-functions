@@ -67,7 +67,7 @@ getpkgname() {
 
 	_name="$(_grep_pkginfo "$1" "^pkgname")"
 	if [ -z "$_name" ]; then
-		echo "ERROR: Package '$1' has no pkgname in the PKGINFO. Fail!"
+		echo "ERROR: Package '$1' has no pkgname in the PKGINFO. Fail!" >&2
 		exit 1
 	fi
 
@@ -80,7 +80,7 @@ getpkgver() {
 
 	_ver="$(_grep_pkginfo "$1" "^pkgver")"
 	if [ -z "$_ver" ]; then
-		echo "ERROR: Package '$1' has no pkgver in the PKGINFO. Fail!"
+		echo "ERROR: Package '$1' has no pkgver in the PKGINFO. Fail!" >&2
 		exit 1
 	fi
 
@@ -92,7 +92,7 @@ check_pkg_arch () { #check_pkg_arch pkgfile arch
 	_arch="$(_grep_pkginfo "$1" "^arch")"
 
 	if [ -z "$_arch" ]; then
-		echo "ERROR: Package '$1' has no arch in the PKGINFO. Fail!"
+		echo "ERROR: Package '$1' has no arch in the PKGINFO. Fail!" >&2
 		return 1
 	fi
 	if [ "$_arch" = "$2" ]; then

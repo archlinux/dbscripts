@@ -46,11 +46,12 @@ for repo in $repos; do
         # create file lists
         for pkg in $repodir/*${PKGEXT}; do
             pkgname="$(getpkgname "$pkg")"
-            tmppkgdir="${TMPDIR}/${repodir}/${pkgname}"
+            pkgver="$(getpkgver "$pkg")"
+            tmppkgdir="${TMPDIR}/${repodir}/${pkgname}-${pkgver}"
             mkdir -p "$tmppkgdir"
-            if [ -f "${CACHEDIR}/${repodir}/${pkgname}/files" ]; then
+            if [ -f "${CACHEDIR}/${repodir}/${pkgname}-${pkgver}/files" ]; then
 #               echo "cache: $pkgname"
-                mv "${CACHEDIR}/${repodir}/${pkgname}/files" "${tmppkgdir}/files"
+                mv "${CACHEDIR}/${repodir}/${pkgname}-${pkgver}/files" "${tmppkgdir}/files"
             else
 #               echo "$repo/$arch: $pkgname"
                 echo '%FILES%' > "${tmppkgdir}/files"

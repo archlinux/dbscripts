@@ -44,7 +44,7 @@ for repo in $repos; do
         fi
 
         # create file lists
-        for pkg in $repodir*${PKGEXT}; do
+        for pkg in $repodir/*${PKGEXT}; do
             pkgname="$(getpkgname "$pkg")"
             tmppkgdir="${TMPDIR}/${repodir}/${pkgname}"
             mkdir -p "$tmppkgdir"

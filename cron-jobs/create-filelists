@@ -50,7 +50,7 @@ for repo in $repos; do
             mkdir -p "$tmppkgdir"
             if [ -f "${CACHEDIR}/${repodir}/${pkgname}/files" ]; then
 #               echo "cache: $pkgname"
-                mv "${CACHEDIR}/${repodir}$/{pkgname}/files" "${tmppkgdir}/files"
+                mv "${CACHEDIR}/${repodir}/${pkgname}/files" "${tmppkgdir}/files"
             else
 #               echo "$repo/$arch: $pkgname"
                 echo '%FILES%' > "${tmppkgdir}/files"

@@ -1,0 +1,95 @@
+#!/bin/bash
+
+. "$(dirname $0)/../db-functions"
+. "$(dirname $0)/../config"
+
+srcpath="$FTP_BASE/sources/"
+logfile="$srcpath/cleanup.txt"
+
+LOCKFILE="/tmp/.sourceball-cleanup.lock"
+WORKDIR="/tmp/sourceball-cleanup.$packagename.$UID"
+
+cleanup () {
+    restore_umask
+    rm -rf "$WORKDIR"
+    rm -f "$LOCKFILE"
+    exit 0
+}
+
+ctrl_c() {
+    echo "Interrupted" >&2
+    cleanup 0
+}
+
+remove_old() {
+    if [ -d "$1" ]; then
+        pushd "$1" >/dev/null
+        PKGVERS=""
+        for repo in *; do
+            cd "$repo"
+            . "$BUILDSCRIPT"
+            PKGVERS="$PKGVERS $pkgver-$pkgrel"
+            cd ..
+        done
+
+        for srcpkg in "$srcpath/$packagename-"*; do
+            [ -f "$srcpkg" ] || continue
+            if [ "$(pkgname_from_src $srcpkg)" == "$packagename" ]; then
+                skip=0
+                pver="$(pkgver_from_src $srcpkg)"
+                for v in $PKGVERS; do
+                    if [ "$v" = "$pver" ]; then
+                        skip=1
+                        break
+                    fi
+                done
+                if [ $skip -ne 1 ]; then 
+                    mv "$srcpkg" $SOURCE_CLEANUP_DESTDIR
+                fi
+            fi
+        done
+
+        popd >/dev/null
+    fi
+}
+
+if [ -f "$LOCKFILE" ]; then
+    owner="$(/usr/bin/stat -c %U $LOCKFILE)"
+    echo "error: source tarball generation is already in progress (started by $owner)"
+    exit 1
+fi
+
+trap cleanup 0
+trap ctrl_c 2
+
+/bin/touch "$LOCKFILE"
+
+#adjust the nice level to run at a lower priority
+/usr/bin/renice +10 -p $$ > /dev/null
+
+set_umask
+/bin/mkdir -p "$WORKDIR"
+cd "$WORKDIR"
+
+[ -e "$logfile" ] && /bin/mv "$logfile" "$logfile.old"
+echo  "Orphaned sourceballs:" > "$logfile"
+
+for sourceball in "$srcpath"/*$SRCEXT; do
+    packagename=$(basename $sourceball)
+    packagename=${packagename%-*-*$SRCEXT}
+
+    if ! /usr/bin/svn export -q --force "$SVNREPO/$packagename" "$packagename" >/dev/null 2>&1 ; then
+      echo "$packagename : no longer in svn.  Removing sourceball." >> "$logfile"
+      mv $sourceball $SOURCE_CLEANUP_DESTDIR
+    elif [ -z "$(ls -A "$packagename/repos")" ]; then
+      echo "$packagename : no longer in repos but trunk is still in svn.  Removing sourceball." >> "$logfile"
+      mv $sourceball $SOURCE_CLEANUP_DESTDIR
+    elif !  source  "$packagename/trunk/$BUILDSCRIPT" &&  chk_license ${license[@]}; then
+      echo "$packagename : source hosting no longer required by license.  Removing sourceball." >> "$logfile"
+      mv $sourceball $SOURCE_CLEANUP_DESTDIR
+    else
+      remove_old "$packagename/repos/"
+    fi
+done
+
+cleanup 0

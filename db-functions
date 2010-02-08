@@ -170,4 +170,25 @@ chk_license() {
     return 1
 }
 
+pkgname_from_src() {
+    local tmp
+    tmp=${1##*/}
+    tmp=${tmp%$SRCEXT}
+    for a in ${ARCHES[@]}; do
+        tmp=${tmp%-$a}
+    done
+    tmp=${tmp%-any}
+    echo ${tmp%-*-*}
+}
+
+pkgver_from_src() {
+    tmp=${1##*/}
+    tmp=${tmp%$SRCEXT}
+    for a in ${ARCHES[@]}; do
+        tmp=${tmp%-$a}
+    done
+    tmp=${tmp%-any}
+    echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
+}
+
 # vim: set ts=4 sw=4 noet ft=sh:

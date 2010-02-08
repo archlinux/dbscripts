@@ -40,27 +40,6 @@ die() {
     cleanup 1
 }
 
-pkgname_from_src() {
-    local tmp
-    tmp=${1##*/}
-    tmp=${tmp%$SRCEXT}
-    for a in ${ARCHES[@]}; do
-        tmp=${tmp%-$a}
-    done
-    tmp=${tmp%-any}
-    echo ${tmp%-*-*}
-}
-
-pkgver_from_src() {
-    tmp=${1##*/}
-    tmp=${tmp%$SRCEXT}
-    for a in ${ARCHES[@]}; do
-        tmp=${tmp%-$a}
-    done
-    tmp=${tmp%-any}
-    echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
-}
-
 create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
@@ -94,38 +73,6 @@ create_srcpackage() {
     fi
 }
 
-remove_old() {
-    if [ -d "$1" ]; then
-        pushd "$1" >/dev/null
-        PKGVERS=""
-        for repo in *; do
-            cd "$repo"
-            . "$BUILDSCRIPT"
-            PKGVERS="$PKGVERS $pkgver-$pkgrel"
-            cd ..
-        done
-
-        for srcpkg in "$srcpath/$packagename-"*; do
-            [ -f "$srcpkg" ] || continue
-            if [ "$(pkgname_from_src $srcpkg)" == "$packagename" ]; then
-                skip=0
-                pver="$(pkgver_from_src $srcpkg)"
-                for v in $PKGVERS; do
-                    if [ "$v" = "$pver" ]; then
-                        skip=1
-                        break
-                    fi
-                done
-                if [ $skip -ne 1 ]; then 
-                    mv "$srcpkg" $SOURCE_CLEANUP_DESTDIR
-                fi
-            fi
-        done
-
-        popd >/dev/null
-    fi
-}
-
 trap ctrl_c 2
 trap cleanup 0 1
 
@@ -135,7 +82,6 @@ set_umask
 cd "$WORKDIR"
 
 if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
-    remove_old "$packagename/repos/"
     create_srcpackage "$packagename/repos/$reponame-$_arch"
 else
     die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"

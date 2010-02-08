@@ -89,4 +89,6 @@ if [ -n "$FAILED_PKGS" ]; then
     echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u >> "$srcbase/failed.txt"
 fi
 
+$dirname/../misc-scripts/sourceballs-cleanup
+
 cleanup

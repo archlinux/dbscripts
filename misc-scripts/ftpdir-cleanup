@@ -1,12 +1,11 @@
 #!/bin/bash
 
-if [ $# -ne 2 ]; then
-	echo "usage: $(basename $0) <reponame> <dest-dir>"
+if [ $# -ne 1 ]; then
+	echo "usage: $(basename $0) <reponame>"
 	exit 1
 fi
 
 reponame=$1
-dest=$2
 
 ############################################################
 
@@ -65,6 +64,7 @@ for arch in ${ARCHES[@]}; do
   cd "$ftppath"
 
   for pkg in $CLEANUP_TMPDIR/*; do
+    [ -f "${pkg}" ] || continue
     filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
 
     if [ ! -e "${filename}" ]; then
@@ -124,7 +124,6 @@ for arch in ${ARCHES[@]}; do
 
   if [ -n "$DELETEFILES" ]; then
       echo "    The following files are out of date"
-      echo "    They will be moved to '$dest'"
       for f in $DELETEFILES; do
           echo "        $f"
       done
@@ -150,14 +149,13 @@ for arch in ${ARCHES[@]}; do
 
   if [ -n "$EXTRAFILES" ]; then
       echo "    The following files are in the repo but not the db"
-      echo "    They will be moved to '$dest'"
       for f in $EXTRAFILES; do
           echo "        $f"
       done
   fi
 
   if [ -n "${DELETEFILES}" ]; then
-      ${CLEANUP_DRYRUN} || mv ${DELETEFILES} "$dest"
+      ${CLEANUP_DRYRUN} || rm -f ${DELETEFILES}
       echo ""
   fi
 
@@ -167,7 +165,7 @@ for arch in ${ARCHES[@]}; do
   fi
 
   if [ -n "${EXTRAFILES}" ]; then
-      ${CLEANUP_DRYRUN} || mv ${EXTRAFILES} "$dest"
+      ${CLEANUP_DRYRUN} || rm -f ${EXTRAFILES}
       echo ""
   fi
 
@@ -197,7 +195,6 @@ fi
 if [ -n "$ARCHINDEPFILES" ]; then
   echo "    The following architecture independent packages"
   echo "    are not symlinked in the architecture repositories."
-  echo "    They will be moved to '$dest'"
     for f in $ARCHINDEPFILES; do
         echo "        $f"
     done
@@ -205,6 +202,6 @@ fi
 
 if [ -d "$ftppath_base/any" -a -n "${ARCHINDEPFILES}" ]; then
   cd "$ftppath_base/any"
-  ${CLEANUP_DRYRUN} || mv ${ARCHINDEPFILES} "$dest"
+  ${CLEANUP_DRYRUN} || rm -f ${ARCHINDEPFILES}
   echo ""
 fi

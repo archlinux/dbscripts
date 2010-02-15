@@ -1,6 +1,5 @@
 
 FTP_BASE="/srv/ftp"
-FTP_OS_SUFFIX="os"
 
 SVNREPO="file:///srv/svn-packages"
 

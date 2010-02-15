@@ -26,7 +26,7 @@ trap cleanup 15
 
 ${CLEANUP_DRYRUN} && echo 'dry run mode is active'
 
-ftppath_base="$FTP_BASE/$reponame/$FTP_OS_SUFFIX"
+ftppath_base="$FTP_BASE/$reponame/os"
 
 for arch in ${ARCHES[@]}; do
 

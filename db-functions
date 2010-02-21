@@ -19,12 +19,12 @@ repo_lock () { #repo_lock repo-name arch
 	LOCKFILE="$TMPDIR/.repolock.$1.$2"
 	if [ -f "$LOCKFILE" ]; then
 		owner="$(/usr/bin/stat -c %U $LOCKFILE)"
-		echo "error: db generation is already in progress (started by $owner)"
+		echo "error: db generation is already in progress (started by $owner)" >&2
 		exit 1
 	else
 		/bin/touch "$LOCKFILE"
 		if [ ! -f "$LOCKFILE" ]; then
-			echo "error: could not create repo lock... something went wrong!"
+			echo "error: could not create repo lock... something went wrong!" >&2
 		fi
 		set_umask
 	fi
@@ -33,7 +33,7 @@ repo_lock () { #repo_lock repo-name arch
 repo_unlock () { #repo_unlock repo-name arch
 	LOCKFILE="$TMPDIR/.repolock.$1.$2"
 	if [ ! -f "$LOCKFILE" ]; then
-		echo "error: repo lock doesn't exist... something went terribly wrong!"
+		echo "error: repo lock doesn't exist... something went terribly wrong!" >&2
 	else
 		rm -f "$LOCKFILE"
 	fi
@@ -85,6 +85,34 @@ getpkgver() {
 	fi
 
 	echo "$_ver"
+}
+
+getpkgfile() {
+	if [[ ${#} -ne 1 ]]; then
+		echo 'ERROR: No canonical package found!' >&2
+		exit 1
+	elif [ ! -f "${1}" ]; then
+		echo "ERROR: Package ${1} not found!" >&2
+		exit 1
+	fi
+
+	echo ${1}
+}
+
+getpkgfiles() {
+	if [ ! -z "$(echo ${@%\.*} | sed "s/ /\n/g" | sort | uniq -D)" ]; then
+		echo 'ERROR: Duplicate packages found!'>&2
+		exit 1
+	fi
+
+	for f in ${@}; do
+		if  [ ! -f "${f}" ]; then
+			echo "ERROR: Package ${f} not found!" >&2
+			exit 1
+		fi
+	done
+
+	echo ${@}
 }
 
 check_pkg_arch () { #check_pkg_arch pkgfile arch

@@ -59,9 +59,7 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
     
     for i in ${pkgname[@]}; do
         _pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
-        if [ ! -f "$ftppath_from/${_arch}/$_pkgfile" ]; then
-            die "error: package file '$_pkgfile' not found in repo '$repofrom'"
-        fi
+        getpkgfile "$ftppath_from/${_arch}/"$_pkgfile >/dev/null
     done
 
     if [ -d "$packagebase/repos/$svnrepo_to" ]; then
@@ -101,13 +99,16 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 
 		for i in ${pkgname[@]}; do
 			_pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
-			/bin/cp "$ftppath_from/$architecture/$_pkgfile" .
+			_cpkgfile=$(getpkgfile "$ftppath_from/$architecture/"$_pkgfile)
+			[ $? -gt 0 ] && die
+			/bin/cp $_cpkgfile .
 			/usr/bin/repo-add -q "$repoto$DBEXT" $_pkgfile || die "Error in repo-add $_pkgfile"
 		done
 		#use '*' to move the old DB too
 		mv $repoto$DBEXT* $ftppath_to/$architecture
         for i in ${pkgname[@]}; do
-            _pkgfile="$i-$pkgver-$pkgrel-$_arch$PKGEXT"
+            _pkgfile=$(getpkgfile "$i-$pkgver-$pkgrel-$_arch"$PKGEXT)
+            [ $? -gt 0 ] && die
             if [ "${_arch}" == "any" ]; then
                 mv ${_pkgfile} $ftppath_to/any
                 ln -s ../any/${_pkgfile} $ftppath_to/$architecture/

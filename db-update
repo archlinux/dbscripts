@@ -89,7 +89,7 @@ done
 
 # Process architecture-independent packages first.
 if [ -d "$stagedir" ]; then
-	ANYPKGS="$(/bin/ls $stagedir/*-any$PKGEXT 2>/dev/null)"
+	ANYPKGS="$(getpkgfiles $stagedir/*-any$PKGEXT 2>/dev/null)"
 fi
 
 mkdir -p $WORKDIR
@@ -115,7 +115,7 @@ if [ -n "$ANYPKGS" ]; then
 			/usr/bin/svn up -q $_pkgbase
 			if [ -d "$_pkgbase/repos/$svnrepo" ]; then
 				. "$_pkgbase/repos/$svnrepo/$BUILDSCRIPT"
-				if [ "$_pkgfile" = "$_pkgname-$pkgver-$pkgrel-any$PKGEXT" ]; then
+				if echo "$_pkgfile" | grep -q "$_pkgname-$pkgver-$pkgrel-any"; then
 					to_add_any="$to_add_any $pkg"
 				else
 					echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
@@ -155,7 +155,7 @@ for current_arch in ${ARCHES[@]}; do
 
 	to_add=""
 	if [ -d "$stagedir" ]; then
-		ADDPKGS="$(/bin/ls $stagedir/*-${current_arch}$PKGEXT 2>/dev/null)"
+		ADDPKGS="$(getpkgfiles $stagedir/*-${current_arch}$PKGEXT 2>/dev/null)"
 	fi
 
 	if [ -n "$ADDPKGS" -o -n "$ANYPKGS" ]; then
@@ -186,7 +186,7 @@ for current_arch in ${ARCHES[@]}; do
 					/usr/bin/svn up -q $_pkgbase
 					if [ -d "$_pkgbase/repos/$svnrepo" ]; then
 						. "$_pkgbase/repos/$svnrepo/$BUILDSCRIPT"
-						if [ "$_pkgfile" = "$_pkgname-$pkgver-$pkgrel-$current_arch$PKGEXT" ]; then
+						if echo "$_pkgfile" | grep -q "$_pkgname-$pkgver-$pkgrel-$current_arch"; then
 							to_add="$to_add $pkg"
 						else
 							echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
@@ -216,7 +216,7 @@ for current_arch in ${ARCHES[@]}; do
 
 	# if non empty, move all build dirs
 	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
-		if [ $(/bin/ls "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
+		if [ $(getpkgfiles "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
 			echo "Copying new files to '$ftppath'"
 			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
 				if ! /bin/cp "$f" "$ftppath/"; then
@@ -224,7 +224,7 @@ for current_arch in ${ARCHES[@]}; do
 				fi
 			done
 		fi
-		if [ $(/bin/ls "$WORKDIR/build/"*-any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
+		if [ $(getpkgfiles "$WORKDIR/build/"*-any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
 			echo "Copying new files to '$ftppath_any' and symlinking"
 			for f in "$WORKDIR/build/"*-any$PKGEXT; do
 				if ! /bin/cp "$f" "$ftppath_any"; then

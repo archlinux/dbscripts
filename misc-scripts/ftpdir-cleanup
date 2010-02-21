@@ -53,7 +53,6 @@ for arch in ${ARCHES[@]}; do
 
   for pkg in $TMPDIR/*; do
     filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
-    [ -z "${filename}" ] && filename="${pkg}${PKGEXT}"
 
     if [ ! -e "${filename}" ]; then
       MISSINGFILES="${MISSINGFILES} ${filename}"

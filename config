@@ -5,6 +5,7 @@ FTP_OS_SUFFIX="os"
 SVNREPO="file:///srv/svn-packages"
 
 CLEANUP_DESTDIR="/srv/package-cleanup"
+CLEANUP_DRYRUN=false
 SOURCE_CLEANUP_DESTDIR="/srv/source-cleanup"
 
 STAGING="$HOME/staging"

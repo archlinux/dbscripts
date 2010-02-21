@@ -13,6 +13,8 @@ dest=$2
 . "$(dirname $0)/../db-functions" 
 . "$(dirname $0)/../config"
 
+${CLEANUP_DRYRUN} && echo 'dry run mode is active'
+
 ftppath_base="$FTP_BASE/$reponame/$FTP_OS_SUFFIX"
 
 for arch in ${ARCHES[@]}; do
@@ -93,7 +95,7 @@ for arch in ${ARCHES[@]}; do
   for mf in $missfiles; do
       if [ -e "${ftppath_base}/any/${mf}" ]; then
           echo "Restoring missing 'any' symlink: ${mf}"
-          ln -s "../any/${mf}" "${ftppath}"
+          ${CLEANUP_DRYRUN} || ln -s "../any/${mf}" "${ftppath}"
       else
           MISSINGFILES="${MISSINGFILES} ${mf}"
       fi
@@ -141,17 +143,17 @@ for arch in ${ARCHES[@]}; do
   fi
 
   if [ -n "${DELETEFILES}" ]; then
-      mv ${DELETEFILES} "$dest"
+      ${CLEANUP_DRYRUN} || mv ${DELETEFILES} "$dest"
       echo ""
   fi
 
   if [ -n "${DELETESYMLINKS}" ]; then
-      rm -f ${DELETESYMLINKS}
+      ${CLEANUP_DRYRUN} || rm -f ${DELETESYMLINKS}
       echo ""
   fi
 
   if [ -n "${EXTRAFILES}" ]; then
-      mv ${EXTRAFILES} "$dest"
+      ${CLEANUP_DRYRUN} || mv ${EXTRAFILES} "$dest"
       echo ""
   fi
 
@@ -189,6 +191,6 @@ fi
 
 if [ -d "$ftppath_base/any" -a -n "${ARCHINDEPFILES}" ]; then
   cd "$ftppath_base/any"
-  mv ${ARCHINDEPFILES} "$dest"
+  ${CLEANUP_DRYRUN} || mv ${ARCHINDEPFILES} "$dest"
   echo ""
 fi

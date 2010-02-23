@@ -77,7 +77,7 @@ for arch in ${ARCHES[@]}; do
       pkgname="$(getpkgname $pkg)"
       for p in ${TMPDIR}/${pkgname}-*; do
           [ ! -d "${p}" ] || continue 2
-          dbpkgname=$(grep -A1 '^%FILENAME%$' "${p}/desc" | tail -n1)
+          dbpkgname=$(grep -A1 '^%FILENAME%$' "${p}/desc" 2>/dev/null| tail -n1)
           if [ "${dbpkgname}" = "${pkgname}" ]; then
               continue 2
           fi                                                                                                                                               

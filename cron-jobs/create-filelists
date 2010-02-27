@@ -3,27 +3,28 @@
 reposdir="/srv/ftp"
 targetdir="/srv/ftp"
 repos="core extra testing community community-testing"
+lock="/tmp/create-filelists.lock"
 
 . "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"
 
-if [ -f "/tmp/createFileList.lock" ]; then
-    echo "Error: createFileList allready in progress."
+if [ -f "$lock" ]; then
+    echo "Error: create-filelists already in progress."
     exit 1
 fi
 
-touch "/tmp/createFileList.lock" || exit 1
-TMPDIR="$(mktemp -d /tmp/createFileList.XXXXXX)" || exit 1
-CACHEDIR="$(mktemp -d /tmp/createFileList.XXXXXX)" || exit 1
+touch "$lock" || exit 1
+TMPDIR="$(mktemp -d /tmp/create-filelists.XXXXXX)" || exit 1
+CACHEDIR="$(mktemp -d /tmp/create-filelists.XXXXXX)" || exit 1
 
 #adjust the nice level to run at a lower priority
 /usr/bin/renice +10 -p $$ > /dev/null
 
 case "${DBEXT}" in
-	*.gz)  TAR_OPT="z" ;;
-	*.bz2) TAR_OPT="j" ;;
-	*.xz)  TAR_OPT="J" ;;
-	*) echo "Unknown compression type for DBEXT=${DBEXT}" && exit 1 ;;
+    *.gz)  TAR_OPT="z" ;;
+    *.bz2) TAR_OPT="j" ;;
+    *.xz)  TAR_OPT="J" ;;
+    *) echo "Unknown compression type for DBEXT=${DBEXT}" && exit 1 ;;
 esac
 
 FILESEXT="${DBEXT//db/files}"
@@ -77,5 +78,7 @@ done
 cd - >/dev/null
 rm -rf "$TMPDIR" || exit 1
 rm -rf "$CACHEDIR" || exit 1
-rm -f "/tmp/createFileList.lock" || exit 1
+rm -f "$lock" || exit 1
 # echo 'done'
+
+# vim: set ts=4 sw=4 et ft=sh:

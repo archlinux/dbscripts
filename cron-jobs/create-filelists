@@ -63,14 +63,18 @@ for repo in $repos; do
 
         # create file lists
         for pkg in $(ls ${DBDIR}/${repodir}); do
+            dbpkgdir="${DBDIR}/${repodir}/${pkg}"
+            cachepkgdir="${CACHEDIR}/${repodir}/${pkg}"
             tmppkgdir="${TMPDIR}/${repodir}/${pkg}"
             mkdir -p "$tmppkgdir"
-            if [ -f "${CACHEDIR}/${repodir}/${pkg}/files" ]; then
+            ln "${dbpkgdir}/desc" "${tmppkgdir}/desc"
+            ln "${dbpkgdir}/depends" "${tmppkgdir}/depends"
+            if [ -f "${cachepkgdir}/files" ]; then
 #               echo "cache: $pkg"
-                mv "${CACHEDIR}/${repodir}/${pkg}/files" "${tmppkgdir}/files"
+                ln "${cachepkgdir}/files" "${tmppkgdir}/files"
             else
 #               echo "not cache: $repo/$arch: $pkg"
-                filename=$(grep -A1 '^%FILENAME%$' "${DBDIR}/${repodir}/${pkg}/desc" | tail -n1)
+                filename=$(grep -A1 '^%FILENAME%$' "${dbpkgdir}/desc" | tail -n1)
                 echo '%FILES%' > "${tmppkgdir}/files"
                 bsdtar --exclude=.* -tf "$repodir/$filename" >> "${tmppkgdir}/files"
                 cached="no"

@@ -30,7 +30,7 @@ esac
 FILESEXT="${DBEXT//db/files}"
 
 for repo in $repos; do
-    REPO_DB_FILE="${repo}$FILESEXT"
+    FILES_DB_FILE="${repo}$FILESEXT"
     for arch in ${ARCHES[@]}; do
         cd "$reposdir"
 
@@ -38,9 +38,9 @@ for repo in $repos; do
         cached="no"
 
         # extract old file archive
-        if [ -f "${targetdir}/${repodir}/${REPO_DB_FILE}" ]; then
+        if [ -f "${targetdir}/${repodir}/${FILES_DB_FILE}" ]; then
             mkdir -p "${CACHEDIR}/${repodir}"
-            bsdtar -xf "${targetdir}/${repodir}/${REPO_DB_FILE}" -C "${CACHEDIR}/${repodir}"
+            bsdtar -xf "${targetdir}/${repodir}/${FILES_DB_FILE}" -C "${CACHEDIR}/${repodir}"
             cached="yes"
         fi
 
@@ -64,13 +64,13 @@ for repo in $repos; do
         # create new file archive
         if [ "$cached" == "no" ]; then
             # at least one package has changed, so let's rebuild the archive
-#           echo "creating ${REPO_DB_FILE}/${arch}"
+#           echo "creating ${FILES_DB_FILE}/${arch}"
             pkgdir="${targetdir}/${repodir}"
             mkdir -p "$pkgdir"
             cd "${TMPDIR}/${repodir}"
-            [ -f "${pkgdir}/${REPO_DB_FILE}.old" ] && rm "${pkgdir}/${REPO_DB_FILE}.old"
-            [ -f "${pkgdir}/${REPO_DB_FILE}" ] && mv "${pkgdir}/${REPO_DB_FILE}" "${pkgdir}/${REPO_DB_FILE}.old"
-            bsdtar --exclude=*${DBEXT//\.db/} -c${TAR_OPT}f "${pkgdir}/${REPO_DB_FILE}" *
+            [ -f "${pkgdir}/${FILES_DB_FILE}.old" ] && rm "${pkgdir}/${FILES_DB_FILE}.old"
+            [ -f "${pkgdir}/${FILES_DB_FILE}" ] && mv "${pkgdir}/${FILES_DB_FILE}" "${pkgdir}/${FILES_DB_FILE}.old"
+            bsdtar --exclude=*${DBEXT//\.db/} -c${TAR_OPT}f "${pkgdir}/${FILES_DB_FILE}" *
         fi
     done
 done

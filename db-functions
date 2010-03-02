@@ -15,27 +15,43 @@ restore_umask () {
 	umask $UMASK
 }
 
-repo_lock () { #repo_lock repo-name arch
-	LOCKFILE="$TMPDIR/.repolock.$1.$2"
-	if [ -f "$LOCKFILE" ]; then
-		owner="$(/usr/bin/stat -c %U $LOCKFILE)"
-		echo "error: db generation is already in progress (started by $owner)" >&2
-		exit 1
-	else
-		/bin/touch "$LOCKFILE"
-		if [ ! -f "$LOCKFILE" ]; then
-			echo "error: could not create repo lock... something went wrong!" >&2
-		fi
-		set_umask
+repo_lock () { #repo_lock <repo-name> <arch> [timeout]
+	LOCKDIR="$TMPDIR/.repolock.$1.$2"
+	local _count
+	local _trial
+	local _timeout
+	local _lockblock
+	local _owner
+
+	if [ $# -eq 2 ]; then
+	    _lockblock=true
+	    _trial=0
+	elif [ $# -eq 3 ]; then
+	    _lockblock=false
+	    _timeout=$3
+	    let _trial=$_timeout/$LOCK_DELAY
 	fi
+
+	_count=0
+	while [ $_count -le $_trial ] || $_lockblock ; do
+	    if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
+		_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
+		echo "error: Repo $1-$2 is already locked by $_owner. Retrying in $LOCK_DELAY seconds..." >&2
+	    else
+		set_umask
+		break
+	    fi
+	    sleep $LOCK_DELAY
+	    let _count=$_count+1
+	done
 }
 
-repo_unlock () { #repo_unlock repo-name arch
-	LOCKFILE="$TMPDIR/.repolock.$1.$2"
-	if [ ! -f "$LOCKFILE" ]; then
+repo_unlock () { #repo_unlock <repo-name> <arch>
+	LOCKDIR="$TMPDIR/.repolock.$1.$2"
+	if [ ! -d "$LOCKDIR" ]; then
 		echo "error: repo lock doesn't exist... something went terribly wrong!" >&2
 	else
-		rm -f "$LOCKFILE"
+		rmdir "$LOCKDIR"
 	fi
 	restore_umask
 }

@@ -8,6 +8,9 @@ CLEANUP_DESTDIR="/srv/package-cleanup"
 CLEANUP_DRYRUN=false
 SOURCE_CLEANUP_DESTDIR="/srv/source-cleanup"
 
+LOCK_DELAY=10
+LOCK_TIMEOUT=300
+
 STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
 ARCHES=(i686 x86_64)

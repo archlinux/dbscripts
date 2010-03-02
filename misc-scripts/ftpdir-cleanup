@@ -10,7 +10,7 @@ dest=$2
 
 ############################################################
 
-. "$(dirname $0)/../db-functions" 
+. "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"
 
 ${CLEANUP_DRYRUN} && echo 'dry run mode is active'
@@ -18,6 +18,8 @@ ${CLEANUP_DRYRUN} && echo 'dry run mode is active'
 ftppath_base="$FTP_BASE/$reponame/$FTP_OS_SUFFIX"
 
 for arch in ${ARCHES[@]}; do
+
+  repo_lock $reponame $arch $LOCK_TIMEOUT
 
   TMPDIR=$(mktemp -d /tmp/cleanup-XXXXXX) || exit 1
   ftppath="$ftppath_base/$arch"
@@ -80,10 +82,10 @@ for arch in ${ARCHES[@]}; do
           dbpkgname=$(grep -A1 '^%FILENAME%$' "${p}/desc" 2>/dev/null| tail -n1)
           if [ "${dbpkgname}" = "${pkgname}" ]; then
               continue 2
-          fi                                                                                                                                               
+          fi
       done
       EXTRAFILES="$EXTRAFILES $pkg"
-  done 
+  done
 
   rm -rf ${TMPDIR}
 
@@ -99,6 +101,8 @@ for arch in ${ARCHES[@]}; do
           MISSINGFILES="${MISSINGFILES} ${mf}"
       fi
   done
+
+  repo_unlock $reponame $arch
 
   #Make sure we've done *something* before outputting anything
   if [ -z "$DELETEFILES$DELETESYMLINKS$MISSINGFILES$EXTRAFILES" ]; then

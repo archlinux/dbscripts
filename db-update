@@ -236,7 +236,7 @@ for current_arch in ${ARCHES[@]}; do
 				fi
 			done
 		fi
-		if ! /bin/cp "$WORKDIR/build/$reponame.db"* "$ftppath/"; then
+		if ! /bin/cp "$WORKDIR/build/$reponame$DBEXT" "$ftppath/"; then
 			die "failed to move repository $reponame-$current_arch".
 		fi
 	else

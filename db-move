@@ -88,8 +88,7 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 		if [ -f "$ftppath_from/$architecture/$repofrom$DBEXT" ]; then
 		    /bin/cp "$ftppath_from/$architecture/$repofrom$DBEXT" .
 		    /usr/bin/repo-remove -q "$repofrom$DBEXT" ${pkgname[@]} || die "Error in repo-remove"
-		    #use '*' to move the old DB too
-		    mv $repofrom$DBEXT* "$ftppath_from/$architecture"
+		    mv $repofrom$DBEXT "$ftppath_from/$architecture"
 		    echo "    Package files will be cleaned up automatically"
 		fi
 
@@ -104,8 +103,7 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 			/bin/cp $_cpkgfile .
 			/usr/bin/repo-add -q "$repoto$DBEXT" $_pkgfile || die "Error in repo-add $_pkgfile"
 		done
-		#use '*' to move the old DB too
-		mv $repoto$DBEXT* $ftppath_to/$architecture
+		mv $repoto$DBEXT $ftppath_to/$architecture
         for i in ${pkgname[@]}; do
             _pkgfile=$(getpkgfile "$i-$pkgver-$pkgrel-$_arch"$PKGEXT)
             [ $? -gt 0 ] && die

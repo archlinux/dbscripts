@@ -88,8 +88,7 @@ for repo in $repos; do
             pkgdir="${targetdir}/${repodir}"
             mkdir -p "$pkgdir"
             cd "${TMPDIR}/${repodir}"
-            [ -f "${pkgdir}/${FILES_DB_FILE}.old" ] && rm "${pkgdir}/${FILES_DB_FILE}.old"
-            [ -f "${pkgdir}/${FILES_DB_FILE}" ] && mv "${pkgdir}/${FILES_DB_FILE}" "${pkgdir}/${FILES_DB_FILE}.old"
+            [ -f "${pkgdir}/${FILES_DB_FILE}" ] && rm "${pkgdir}/${FILES_DB_FILE}"
             bsdtar --exclude=*${DBEXT//\.db/} -c${TAR_OPT}f "${pkgdir}/${FILES_DB_FILE}" *
         fi
     done

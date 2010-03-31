@@ -219,6 +219,7 @@ for current_arch in ${ARCHES[@]}; do
 		if [ $(getpkgfiles "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
 			echo "Copying new files to '$ftppath'"
 			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
+				/bin/chmod 664 "$f" &>/dev/null
 				if ! /bin/cp "$f" "$ftppath/"; then
 					die "error: failure while copying files to $ftppath"
 				fi
@@ -227,6 +228,7 @@ for current_arch in ${ARCHES[@]}; do
 		if [ $(getpkgfiles "$WORKDIR/build/"*-any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
 			echo "Copying new files to '$ftppath_any' and symlinking"
 			for f in "$WORKDIR/build/"*-any$PKGEXT; do
+				/bin/chmod 664 "$f" &>/dev/null
 				if ! /bin/cp "$f" "$ftppath_any"; then
 					die "error: failure while copying files to $ftppath_any"
 				fi

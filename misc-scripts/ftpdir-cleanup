@@ -32,7 +32,7 @@ for arch in ${ARCHES[@]}; do
 
   repo_lock $reponame $arch $LOCK_TIMEOUT || continue
 
-  TMPDIR=$(mktemp -d /tmp/cleanup-XXXXXX) || exit 1
+  CLEANUP_TMPDIR=$(mktemp -d ${TMPDIR}/cleanup-XXXXXX) || exit 1
   ftppath="$ftppath_base/$arch"
   MISSINGFILES=""
   DELETEFILES=""
@@ -44,8 +44,8 @@ for arch in ${ARCHES[@]}; do
       exit 1
   fi
 
-  if ! cd "${TMPDIR}" ; then
-      echo "Failed to cd to ${TMPDIR}"
+  if ! cd "${CLEANUP_TMPDIR}" ; then
+      echo "Failed to cd to ${CLEANUP_TMPDIR}"
       exit 1
   fi
 
@@ -64,7 +64,7 @@ for arch in ${ARCHES[@]}; do
 
   cd "$ftppath"
 
-  for pkg in $TMPDIR/*; do
+  for pkg in $CLEANUP_TMPDIR/*; do
     filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
 
     if [ ! -e "${filename}" ]; then
@@ -88,7 +88,7 @@ for arch in ${ARCHES[@]}; do
           continue
       fi
       pkgname="$(getpkgname $pkg)"
-      for p in ${TMPDIR}/${pkgname}-*; do
+      for p in ${CLEANUP_TMPDIR}/${pkgname}-*; do
           [ ! -d "${p}" ] || continue 2
           dbpkgname=$(grep -A1 '^%FILENAME%$' "${p}/desc" 2>/dev/null| tail -n1)
           if [ "${dbpkgname}" = "${pkgname}" ]; then
@@ -98,7 +98,7 @@ for arch in ${ARCHES[@]}; do
       EXTRAFILES="$EXTRAFILES $pkg"
   done
 
-  rm -rf ${TMPDIR}
+  rm -rf ${CLEANUP_TMPDIR}
 
   # Do a quick check to see if a missing ARCHINDEPFILE is in the any dir
   # If it is, and the file is MISSING, restore it

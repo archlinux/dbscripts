@@ -8,11 +8,12 @@
 UMASK=""
 set_umask () {
 	[ "$UMASK" == "" ] && UMASK="$(umask)"
+	export UMASK
 	umask 002
 }
 
 restore_umask () {
-	umask $UMASK
+	umask $UMASK >/dev/null
 }
 
 repo_lock () { #repo_lock <repo-name> <arch> [timeout]
@@ -36,24 +37,30 @@ repo_lock () { #repo_lock <repo-name> <arch> [timeout]
 	while [ $_count -le $_trial ] || $_lockblock ; do
 	    if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
 		_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
-		echo "error: Repo $1-$2 is already locked by $_owner. Retrying in $LOCK_DELAY seconds..." >&2
+		echo "warning: Repo $1-$2 is already locked by $_owner. Retrying in $LOCK_DELAY seconds..." >&2
 	    else
 		set_umask
-		break
+		return 0
 	    fi
 	    sleep $LOCK_DELAY
 	    let _count=$_count+1
 	done
+
+	echo "error: Repo $1-$2 is already locked by $_owner. Giving up!" >&2
+	return 1
 }
 
 repo_unlock () { #repo_unlock <repo-name> <arch>
 	LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	if [ ! -d "$LOCKDIR" ]; then
-		echo "error: repo lock doesn't exist... something went terribly wrong!" >&2
+		echo "warning: Repo lock $1-$2 was not locked!" >&2
+		restore_umask
+		return 1
 	else
 		rmdir "$LOCKDIR"
+		restore_umask
+		return 0
 	fi
-	restore_umask
 }
 
 # usage: _grep_pkginfo pkgfile pattern

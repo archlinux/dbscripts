@@ -40,7 +40,7 @@ die() {
 trap ctrl_c 2
 trap cleanup 0
 
-repo_lock $reponame $_arch
+repo_lock $reponame $_arch || exit 1
 
 /bin/mkdir -p "$WORKDIR"
 

@@ -141,7 +141,7 @@ for current_arch in ${ARCHES[@]}; do
 
 	svnrepo="$reponame-$current_arch"
 
-	repo_lock $reponame $current_arch
+	repo_lock $reponame $current_arch || continue
 
 	/bin/mkdir -p "$WORKDIR/build"
 	cd "$WORKDIR"

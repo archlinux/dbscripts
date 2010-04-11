@@ -13,13 +13,24 @@ dest=$2
 . "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"
 
+cleanup() {
+  trap '' 2 15
+  for arch in ${ARCHES[@]}; do
+    repo_unlock $reponame $arch
+  done
+  exit 1
+}
+
+trap cleanup 2
+trap cleanup 15
+
 ${CLEANUP_DRYRUN} && echo 'dry run mode is active'
 
 ftppath_base="$FTP_BASE/$reponame/$FTP_OS_SUFFIX"
 
 for arch in ${ARCHES[@]}; do
 
-  repo_lock $reponame $arch $LOCK_TIMEOUT
+  repo_lock $reponame $arch $LOCK_TIMEOUT || continue
 
   TMPDIR=$(mktemp -d /tmp/cleanup-XXXXXX) || exit 1
   ftppath="$ftppath_base/$arch"

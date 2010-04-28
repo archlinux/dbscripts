@@ -64,7 +64,7 @@ if [ -n "$to_cleanup" ]; then
         echo "        $(basename "$f")"
     done
     echo ""
-    mv "$f" "$CLEANUP_DESTDIR"
+    mv $to_cleanup "$CLEANUP_DESTDIR"
 fi
 
 cleanup

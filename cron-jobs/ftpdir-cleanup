@@ -40,19 +40,9 @@ for _arch in ${ARCHES[@]}; do
     cd $poolpath
     for pkg in *$PKGEXT; do
         [ -f "$pkg" ] || continue # in case we get a file named "*.pkg.tar.gz"
-        LINKS="$(/bin/ls $FTP_BASE/*/os/$_arch/$pkg 2>/dev/null)"
-        if [ -n "$LINKS" ]; then
-            found=0
-            for lnk in $LINKS; do
-                if [ -h "$lnk" ]; then
-                    found=1
-                    break
-                fi
-            done
-            # No links found, clean it up
-            if [ $found -eq 0 ]; then
-                to_cleanup="$to_cleanup $poolpath/$pkg"
-            fi
+        LINKS="$(/usr/bin/find $FTP_BASE -type l -name "$pkg" 2>/dev/null)"
+        if [ -z "$LINKS" ]; then
+            to_cleanup="$to_cleanup $poolpath/$pkg"
         fi
     done
 done

@@ -20,6 +20,16 @@ cleanup() {
   exit 1
 }
 
+clean_pkgs () {
+    for pkg in "$@"; do
+        if [ -h "$pkg" ]; then
+            rm -f "$pkg"
+        else
+            mv "$pkg" "$CLEANUP_DESTDIR"
+        fi
+    done
+}
+
 trap cleanup 2
 trap cleanup 15
 
@@ -155,17 +165,17 @@ for arch in ${ARCHES[@]}; do
   fi
 
   if [ -n "${DELETEFILES}" ]; then
-      ${CLEANUP_DRYRUN} || rm -f ${DELETEFILES}
+      ${CLEANUP_DRYRUN} || clean_pkgs ${DELETEFILES}
       echo ""
   fi
 
   if [ -n "${DELETESYMLINKS}" ]; then
-      ${CLEANUP_DRYRUN} || rm -f ${DELETESYMLINKS}
+      ${CLEANUP_DRYRUN} || clean_pkgs ${DELETESYMLINKS}
       echo ""
   fi
 
   if [ -n "${EXTRAFILES}" ]; then
-      ${CLEANUP_DRYRUN} || rm -f ${EXTRAFILES}
+      ${CLEANUP_DRYRUN} || clean_pkgs ${EXTRAFILES}
       echo ""
   fi
 
@@ -202,6 +212,6 @@ fi
 
 if [ -d "$ftppath_base/any" -a -n "${ARCHINDEPFILES}" ]; then
   cd "$ftppath_base/any"
-  ${CLEANUP_DRYRUN} || rm -f ${ARCHINDEPFILES}
+  ${CLEANUP_DRYRUN} || clean_pkgs ${ARCHINDEPFILES}
   echo ""
 fi

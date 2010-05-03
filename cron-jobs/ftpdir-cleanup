@@ -36,7 +36,7 @@ done
 
 to_cleanup=""
 for _arch in ${ARCHES[@]}; do
-    poolpath="$FTP_BASE/packages/os/$_arch/"
+    poolpath="$FTP_BASE/$PKGPOOL_DIR/os/$_arch/"
     cd $poolpath
     for pkg in *$PKGEXT; do
         [ -f "$pkg" ] || continue # in case we get a file named "*.pkg.tar.gz"

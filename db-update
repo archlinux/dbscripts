@@ -131,11 +131,11 @@ for current_arch in ${ARCHES[@]}; do
 
 	ftppath="$FTP_BASE/$reponame/os/$current_arch"
 	ftppath_any="$FTP_BASE/$reponame/os/any"
-	poolpath="$FTP_BASE/packages/os/$current_arch"
-	poolpath_any="$FTP_BASE/packages/os/any"
+	poolpath="$FTP_BASE/$PKGPOOL_DIR/os/$current_arch"
+	poolpath_any="$FTP_BASE/$PKGPOOL_DIR/os/any"
 	# The following is used to create relative symlinks
-	poolrel="../../../packages/os/$current_arch"
-	poolrel_any="../../../packages/os/any"
+	poolrel="../../../$PKGPOOL_DIR/os/$current_arch"
+	poolrel_any="../../../$PKGPOOL_DIR/os/any"
 
 	if [ ! -d "$ftppath" ]; then
 		echo "FTP path for this repo ($reponame) is missing"

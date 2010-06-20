@@ -1,9 +1,6 @@
 
 FTP_BASE="/srv/ftp"
 
-#This dir MUST be under FTP_BASE
-PKGPOOL_DIR="packages"
-
 SVNREPO="file:///srv/svn-packages"
 
 CLEANUP_DESTDIR="/srv/package-cleanup"

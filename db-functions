@@ -161,6 +161,14 @@ get_repos_for_host() {
 	fi
 }
 
+get_pkgpool_for_host() {
+	if [ "$(hostname)" = "sigurd" ]; then
+		echo "packages/community"
+	else
+		echo "packages/arch"
+	fi
+}
+
 #usage: chk_license ${license[@]}"
 chk_license() {
     local l

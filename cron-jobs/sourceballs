@@ -2,7 +2,7 @@
 
 ftpbase="/srv/ftp"
 srcbase="/srv/ftp/sources"
-repos="core extra testing" #community"
+repos="core extra testing community community-testing"
 
 . "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"

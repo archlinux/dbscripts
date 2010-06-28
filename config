@@ -2,6 +2,7 @@
 FTP_BASE="/srv/ftp"
 
 SVNREPO="file:///srv/svn-packages"
+SVNREPOCOMMUNITY="file:///srv/svn-community"
 
 CLEANUP_DESTDIR="/srv/package-cleanup"
 CLEANUP_DRYRUN=false

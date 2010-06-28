@@ -81,8 +81,16 @@ set_umask
 /bin/mkdir -p "$logpath"
 cd "$WORKDIR"
 
-if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
-    create_srcpackage "$packagename/repos/$reponame-$_arch"
+if [[ "$reponame" = "community" || "$reponame" = "community-testing" ]]; then
+    if /usr/bin/svn export -q "$SVNREPOCOMMUNITY/$packagename" $packagename; then
+	create_srcpackage "$packagename/repos/$reponame-$_arch"
+    else
+	die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
+    fi
 else
-    die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
+    if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
+	create_srcpackage "$packagename/repos/$reponame-$_arch"
+    else
+	die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
+    fi
 fi

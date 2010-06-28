@@ -43,7 +43,7 @@ remove_old() {
                         break
                     fi
                 done
-                if [ $skip -ne 1 ]; then 
+                if [ $skip -ne 1 ]; then
                     mv "$srcpkg" $SOURCE_CLEANUP_DESTDIR
                 fi
             fi
@@ -78,7 +78,8 @@ for sourceball in "$srcpath"/*$SRCEXT; do
     packagename=$(basename $sourceball)
     packagename=${packagename%-*-*$SRCEXT}
 
-    if ! /usr/bin/svn export -q --force "$SVNREPO/$packagename" "$packagename" >/dev/null 2>&1 ; then
+    if ! /usr/bin/svn export -q --force "$SVNREPO/$packagename" "$packagename" >/dev/null 2>&1 \
+	&& ! /usr/bin/svn export -q --force "$SVNREPOCOMMUNITY/$packagename" "$packagename" >/dev/null 2>&1 ; then
       echo "$packagename : no longer in svn.  Removing sourceball." >> "$logfile"
       mv $sourceball $SOURCE_CLEANUP_DESTDIR
     elif [ -z "$(ls -A "$packagename/repos")" ]; then

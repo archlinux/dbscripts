@@ -239,12 +239,16 @@ for current_arch in ${ARCHES[@]}; do
 			echo "Copying new files to '$ftppath_any' and symlinking"
 			for f in "$WORKDIR/build/"*-any$PKGEXT; do
 				/bin/chmod 664 "$f" &>/dev/null
-				if ! /bin/cp "$f" "$poolpath_any/"; then
-					die "error: failure while copying files to $poolpath_any"
-				fi
 				fname="$(basename $f)"
-				if ! ln -s "$poolrel_any/$fname" "$ftppath_any/$fname"; then
-					die "error: failure symlinking $fname to $ftppath_any"
+				if [ ! -f "$poolrel_any/$fname" ]; then
+					if ! /bin/cp "$f" "$poolpath_any/"; then
+						die "error: failure while copying files to $poolpath_any"
+					fi
+				fi
+				if [ ! -f "$ftppath_any/$fname" ]; then
+					if ! ln -s "$poolrel_any/$fname" "$ftppath_any/$fname"; then
+						die "error: failure symlinking $fname to $ftppath_any"
+					fi
 				fi
 				if ! ln -s "$poolrel_any/$fname" "$ftppath/$fname"; then
 					die "error: failure symlinking $fname to $ftppath"

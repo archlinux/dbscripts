@@ -153,7 +153,7 @@ for current_arch in ${ARCHES[@]}; do
 
 	# copy the db file into our working area
 	if [ -f "$ftppath/$reponame$DBEXT" ]; then
-		/bin/cp "$ftppath/$reponame$DBEXT" build/
+		/bin/cp "$ftppath/$reponame$DBEXT" build/$reponame-$current_arch$DBEXT
 	fi
 
 	echo "Updating DB for $svnrepo"
@@ -166,8 +166,9 @@ for current_arch in ${ARCHES[@]}; do
 	if [ -n "$ADDPKGS" -o -n "$ANYPKGS" ]; then
 
 		echo "==> Copying DB file from '$reponame'..." >&2
+
 		if [ -f "$ftppath/$reponame$DBEXT" ]; then
-			/bin/cp "$ftppath/$reponame$DBEXT" build/
+			/bin/cp "$ftppath/$reponame$DBEXT" build/$reponame-$current_arch$DBEXT
 		fi
 
 		pkgtotal=$(echo "$ADDPKGS $ANYPKGS" | wc -w)
@@ -210,9 +211,9 @@ for current_arch in ${ARCHES[@]}; do
 			pkgs=""
 			for pkg in $to_add $to_add_any; do pkgs="$pkgs $(basename $pkg)"; done
 
-			/usr/bin/repo-add -q "$reponame$DBEXT" $pkgs
+			/usr/bin/repo-add -q "$reponame-$current_arch$DBEXT" $pkgs
 		else
-			rm -f "build/$reponame$DBEXT"
+			rm -f "build/$reponame-$current_arch$DBEXT"
 			echo "Errors found when adding packages"
 		fi
 	else
@@ -250,7 +251,7 @@ for current_arch in ${ARCHES[@]}; do
 				fi
 			done
 		fi
-		if ! /bin/cp "$WORKDIR/build/$reponame$DBEXT" "$ftppath/"; then
+		if ! /bin/cp "$WORKDIR/build/$reponame-$current_arch$DBEXT" "$ftppath/$reponame$DBEXT"; then
 			die "failed to move repository $reponame-$current_arch".
 		fi
 	else

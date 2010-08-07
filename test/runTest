@@ -1,0 +1,66 @@
+#!/bin/bash
+
+curdir=$(readlink -e $(dirname $0))
+. "${curdir}/lib/common.inc"
+
+
+testAddSimplePackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b')
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update extra
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			checkPackage extra ${pkgbase}-1-1-${arch}.pkg.tar.xz ${arch}
+		done
+	done
+}
+
+testAddAnyPackages() {
+	local pkgs=('pkg-any-a' 'pkg-any-b')
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase} any
+	done
+
+	../db-update extra
+
+	for pkgbase in ${pkgs[@]}; do
+		checkAnyPackage extra ${pkgbase}-1-1-any.pkg.tar.xz
+	done
+}
+
+testAddSplitPackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-split-a' 'pkg-split-b')
+	local pkg
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update extra
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}.pkg.tar.*; do
+				checkPackage extra $(basename ${pkg}) ${arch}
+			done
+		done
+	done
+}
+
+
+. "${curdir}/lib/shunit2"

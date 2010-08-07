@@ -21,3 +21,6 @@ SRCEXT=".src.tar.gz"
 
 # Allowed licenses: get sourceballs only for licenses in this array
 ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2')
+
+# Override default config with config.local
+[ -f "$(dirname $0)/config.local" ] && . "$(dirname $0)/config.local"

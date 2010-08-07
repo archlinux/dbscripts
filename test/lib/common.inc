@@ -16,7 +16,7 @@ oneTimeSetUp() {
 }
 
 oneTimeTearDown() {
-	find "${pkgdir}" -name '*.pkg.tar.*' -delete
+	rm -rf "${pkgdir}"
 }
 
 setUp() {
@@ -54,6 +54,7 @@ setUp() {
 	SOURCE_CLEANUP_DESTDIR="${TMP}/source-cleanup"
 	STAGING="${TMP}/staging"
 	TMPDIR="${TMP}/tmp"
+	CLEANUP_DRYRUN=false
 eot
 	. "${curdir}/../config"
 }

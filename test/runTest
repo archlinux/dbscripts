@@ -25,6 +25,7 @@ testAddSimplePackages() {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
+	local arch
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -61,6 +62,7 @@ testAddSplitPackages() {
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
 	local pkgbase
+	local arch
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -88,6 +90,7 @@ testRemovePackages() {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b')
 	local pkgbase
+	local arch
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -138,6 +141,7 @@ testMoveSimplePackages() {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
+	local arch
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -180,6 +184,7 @@ testMoveSplitPackages() {
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
 	local pkgbase
+	local arch
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -206,5 +211,97 @@ testMoveSplitPackages() {
 
 	checkRemovedAnyPackage testing pkg-split-a
 }
+
+
+#
+# ftpdir-cleanup
+#
+
+testCleanupSimplePackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update extra
+
+	for arch in ${arches[@]}; do
+		../db-remove pkg-simple-a extra ${arch}
+	done
+
+	../cron-jobs/ftpdir-cleanup
+
+	for arch in ${arches[@]}; do
+		local pkg1="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
+		[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg1}" ] && fail "packages/arch/${arch}/${pkg1} found"
+		[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
+
+		local pkg2="pkg-simple-b-1-1-${arch}.pkg.tar.xz"
+		checkPackage extra ${pkg2} ${arch}
+	done
+}
+
+testCleanupAnyPackages() {
+	local pkgs=('pkg-any-a' 'pkg-any-b')
+	local pkgbase
+	local arch='any'
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase} any
+	done
+
+	../db-update extra
+	../db-remove pkg-any-a extra any
+	../cron-jobs/ftpdir-cleanup
+
+	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
+	[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg1}" ] && fail "packages/arch/${arch}/${pkg1} found"
+	[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
+
+	local pkg2="pkg-any-b-1-1-${arch}.pkg.tar.xz"
+	checkAnyPackage extra ${pkg2}
+}
+
+testCleanupSplitPackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-split-a' 'pkg-split-b')
+	local pkg
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update extra
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			../db-remove pkg-split-a extra ${arch}
+		done
+	done
+
+	../cron-jobs/ftpdir-cleanup
+
+	for arch in ${arches[@]}; do
+		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}.pkg.tar.*; do
+			[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg}" ] && fail "packages/arch/${arch}/${pkg} found"
+			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] && fail "${repo}/os/${arch}/${pkg} found"
+		done
+
+		for pkg in "${pkgdir}/${pkgs[1]}"/*-${arch}.pkg.tar.*; do
+			checkPackage extra $(basename ${pkg}) ${arch}
+		done
+	done
+}
+
 
 . "${curdir}/lib/shunit2"

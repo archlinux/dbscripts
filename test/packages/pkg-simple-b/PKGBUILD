@@ -1,0 +1,11 @@
+pkgname=pkg-simple-b
+pkgver=1
+pkgrel=1
+pkgdesc="A package called ${pkgname}"
+arch=('i686' 'x86_64')
+url='http://www.archlinux.org/'
+license=('GPL')
+
+package() {
+	true
+}

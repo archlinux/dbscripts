@@ -1,0 +1,11 @@
+pkgname=pkg-any-b
+pkgver=1
+pkgrel=1
+pkgdesc="A package called ${pkgname}"
+arch=('any')
+url='http://www.archlinux.org/'
+license=('GPL')
+
+package() {
+	true
+}

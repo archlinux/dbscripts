@@ -1,0 +1,16 @@
+pkgbase=pkg-split-b
+pkgname=('pkg-split-b1' 'pkg-split-b2')
+pkgver=1
+pkgrel=1
+pkgdesc="A split package called ${pkgbase}"
+arch=('i686' 'x86_64')
+url='http://www.archlinux.org/'
+license=('GPL')
+
+package_pkg-split-b1() {
+	true
+}
+
+package_pkg-split-b2() {
+	true
+}

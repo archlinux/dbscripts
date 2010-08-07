@@ -223,7 +223,7 @@ for current_arch in ${ARCHES[@]}; do
 	# if non empty, move all build dirs
 	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 		if [ $(getpkgfiles "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
-			echo "Copying new files to '$ftppath'"
+			echo "Copying new files to '$poolpath' and symlinking"
 			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
 				/bin/chmod 664 "$f" &>/dev/null
 				if ! /bin/cp "$f" "$poolpath/"; then
@@ -236,20 +236,14 @@ for current_arch in ${ARCHES[@]}; do
 			done
 		fi
 		if [ $(getpkgfiles "$WORKDIR/build/"*-any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
-			echo "Copying new files to '$ftppath_any' and symlinking"
+			echo "Copying new files to '$poolpath_any' and symlinking"
 			for f in "$WORKDIR/build/"*-any$PKGEXT; do
 				/bin/chmod 664 "$f" &>/dev/null
 				fname="$(basename $f)"
-				if [ ! -f "$poolrel_any/$fname" ]; then
-					if ! /bin/cp "$f" "$poolpath_any/"; then
-						die "error: failure while copying files to $poolpath_any"
-					fi
+				if ! /bin/cp "$f" "$poolpath_any/"; then
+					die "error: failure while copying files to $poolpath_any"
 				fi
-				if [ ! -f "$ftppath_any/$fname" ]; then
-					if ! ln -s "$poolrel_any/$fname" "$ftppath_any/$fname"; then
-						die "error: failure symlinking $fname to $ftppath_any"
-					fi
-				fi
+
 				if ! ln -s "$poolrel_any/$fname" "$ftppath/$fname"; then
 					die "error: failure symlinking $fname to $ftppath"
 				fi

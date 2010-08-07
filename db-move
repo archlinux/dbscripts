@@ -74,16 +74,15 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 
 	_pkgfiles=''
 	for i in ${pkgname[@]}; do
-		_pkgpath=$(getpkgfile "$ftppath_from/${_arch}/"$i-$pkgver-$pkgrel-$_arch$PKGEXT)
-		_pkgfile=$(basename "${_pkgpath}")
-
-		# copy package to pool if needed
-		# TODO: can be removed once every package has benn moved to the package pool
-		if [ ! -f $FTP_BASE/$(get_pkgpool_for_host)/${_arch}/$_pkgfile ]; then
-			cp $_pkgpath $FTP_BASE/$(get_pkgpool_for_host)/${_arch}/
-		fi
-
 		for _tarch in ${_tarches[@]}; do
+			_pkgpath=$(getpkgfile "$ftppath_from/${_tarch}/"$i-$pkgver-$pkgrel-$_arch$PKGEXT)
+			_pkgfile=$(basename "${_pkgpath}")
+
+			# copy package to pool if needed
+			# TODO: can be removed once every package has been moved to the package pool
+			if [ ! -f $FTP_BASE/$(get_pkgpool_for_host)/${_arch}/$_pkgfile ]; then
+				cp $_pkgpath $FTP_BASE/$(get_pkgpool_for_host)/${_arch}/
+			fi
 			ln -s "../../../$(get_pkgpool_for_host)/${_arch}/${_pkgfile}" $ftppath_to/${_tarch}/
 		done
 

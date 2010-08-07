@@ -91,6 +91,8 @@ checkAnyPackage() {
 	[ -f "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
 
 	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}.db.tar.gz" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}.db.tar.gz"
+
+	[ -f "${FTP_BASE}/${repo}/os/any/${pkg}" ] && fail "${repo}/os/any/${pkg} should not exist"
 }
 
 checkPackage() {

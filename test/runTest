@@ -148,7 +148,7 @@ testMoveSimplePackages() {
 	../db-update testing
 
 	for arch in ${arches[@]}; do
-		../db-move-draft pkg-simple-a testing extra ${arch}
+		../db-move pkg-simple-a testing extra ${arch}
 	done
 
 	for arch in ${arches[@]}; do
@@ -168,7 +168,7 @@ testMoveAnyPackages() {
 	done
 
 	../db-update testing
-	../db-move-draft pkg-any-a testing extra any
+	../db-move pkg-any-a testing extra any
 
 	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz
 	checkRemovedAnyPackage testing pkg-any-a
@@ -190,7 +190,7 @@ testMoveSplitPackages() {
 	../db-update testing
 
 	for arch in ${arches[@]}; do
-		../db-move-draft pkg-split-a testing extra ${arch}
+		../db-move pkg-split-a testing extra ${arch}
 	done
 
 	for arch in ${arches[@]}; do

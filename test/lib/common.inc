@@ -1,4 +1,4 @@
-pkgdir="$(dirname $0)/packages"
+pkgdir="${curdir}/packages"
 
 oneTimeSetUp() {
 	local p
@@ -57,18 +57,11 @@ eot
 }
 
 tearDown() {
+	echo -n 'Cleaning up...'
 	rm -rf "${TMP}"
 	rm -f "${curdir}/../config.local"
+	echo 'done'
 	echo
-}
-
-testPackages() {
-	local p
-	for p in "${pkgdir}"/*; do
-		pushd $p >/dev/null
-		namcap *.pkg.tar.* || fail 'namcap failed'
-		popd >/dev/null
-	done
 }
 
 releasePackage() {

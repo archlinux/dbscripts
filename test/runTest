@@ -3,6 +3,23 @@
 curdir=$(readlink -e $(dirname $0))
 . "${curdir}/lib/common.inc"
 
+#
+# self test
+#
+
+testPackages() {
+	local p
+	for p in "${pkgdir}"/*; do
+		pushd $p >/dev/null
+		namcap *.pkg.tar.* || fail 'namcap failed'
+		popd >/dev/null
+	done
+}
+
+
+#
+# db-update
+#
 
 testAddSimplePackages() {
 	local arches=('i686' 'x86_64')
@@ -59,6 +76,67 @@ testAddSplitPackages() {
 				checkPackage extra $(basename ${pkg}) ${arch}
 			done
 		done
+	done
+}
+
+
+#
+# db-remove
+#
+
+testRemovePackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b')
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update extra
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			../db-remove ${pkgbase} extra ${arch}
+		done
+	done
+
+	for arch in ${arches[@]}; do
+		[ -z "$(bsdtar -tf "${FTP_BASE}/extra/os/${arch}/extra.db.tar.gz" -O)" ] || fail "extra/os/${arch}/${repo}.db.tar.gz should be empty"
+	done
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+			[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/extra-${arch}" ] && fail "svn-packages-copy/${pkgbase}/repos/extra-${arch} should not exist"
+		done
+	done
+}
+
+testRemoveAnyPackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-any-a' 'pkg-any-b')
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase} any
+	done
+
+	../db-update extra
+
+	for pkgbase in ${pkgs[@]}; do
+		../db-remove ${pkgbase} extra any
+	done
+
+	for arch in ${arches[@]}; do
+		[ -z "$(bsdtar -tf "${FTP_BASE}/extra/os/${arch}/extra.db.tar.gz" -O)" ] || fail "extra/os/${arch}/${repo}.db.tar.gz should be empty"
+	done
+
+	for pkgbase in ${pkgs[@]}; do
+		svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+		[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/extra-any" ] && fail "svn-packages-copy/${pkgbase}/repos/extra-any should not exist"
 	done
 }
 

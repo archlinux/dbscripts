@@ -37,9 +37,9 @@ for repo in $repos; do
 done
 
 to_cleanup=""
-for _arch in ${ARCHES[@]}; do
+for _arch in any ${ARCHES[@]}; do
     poolpath="$FTP_BASE/$(get_pkgpool_for_host)/$_arch/"
-    cd $poolpath
+    pushd $poolpath >/dev/null
     for pkg in *$PKGEXT; do
         [ -f "$pkg" ] || continue # in case we get a file named "*.pkg.tar.gz"
         LINKS="$(/usr/bin/find $repopaths -type l -name "$pkg" 2>/dev/null)"
@@ -47,6 +47,7 @@ for _arch in ${ARCHES[@]}; do
             to_cleanup="$to_cleanup $poolpath/$pkg"
         fi
     done
+    popd >/dev/null
 done
 
 if [ -n "$to_cleanup" ]; then

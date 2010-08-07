@@ -60,9 +60,10 @@ for arch in ${ARCHES[@]}; do
 
   if [ ! -f "$ftppath/$reponame$DBEXT" ]; then
     echo ""
-    echo "ERROR: The file \"$ftppath/$reponame$DBEXT\" could not be found, aborting."
+    echo "WARNING: The file \"$ftppath/$reponame$DBEXT\" could not be found, skipping."
     echo ""
-    exit 1
+    repo_unlock $reponame $arch
+    continue
   fi
 
   if ! bsdtar xf "$ftppath/$reponame$DBEXT"; then

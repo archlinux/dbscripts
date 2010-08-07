@@ -1,12 +1,14 @@
-pkgdir="${curdir}/packages"
+. "${curdir}/../db-functions"
 
 oneTimeSetUp() {
 	local p
+	pkgdir="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
+	cp -r ${curdir}/packages/* "${pkgdir}"
 	echo -n 'Building packages...'
 	for p in "${pkgdir}"/*; do
 		pushd $p >/dev/null
 		linux32 makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1 || exit 1
-		linux64 makepkg -cf --config ${curdir}/lib/makepkg-x86_64.conf >/dev/null 2>&1 || exit 1
+		[ -f *-any.pkg.tar.* ] || linux64 makepkg -cf --config ${curdir}/lib/makepkg-x86_64.conf >/dev/null 2>&1 || exit 1
 		popd >/dev/null
 	done
 	echo 'done'
@@ -22,7 +24,7 @@ setUp() {
 	local pkg
 
 	[ -f "${curdir}/../config.local" ] && exit 1
-	TMP="$(mktemp -d /tmp/$(basename $0).XXXXXXXXXX)"
+	TMP="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
 	#echo "Using ${TMP}"
 
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-{packages,community}-{copy,repo}}
@@ -82,7 +84,7 @@ checkAnyPackage() {
 
 	[ -f "${FTP_BASE}/packages/arch/any/${pkg}" ] || fail "packages/arch/any/${pkg} not found"
 
-	for arch in any i686 x86_64; do
+	for arch in i686 x86_64; do
 		[ -L "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} not a symlink"
 		[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/packages/arch/any/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to packages/arch/any/${pkg}"
 	done
@@ -103,4 +105,32 @@ checkPackage() {
 	[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/packages/arch/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to packages/arch/${arch}/${pkg}"
 
 	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}.db.tar.gz" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}.db.tar.gz"
+
+	local pkgbase=$(getpkgbase "${FTP_BASE}/packages/arch/${arch}/${pkg}")
+	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] || fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} does not exist"
+}
+
+checkRemovedPackage() {
+	local repo=$1
+	local pkgbase=$2
+	local arch=$3
+
+	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}.db.tar.gz" -O | grep -q ${pkgbase} && fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}.db.tar.gz"
+
+	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] && fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} should not exist"
+}
+
+checkRemovedAnyPackage() {
+	local repo=$1
+	local pkgbase=$2
+	local arch
+
+	for arch in i686 x86_64; do
+		bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}.db.tar.gz" -O | grep -q ${pkgbase} && fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}.db.tar.gz"
+	done
+
+	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] && fail "svn-packages-copy/${pkgbase}/repos/${repo}-any should not exist"
 }

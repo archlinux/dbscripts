@@ -103,20 +103,14 @@ testRemovePackages() {
 		done
 	done
 
-	for arch in ${arches[@]}; do
-		[ -z "$(bsdtar -tf "${FTP_BASE}/extra/os/${arch}/extra.db.tar.gz" -O)" ] || fail "extra/os/${arch}/${repo}.db.tar.gz should be empty"
-	done
-
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-			[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/extra-${arch}" ] && fail "svn-packages-copy/${pkgbase}/repos/extra-${arch} should not exist"
+			checkRemovedPackage extra ${pkgbase} ${arch}
 		done
 	done
 }
 
 testRemoveAnyPackages() {
-	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 
@@ -130,15 +124,87 @@ testRemoveAnyPackages() {
 		../db-remove ${pkgbase} extra any
 	done
 
-	for arch in ${arches[@]}; do
-		[ -z "$(bsdtar -tf "${FTP_BASE}/extra/os/${arch}/extra.db.tar.gz" -O)" ] || fail "extra/os/${arch}/${repo}.db.tar.gz should be empty"
-	done
-
 	for pkgbase in ${pkgs[@]}; do
-		svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-		[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/extra-any" ] && fail "svn-packages-copy/${pkgbase}/repos/extra-any should not exist"
+		checkRemovedAnyPackage extra ${pkgbase}
 	done
 }
 
+
+#
+# db-move
+#
+
+testMoveSimplePackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b')
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage testing ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update testing
+
+	for arch in ${arches[@]}; do
+		../db-move-draft pkg-simple-a testing extra ${arch}
+	done
+
+	for arch in ${arches[@]}; do
+		checkPackage extra pkg-simple-a-1-1-${arch}.pkg.tar.xz ${arch}
+		checkRemovedPackage testing pkg-simple-a-1-1-${arch}.pkg.tar.xz ${arch}
+
+		checkPackage testing pkg-simple-b-1-1-${arch}.pkg.tar.xz ${arch}
+	done
+}
+
+testMoveAnyPackages() {
+	local pkgs=('pkg-any-a' 'pkg-any-b')
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage testing ${pkgbase} any
+	done
+
+	../db-update testing
+	../db-move-draft pkg-any-a testing extra any
+
+	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz
+	checkRemovedAnyPackage testing pkg-any-a
+	checkAnyPackage testing pkg-any-b-1-1-any.pkg.tar.xz
+}
+
+testMoveSplitPackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-split-a' 'pkg-split-b')
+	local pkg
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage testing ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update testing
+
+	for arch in ${arches[@]}; do
+		../db-move-draft pkg-split-a testing extra ${arch}
+	done
+
+	for arch in ${arches[@]}; do
+		for pkg in "${pkgdir}/pkg-split-a"/*-${arch}.pkg.tar.*; do
+			checkPackage extra $(basename ${pkg}) ${arch}
+		done
+	done
+	for arch in ${arches[@]}; do
+		for pkg in "${pkgdir}/pkg-split-b"/*-${arch}.pkg.tar.*; do
+			checkPackage testing $(basename ${pkg}) ${arch}
+		done
+	done
+
+	checkRemovedAnyPackage testing pkg-split-a
+}
 
 . "${curdir}/lib/shunit2"

@@ -235,7 +235,7 @@ testCleanupSimplePackages() {
 		../db-remove pkg-simple-a extra ${arch}
 	done
 
-	../cron-jobs/ftpdir-cleanup
+	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for arch in ${arches[@]}; do
 		local pkg1="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
@@ -258,7 +258,7 @@ testCleanupAnyPackages() {
 
 	../db-update extra
 	../db-remove pkg-any-a extra any
-	../cron-jobs/ftpdir-cleanup
+	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
 	[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg1}" ] && fail "packages/arch/${arch}/${pkg1} found"
@@ -289,7 +289,7 @@ testCleanupSplitPackages() {
 		done
 	done
 
-	../cron-jobs/ftpdir-cleanup
+	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for arch in ${arches[@]}; do
 		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}.pkg.tar.*; do
@@ -333,7 +333,7 @@ testMovePackagesWithoutPool() {
 		done
 	done
 
-	../cron-jobs/ftpdir-cleanup
+	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -341,7 +341,7 @@ testMovePackagesWithoutPool() {
 		done
 	done
 
-	../cron-jobs/ftpdir-cleanup
+	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -374,13 +374,13 @@ testMoveAnyPackagesWithoutPool() {
 		done
 	done
 
-	../cron-jobs/ftpdir-cleanup
+	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for pkgbase in ${pkgs[@]}; do
 		../db-move ${pkgbase} testing extra any
 	done
 
-	../cron-jobs/ftpdir-cleanup
+	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for pkgbase in ${pkgs[@]}; do
 		for pkg in "${pkgdir}/${pkgbase}"/*-any.pkg.tar.*; do

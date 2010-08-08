@@ -42,26 +42,21 @@ trap cleanup 0
 
 repo_lock $reponame $_arch || exit 1
 
+echo -n "Removing $packagebase from $reponame..."
 /bin/mkdir -p "$WORKDIR"
-
-
-echo "==> Removing package '$packagebase' from '$reponame'..." >&2
-
 cd "$WORKDIR"
-/usr/bin/svn checkout -N $SVNREPO checkout
+/usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
 cd checkout
 
 /usr/bin/svn up -q $packagebase
 if [ -d "$packagebase/repos/$svnrepo" ]; then
-	echo "    Removing from subversion"
 	. "$packagebase/repos/$svnrepo/$BUILDSCRIPT"
 	/usr/bin/svn rm --force -q "$packagebase/repos/$svnrepo"
 	/usr/bin/svn commit -q -m "$(basename $0): $packagebase removed by $(id -un)"
 else
 	echo "    Warning: $packagebase not found in $svnrepo"
-	echo "             Removing split packages is not supported"
-	echo "             You need to specify each sub package instead"
-	pkgname=$packagebase
+	echo "             Removing split packages is not yet supported"
+	exit 1
 fi
 
 cd "$WORKDIR"
@@ -82,14 +77,16 @@ for architecture in $arches; do
 		exit 0
 	fi
 
-	echo "    Removing from $reponame DB file ($architecture)"
 	cd build/
-	/usr/bin/repo-remove -q "$reponame$DBEXT" ${pkgname[@]}
+	/usr/bin/repo-remove -q "$reponame$DBEXT" ${pkgname[@]} >/dev/null
 
 	/bin/mv "$reponame$DBEXT" "$ftppath/$architecture"
 
-	echo "Package files will be cleaned up automatically"
 	cd ..
 done
+
+echo 'done'
+
 cleanup
+
 # vim: set ts=4 sw=4 noet ft=sh:

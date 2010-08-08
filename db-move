@@ -55,22 +55,21 @@ repo_lock $repofrom $_arch || exit 1
 /bin/mkdir -p "$WORKDIR"
 
 cd "$WORKDIR"
-/usr/bin/svn checkout -N $SVNREPO checkout
+/usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
 cd checkout
 
 /usr/bin/svn up -q $packagebase
 if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 	. "$packagebase/repos/$svnrepo_from/$BUILDSCRIPT"
 
+	echo -n "Moving $packagebase from $repofrom to $repoto..."
 	if [ -d "$packagebase/repos/$svnrepo_to" ]; then
-		echo "    Removing existing package from subversion"
 		/usr/bin/svn rm --force -q "$packagebase/repos/$svnrepo_to"
 		/usr/bin/svn commit -q -m "$(basename $0): $packagebase removed by $(id -un) for move to $repoto"
 	fi
 
-	echo "    Moving svn entries"
-	/usr/bin/svn mv -r HEAD "$packagebase/repos/$svnrepo_from" "$packagebase/repos/$svnrepo_to"
-	/usr/bin/svn commit -m "$(basename $0): moved $packagebase from [$repofrom] to [$repoto] ($_arch)"
+	/usr/bin/svn mv -q -r HEAD "$packagebase/repos/$svnrepo_from" "$packagebase/repos/$svnrepo_to"
+	/usr/bin/svn commit -q -m "$(basename $0): moved $packagebase from [$repofrom] to [$repoto] ($_arch)"
 
 	_pkgfiles=''
 	for i in ${pkgname[@]}; do
@@ -90,9 +89,11 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 	done
 
 	for _tarch in ${_tarches[@]}; do
-		/usr/bin/repo-add -q "$ftppath_to/${_tarch}/$repoto$DBEXT" ${_pkgfiles} || die "Error in repo-add $_pkgfiles"
-		/usr/bin/repo-remove -q "$ftppath_from/${_tarch}/$repofrom$DBEXT" ${pkgname[@]} || die "Error in repo-remove ${pkgname[@]}"
+		/usr/bin/repo-add -q "$ftppath_to/${_tarch}/$repoto$DBEXT" ${_pkgfiles} >/dev/null || die "Error in repo-add $_pkgfiles"
+		/usr/bin/repo-remove -q "$ftppath_from/${_tarch}/$repofrom$DBEXT" ${pkgname[@]} >/dev/null || die "Error in repo-remove ${pkgname[@]}"
 	done
+
+	echo 'done'
 else
 	die "Error: $packagebase is not in repo $repofrom"
 fi

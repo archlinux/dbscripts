@@ -60,10 +60,8 @@ eot
 }
 
 tearDown() {
-	echo -n 'Cleaning up...'
 	rm -rf "${TMP}"
 	rm -f "${curdir}/../config.local"
-	echo 'done'
 	echo
 }
 
@@ -73,7 +71,7 @@ releasePackage() {
 	local arch=$3
 
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/ >/dev/null
-	archrelease ${repo}-${arch} >/dev/null
+	archrelease ${repo}-${arch} >/dev/null 2&>1
 	popd >/dev/null
 	cp "${pkgdir}/${pkgbase}"/*.pkg.tar.* "${STAGING}"/${repo}/
 }

@@ -74,6 +74,8 @@ die() {
 trap ctrl_c 2
 trap cleanup 0
 
+echo -n "Updating $reponame..."
+
 # Remove any package from $stagedir that is already in the FTP repository
 for current_arch in ${ARCHES[@]} any; do
 	ftppath="$FTP_BASE/$reponame/os/$current_arch"
@@ -97,9 +99,8 @@ cd "$WORKDIR"
 
 if [ -n "$ANYPKGS" ]; then
 	pkgtotal=$(echo "$ANYPKGS" | wc -w)
-	echo "==> Processing $pkgtotal new/updated arch-independent packages for '$reponame'..." >&2
 
-	/usr/bin/svn checkout -N $SVNREPO checkout
+	/usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
 	cd checkout
 	to_add_any=""
 	for pkg in $ANYPKGS; do
@@ -107,11 +108,9 @@ if [ -n "$ANYPKGS" ]; then
 		_pkgname="$(getpkgname $pkg)"
 		_pkgbase="$(getpkgbase $pkg)"
 		svnrepo="$reponame-any"
-		echo "    Validating package arch (any) $_pkgname"
 		if ! check_pkg_arch "$pkg" "any"; then
 			echo "   ERROR: $_pkgfile is not architecture independent!"
 		else
-			echo "    Checking SVN for $_pkgbase"
 			/usr/bin/svn up -q $_pkgbase
 			if [ -d "$_pkgbase/repos/$svnrepo" ]; then
 				. "$_pkgbase/repos/$svnrepo/$BUILDSCRIPT"
@@ -156,8 +155,6 @@ for current_arch in ${ARCHES[@]}; do
 		/bin/cp "$ftppath/$reponame$DBEXT" build/$reponame-$current_arch$DBEXT
 	fi
 
-	echo "Updating DB for $svnrepo"
-
 	to_add=""
 	if [ -d "$stagedir" ]; then
 		ADDPKGS="$(getpkgfiles $stagedir/*-${current_arch}$PKGEXT 2>/dev/null)"
@@ -165,17 +162,14 @@ for current_arch in ${ARCHES[@]}; do
 
 	if [ -n "$ADDPKGS" -o -n "$ANYPKGS" ]; then
 
-		echo "==> Copying DB file from '$reponame'..." >&2
-
 		if [ -f "$ftppath/$reponame$DBEXT" ]; then
 			/bin/cp "$ftppath/$reponame$DBEXT" build/$reponame-$current_arch$DBEXT
 		fi
 
 		pkgtotal=$(echo "$ADDPKGS $ANYPKGS" | wc -w)
-		echo "==> Processing $pkgtotal new/updated packages for repository '$reponame'..." >&2
 
 		cd "$WORKDIR"
-		/usr/bin/svn checkout -N $SVNREPO checkout
+		/usr/bin/svn checkout -N $SVNREPO checkout >/dev/null
 		cd checkout
 	
 		if [ -n "$ADDPKGS" ]; then
@@ -184,11 +178,9 @@ for current_arch in ${ARCHES[@]}; do
 				_pkgname="$(getpkgname $pkg)"
 				_pkgbase="$(getpkgbase $pkg)"
 
-				echo "    Validating package arch ($current_arch) $_pkgname"
 				if ! check_pkg_arch "$pkg" "$current_arch"; then
 					echo "   ERROR: $_pkgfile was built for the wrong architecture"
 				else
-					echo "    Checking SVN for $_pkgbase"
 					/usr/bin/svn up -q $_pkgbase
 					if [ -d "$_pkgbase/repos/$svnrepo" ]; then
 						. "$_pkgbase/repos/$svnrepo/$BUILDSCRIPT"
@@ -211,7 +203,7 @@ for current_arch in ${ARCHES[@]}; do
 			pkgs=""
 			for pkg in $to_add $to_add_any; do pkgs="$pkgs $(basename $pkg)"; done
 
-			/usr/bin/repo-add -q "$reponame-$current_arch$DBEXT" $pkgs
+			/usr/bin/repo-add -q "$reponame-$current_arch$DBEXT" $pkgs >/dev/null
 		else
 			rm -f "build/$reponame-$current_arch$DBEXT"
 			echo "Errors found when adding packages"
@@ -223,7 +215,6 @@ for current_arch in ${ARCHES[@]}; do
 	# if non empty, move all build dirs
 	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
 		if [ $(getpkgfiles "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
-			echo "Copying new files to '$poolpath' and symlinking"
 			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
 				/bin/chmod 664 "$f" &>/dev/null
 				if ! /bin/cp "$f" "$poolpath/"; then
@@ -236,7 +227,6 @@ for current_arch in ${ARCHES[@]}; do
 			done
 		fi
 		if [ $(getpkgfiles "$WORKDIR/build/"*-any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
-			echo "Copying new files to '$poolpath_any' and symlinking"
 			for f in "$WORKDIR/build/"*-any$PKGEXT; do
 				/bin/chmod 664 "$f" &>/dev/null
 				fname="$(basename $f)"
@@ -257,7 +247,6 @@ for current_arch in ${ARCHES[@]}; do
 	fi
 
 	if [ -n "$to_add" ]; then
-		echo "Cleaning staging dir"
 		/bin/rm $to_add
 	fi
 
@@ -267,6 +256,8 @@ done
 if [ -n "$to_add_any" ]; then
 	/bin/rm $to_add_any
 fi
+
+echo 'done'
 
 trap '' 0 2
 rm -rf $WORKDIR

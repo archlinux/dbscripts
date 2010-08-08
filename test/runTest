@@ -303,5 +303,91 @@ testCleanupSplitPackages() {
 	done
 }
 
+#
+# transition tests
+#
+
+testMovePackagesWithoutPool() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b')
+	local pkgbase
+	local arch
+	local pkg
+	local old
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage testing ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update testing
+
+	# transform two packages to old style layout
+	for arch in ${arches[@]}; do
+		for old in 0 2; do
+			for pkg in "${pkgdir}/${pkgs[${old}]}"/*-${arch}.pkg.tar.*; do
+				pkg=$(basename $pkg)
+				mv -f "${FTP_BASE}/packages/arch/${arch}/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
+			done
+		done
+	done
+
+	../cron-jobs/ftpdir-cleanup
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			../db-move ${pkgbase} testing extra ${arch}
+		done
+	done
+
+	../cron-jobs/ftpdir-cleanup
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}.pkg.tar.*; do
+				checkPackage extra $(basename ${pkg}) ${arch}
+			done
+			checkRemovedPackage testing ${pkgbase} ${arch}
+		done
+	done
+}
+
+testMoveAnyPackagesWithoutPool() {
+	local pkgs=('pkg-any-a' 'pkg-any-b')
+	local pkgbase
+	local arch
+	local pkg
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage testing ${pkgbase} any
+	done
+
+	../db-update testing
+
+	# transform a package to old style layout
+	for pkg in "${pkgdir}/${pkgs[0]}"/*-any.pkg.tar.*; do
+		pkg=$(basename $pkg)
+		mv -f "${FTP_BASE}/packages/arch/any/${pkg}" "${FTP_BASE}/testing/os/any/${pkg}"
+		for arch in i686 x86_64; do
+			ln -sf "../any/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
+		done
+	done
+
+	../cron-jobs/ftpdir-cleanup
+
+	for pkgbase in ${pkgs[@]}; do
+		../db-move ${pkgbase} testing extra any
+	done
+
+	../cron-jobs/ftpdir-cleanup
+
+	for pkgbase in ${pkgs[@]}; do
+		for pkg in "${pkgdir}/${pkgbase}"/*-any.pkg.tar.*; do
+			checkAnyPackage extra $(basename ${pkg})
+		done
+		checkRemovedAnyPackage testing ${pkgbase}
+	done
+}
 
 . "${curdir}/lib/shunit2"

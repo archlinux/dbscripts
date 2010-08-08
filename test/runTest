@@ -239,6 +239,7 @@ testCleanupSimplePackages() {
 
 	for arch in ${arches[@]}; do
 		local pkg1="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
+		checkRemovedPackage extra 'pkg-simple-a' ${arch}
 		[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg1}" ] && fail "packages/arch/${arch}/${pkg1} found"
 		[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
 
@@ -261,6 +262,7 @@ testCleanupAnyPackages() {
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
+	checkRemovedAnyPackage extra 'pkg-any-a'
 	[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg1}" ] && fail "packages/arch/${arch}/${pkg1} found"
 	[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
 
@@ -283,16 +285,15 @@ testCleanupSplitPackages() {
 
 	../db-update extra
 
-	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			../db-remove pkg-split-a extra ${arch}
-		done
+	for arch in ${arches[@]}; do
+		../db-remove ${pkgs[0]} extra ${arch}
 	done
 
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for arch in ${arches[@]}; do
 		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}.pkg.tar.*; do
+			checkRemovedPackage extra ${pkgs[0]} ${arch}
 			[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg}" ] && fail "packages/arch/${arch}/${pkg} found"
 			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] && fail "${repo}/os/${arch}/${pkg} found"
 		done

@@ -23,28 +23,6 @@ ftppath_to="$FTP_BASE/$repoto/os/"
 svnrepo_from="$repofrom-$_arch"
 svnrepo_to="$repoto-$_arch"
 
-cleanup() {
-	trap '' 0 2
-	# unlock
-	repo_unlock $repoto $_arch
-	repo_unlock $repofrom $_arch
-	rm -rf "$WORKDIR"
-	[ "$1" ] && exit $1
-}
-
-ctrl_c() {
-	echo "Interrupted" >&2
-	cleanup 0
-}
-
-die() {
-	echo "$*" >&2
-	cleanup 1
-}
-
-trap ctrl_c 2
-trap cleanup 0
-
 repo_lock $repoto $_arch || exit 1
 repo_lock $repofrom $_arch || exit 1
 
@@ -91,3 +69,6 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 else
 	die "Error: $packagebase is not in repo $repofrom"
 fi
+
+repo_unlock $repoto $_arch || exit 1
+repo_unlock $repofrom $_arch || exit 1

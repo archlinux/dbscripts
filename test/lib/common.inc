@@ -7,8 +7,8 @@ oneTimeSetUp() {
 	echo -n 'Building packages...'
 	for p in "${pkgdir}"/*; do
 		pushd $p >/dev/null
-		linux32 makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1 || exit 1
-		[ -f *-any.pkg.tar.* ] || linux64 makepkg -cf --config ${curdir}/lib/makepkg-x86_64.conf >/dev/null 2>&1 || exit 1
+		linux32 makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1 || die 'makepkg failed'
+		[ -f *-any.pkg.tar.* ] || linux64 makepkg -cf --config ${curdir}/lib/makepkg-x86_64.conf >/dev/null 2>&1 || die 'makepkg failed'
 		popd >/dev/null
 	done
 	echo 'done'
@@ -23,7 +23,7 @@ setUp() {
 	local p
 	local pkg
 
-	[ -f "${curdir}/../config.local" ] && exit 1
+	[ -f "${curdir}/../config.local" ] && die "${curdir}/../config.local exists"
 	TMP="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
 	#echo "Using ${TMP}"
 

@@ -33,26 +33,6 @@ if [ ! -d $stagedir ]; then
 	exit 1
 fi
 
-cleanup() {
-    trap '' 0 2
-	repo_unlock $reponame $current_arch
-	rm -rf "$WORKDIR"
-	[ "$1" ] && exit $1
-}
-
-ctrl_c() {
-	echo "Interrupted" >&2
-	cleanup 1
-}
-
-die() {
-	echo "$*" >&2
-	cleanup 1
-}
-
-trap ctrl_c 2
-trap cleanup 0
-
 echo -n "Updating $reponame..."
 
 # Remove any package from $stagedir that is already in the FTP repository
@@ -238,6 +218,4 @@ fi
 
 echo 'done'
 
-trap '' 0 2
-rm -rf $WORKDIR
 # vim: set ts=4 sw=4 noet ft=sh:

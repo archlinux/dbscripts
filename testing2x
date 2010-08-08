@@ -12,20 +12,6 @@ case "$0" in
     ;;
 esac
 
-cleanup() {
-    trap '' 0 2
-    rm -rf "${WORKDIR}"
-    [ -n "$1" ] && exit $1
-}
-
-ctrl_c() {
-    echo "Interrupted" >&2
-    cleanup 0
-}
-
-trap ctrl_c 2
-trap cleanup 0
-
 cd "${WORKDIR}"
 /usr/bin/svn checkout -N $SVNREPO checkout
 cd checkout
@@ -49,5 +35,3 @@ for pkg in $*; do
         echo "===> Warning: ${pkg} is not in testing-${_arch}"
     fi
 done
-
-cleanup

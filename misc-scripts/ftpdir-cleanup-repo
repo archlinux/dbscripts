@@ -12,14 +12,6 @@ reponame=$1
 . "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"
 
-cleanup() {
-  trap '' 2 15
-  for arch in ${ARCHES[@]}; do
-    repo_unlock $reponame $arch
-  done
-  exit 1
-}
-
 clean_pkgs () {
     for pkg in "$@"; do
         if [ -h "$pkg" ]; then
@@ -30,9 +22,6 @@ clean_pkgs () {
     done
 }
 
-trap cleanup 2
-trap cleanup 15
-
 ${CLEANUP_DRYRUN} && echo 'dry run mode is active'
 
 ftppath_base="$FTP_BASE/$reponame/os"
@@ -41,7 +30,7 @@ for arch in ${ARCHES[@]}; do
 
   repo_lock $reponame $arch $LOCK_TIMEOUT || continue
 
-  CLEANUP_TMPDIR=$(mktemp -d ${TMPDIR}/cleanup-XXXXXX) || exit 1
+  CLEANUP_TMPDIR=$(mktemp -d ${WORKDIR}/cleanup-XXXXXX) || exit 1
   ftppath="$ftppath_base/$arch"
   MISSINGFILES=""
   DELETEFILES=""

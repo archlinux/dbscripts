@@ -22,21 +22,7 @@ _arch="$3"
 srcpath="$FTP_BASE/sources/"
 logpath="/var/log/sourceballs/"
 
-cleanup() {
-    restore_umask
-    rm -rf "$WORKDIR"
-    [ "$1" ] && exit $1
-}
-
-ctrl_c() {
-    echo "Interrupted" >&2
-    cleanup 0
-}
-
-die() {
-    echo -e "$*" >&2
-    cleanup 1
-}
+script_lock
 
 create_srcpackage() {
     if [ -d "$1" ]; then
@@ -71,9 +57,6 @@ create_srcpackage() {
     fi
 }
 
-trap ctrl_c 2
-trap cleanup 0 1
-
 set_umask
 /bin/mkdir -p "$logpath"
 cd "$WORKDIR"
@@ -91,3 +74,5 @@ else
 	die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
     fi
 fi
+
+script_unlock

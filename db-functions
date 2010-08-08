@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# set up general environment
-WORKDIR=$(mktemp -d /tmp/$(basename $0).XXXXXXXXXX)
-
 # Useful functions
-
 UMASK=""
 set_umask () {
 	[ "$UMASK" == "" ] && UMASK="$(umask)"
@@ -16,8 +12,73 @@ restore_umask () {
 	umask $UMASK >/dev/null
 }
 
+# set up general environment
+WORKDIR=$(mktemp -d /tmp/$(basename $0).XXXXXXXXXX)
+LOCKS=()
+
+script_lock() {
+	local LOCKDIR="$TMPDIR/.scriptlock.$(basename $0)"
+	if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
+		local _owner="$(/usr/bin/stat -c %U $LOCKDIR)"
+		echo "Error: Script $(basename $0) is already locked by $_owner." >&2
+		exit 1
+	else
+		set_umask
+		return 0
+	fi
+}
+
+script_unlock() {
+	local LOCKDIR="$TMPDIR/.scriptlock.$(basename $0)"
+	if [ ! -d "$LOCKDIR" ]; then
+		echo "Warning: Script $(basename $0) was not locked!" >&2
+		restore_umask
+		return 1
+	else
+		rmdir "$LOCKDIR"
+		restore_umask
+		return 0
+	fi
+}
+
+cleanup() {
+	local l
+	local repo
+	local arch
+
+	trap - EXIT INT QUIT TERM
+	for l in ${LOCKS[@]}; do
+		repo=${l%.*}
+		arch=${l#*.}
+		if [ -d "$TMPDIR/.repolock.$repo.$arch" ]; then
+			echo "Removing left over lock from $repo/$arch" >&2
+			repo_unlock $repo $_arch
+		fi
+	done
+	if [ -d "$TMPDIR/.scriptlock.$(basename $0)" ]; then
+		echo "Removing left over lock from $(basename $0)" >&2
+		script_unlock
+	fi
+	rm -rf "$WORKDIR"
+	[ "$1" ] && exit $1
+}
+
+abort() {
+	echo 'Aborting...' >&2
+	cleanup 0
+}
+
+die() {
+	echo "$*" >&2
+	cleanup 1
+}
+
+trap abort INT QUIT TERM
+trap cleanup EXIT
+
+
 repo_lock () { #repo_lock <repo-name> <arch> [timeout]
-	LOCKDIR="$TMPDIR/.repolock.$1.$2"
+	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	local _count
 	local _trial
 	local _timeout
@@ -39,6 +100,7 @@ repo_lock () { #repo_lock <repo-name> <arch> [timeout]
 		_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
 		echo "warning: Repo $1-$2 is already locked by $_owner. Retrying in $LOCK_DELAY seconds..." >&2
 	    else
+		LOCKS[${#LOCKS[*]}]="$1.$2"
 		set_umask
 		return 0
 	    fi
@@ -51,7 +113,7 @@ repo_lock () { #repo_lock <repo-name> <arch> [timeout]
 }
 
 repo_unlock () { #repo_unlock <repo-name> <arch>
-	LOCKDIR="$TMPDIR/.repolock.$1.$2"
+	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	if [ ! -d "$LOCKDIR" ]; then
 		echo "warning: Repo lock $1-$2 was not locked!" >&2
 		restore_umask

@@ -15,27 +15,6 @@ _arch="$3"
 ftppath="$FTP_BASE/$reponame/os"
 svnrepo="$reponame-$_arch"
 
-cleanup() {
-    trap '' 0 2
-	# unlock
-	repo_unlock $reponame $_arch
-	rm -rf "$WORKDIR"
-	[ "$1" ] && exit $1
-}
-
-ctrl_c() {
-	echo "Interrupted" >&2
-	cleanup 0
-}
-
-die() {
-	echo "$*" >&2
-	cleanup 1
-}
-
-trap ctrl_c 2
-trap cleanup 0
-
 repo_lock $reponame $_arch || exit 1
 
 echo -n "Removing $packagebase from $reponame..."
@@ -70,5 +49,7 @@ for arch in $arches; do
 done
 
 echo 'done'
+
+repo_unlock $reponame $_arch || exit 1
 
 # vim: set ts=4 sw=4 noet ft=sh:

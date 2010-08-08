@@ -52,7 +52,7 @@ cleanup() {
 		arch=${l#*.}
 		if [ -d "$TMPDIR/.repolock.$repo.$arch" ]; then
 			echo "Removing left over lock from $repo/$arch" >&2
-			repo_unlock $repo $_arch
+			repo_unlock $repo $arch
 		fi
 	done
 	if [ -d "$TMPDIR/.scriptlock.$(basename $0)" ]; then

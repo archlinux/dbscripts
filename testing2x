@@ -11,7 +11,6 @@ case "$0" in
     _arch="i686"
     ;;
 esac
-WORKDIR="$TMPDIR/testing2x.$UID"
 
 cleanup() {
     trap '' 0 2
@@ -27,7 +26,6 @@ ctrl_c() {
 trap ctrl_c 2
 trap cleanup 0
 
-/bin/mkdir "${WORKDIR}"
 cd "${WORKDIR}"
 /usr/bin/svn checkout -N $SVNREPO checkout
 cd checkout

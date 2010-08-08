@@ -7,7 +7,6 @@ srcpath="$FTP_BASE/sources/"
 logfile="$srcpath/cleanup.txt"
 
 LOCKFILE="/tmp/.sourceball-cleanup.lock"
-WORKDIR="/tmp/sourceball-cleanup.$packagename.$UID"
 
 cleanup () {
     restore_umask
@@ -68,7 +67,6 @@ trap ctrl_c 2
 /usr/bin/renice +10 -p $$ > /dev/null
 
 set_umask
-/bin/mkdir -p "$WORKDIR"
 cd "$WORKDIR"
 
 [ -e "$logfile" ] && /bin/mv "$logfile" "$logfile.old"

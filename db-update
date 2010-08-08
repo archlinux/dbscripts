@@ -24,7 +24,6 @@ if [ $found -ne 1 ]; then
 	exit 1
 fi
 
-WORKDIR="$TMPDIR/db-update.$reponame.$UID"
 ADDPKGS=""
 ANYPKGS=""
 
@@ -74,7 +73,6 @@ if [ -d "$stagedir" ]; then
 	ANYPKGS="$(getpkgfiles $stagedir/*-any$PKGEXT 2>/dev/null)"
 fi
 
-mkdir -p $WORKDIR
 cd "$WORKDIR"
 
 if [ -n "$ANYPKGS" ]; then

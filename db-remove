@@ -15,10 +15,6 @@ _arch="$3"
 ftppath="$FTP_BASE/$reponame/os"
 svnrepo="$reponame-$_arch"
 
-[ "$UID" = "" ] && UID=$(uid)
-
-WORKDIR="$TMPDIR/db-remove.$svnrepo.$UID"
-
 cleanup() {
     trap '' 0 2
 	# unlock
@@ -43,7 +39,6 @@ trap cleanup 0
 repo_lock $reponame $_arch || exit 1
 
 echo -n "Removing $packagebase from $reponame..."
-/bin/mkdir -p "$WORKDIR"
 cd "$WORKDIR"
 /usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
 cd checkout

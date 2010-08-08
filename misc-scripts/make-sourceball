@@ -22,8 +22,6 @@ _arch="$3"
 srcpath="$FTP_BASE/sources/"
 logpath="/var/log/sourceballs/"
 
-WORKDIR="/tmp/make-sourceball.$packagename.$UID"
-
 cleanup() {
     restore_umask
     rm -rf "$WORKDIR"
@@ -77,7 +75,6 @@ trap ctrl_c 2
 trap cleanup 0 1
 
 set_umask
-/bin/mkdir -p "$WORKDIR"
 /bin/mkdir -p "$logpath"
 cd "$WORKDIR"
 

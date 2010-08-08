@@ -222,6 +222,7 @@ for current_arch in ${ARCHES[@]}; do
 		if ! /bin/cp "$WORKDIR/build/$reponame-$current_arch$DBEXT" "$ftppath/$reponame$DBEXT"; then
 			die "failed to move repository $reponame-$current_arch".
 		fi
+		ln -sf "$reponame$DBEXT" "$ftppath/$reponame${DBEXT%.tar.*}"
 	else
 		echo "Nothing to copy, no work done"
 	fi

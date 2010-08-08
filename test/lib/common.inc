@@ -89,7 +89,7 @@ checkAnyPackage() {
 	done
 	[ -f "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
 
-	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}.db.tar.gz" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}.db.tar.gz"
+	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 
 	[ -f "${FTP_BASE}/${repo}/os/any/${pkg}" ] && fail "${repo}/os/any/${pkg} should not exist"
 }
@@ -105,7 +105,7 @@ checkPackage() {
 
 	[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/packages/arch/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to packages/arch/${arch}/${pkg}"
 
-	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}.db.tar.gz" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}.db.tar.gz"
+	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/packages/arch/${arch}/${pkg}")
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
@@ -117,7 +117,7 @@ checkRemovedPackage() {
 	local pkgbase=$2
 	local arch=$3
 
-	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}.db.tar.gz" -O | grep -q ${pkgbase} && fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}.db.tar.gz"
+	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase} && fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] && fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} should not exist"
@@ -129,7 +129,7 @@ checkRemovedAnyPackage() {
 	local arch
 
 	for arch in i686 x86_64; do
-		bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}.db.tar.gz" -O | grep -q ${pkgbase} && fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}.db.tar.gz"
+		bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase} && fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 	done
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"

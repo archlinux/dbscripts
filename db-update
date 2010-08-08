@@ -34,26 +34,6 @@ if [ ! -d $stagedir ]; then
 	exit 1
 fi
 
-if [ -d "${stagedir}64" ]; then
-	echo "--------------------------------------------------"
-	echo "It looks like you have an old staging dir"
-	echo "Packages are now differentiated by the arch in the filename."
-	echo "Please delete '${stagedir}64'"
-	echo "--------------------------------------------------"
-	/bin/mv "${stagedir}64/add/"* "$stagedir/add/"
-	/bin/mv "${stagedir}64/del/"* "$stagedir/del/"
-fi
-
-if [ -d "${stagedir}/add" ]; then
-	echo "--------------------------------------------------"
-	echo "It looks like you have an old staging dir"
-	echo "The 'add' and 'del' dirs are no longer used."
-	echo "Please delete staging/<reponame>/{add,del}"
-	echo " and ensure you are using the newest devtools"
-	echo "--------------------------------------------------"
-	/bin/mv "${stagedir}/add/"* "$stagedir/"
-fi
-
 cleanup() {
     trap '' 0 2
 	repo_unlock $reponame $current_arch

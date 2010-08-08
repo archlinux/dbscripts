@@ -1,36 +1,15 @@
 #!/bin/bash
 
-ftpbase="/srv/ftp"
-srcbase="/srv/ftp/sources"
-repos="core extra testing community community-testing"
-
 . "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"
 
-LOCKFILE="/tmp/.sourceball.lock"
+ftpbase="${FTP_BASE}"
+srcbase="${FTP_BASE}/sources"
+repos=(core extra testing community community-testing)
 
-cleanup () {
-	rm -f "$LOCKFILE"
-    restore_umask
-    exit 0
-}
-
-ctrl_c() {
-    cleanup
-}
-
-if [ -f "$LOCKFILE" ]; then
-	owner="$(/usr/bin/stat -c %U $LOCKFILE)"
-	echo "error: source tarball generation is already in progress (started by $owner)"
-	exit 1
-fi
-
-trap cleanup 0
-trap ctrl_c 2
+script_lock
 
 set_umask
-
-/bin/touch "$LOCKFILE"
 
 dirname="$(/bin/readlink -f $(/usr/bin/dirname $0))"
 
@@ -39,7 +18,7 @@ FAILED_PKGS=""
 [ -e "$srcbase/errors.txt" ] && /bin/mv "$srcbase/errors.txt" "$srcbase/errors.txt.old"
 echo "Errors occured during run:" > "$srcbase/errors.txt"
 
-for repo in $repos; do
+for repo in ${repos[@]}; do
     for arch in ${ARCHES[@]} any; do
         ftppath="$ftpbase/$repo/os/$arch"
         if [ ! -d "$ftppath" ]; then
@@ -91,4 +70,4 @@ fi
 
 $dirname/../misc-scripts/sourceballs-cleanup
 
-cleanup
+script_unlock

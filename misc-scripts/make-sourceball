@@ -17,7 +17,7 @@ fi
 
 packagename="$1"
 reponame="$2"
-_arch="$3"
+arch="$3"
 
 srcpath="$FTP_BASE/sources/"
 logpath="/var/log/sourceballs/"
@@ -27,7 +27,8 @@ script_lock
 create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
-        . "PKGBUILD"
+	pkgver=$(. PKGBUILD; echo ${pkgver})
+	pkgrel=$(. PKGBUILD; echo ${pkgrel})
 	if ! [ $FORCE == 1 ] && ! chk_license ${license[@]} ; then
             #Removed so as not to clutter failed.txt
             #echo -e "\t$packagename license (${license[@]}) does not require source tarballs" >&2
@@ -40,7 +41,7 @@ create_srcpackage() {
         if ! /usr/bin/makepkg --allsource --ignorearch >"$logfile" 2>&1; then
             popd >/dev/null
             /bin/gzip -f -9 "$logfile"
-            die "\tFailed to download source for $packagename-$pkgver-$pkgrel ($reponame-$_arch)"
+            die "\tFailed to download source for $packagename-$pkgver-$pkgrel ($reponame-$arch)"
         fi
         /bin/rm -f "$logfile"{,.gz}
 
@@ -63,15 +64,15 @@ cd "$WORKDIR"
 
 if [[ "$reponame" = "community" || "$reponame" = "community-testing" ]]; then
     if /usr/bin/svn export -q "$SVNREPOCOMMUNITY/$packagename" $packagename; then
-	create_srcpackage "$packagename/repos/$reponame-$_arch"
+	create_srcpackage "$packagename/repos/$reponame-$arch"
     else
-	die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
+	die "\tPackage '$packagename' does not exist in repo '$reponame-$arch'"
     fi
 else
     if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
-	create_srcpackage "$packagename/repos/$reponame-$_arch"
+	create_srcpackage "$packagename/repos/$reponame-$arch"
     else
-	die "\tPackage '$packagename' does not exist in repo '$reponame-$_arch'"
+	die "\tPackage '$packagename' does not exist in repo '$reponame-$arch'"
     fi
 fi
 

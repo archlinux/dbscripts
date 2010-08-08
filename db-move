@@ -11,20 +11,20 @@ fi
 packagebase="$1"
 repofrom="$2"
 repoto="$3"
-_arch="$4"
-if [ "${_arch}" == 'any' ]; then
-	_tarches=('i686' 'x86_64')
+arch="$4"
+if [ "${arch}" == 'any' ]; then
+	tarches=('i686' 'x86_64')
 else
-	_tarches=("${_arch}")
+	tarches=("${arch}")
 fi
 
 ftppath_from="$FTP_BASE/$repofrom/os/"
 ftppath_to="$FTP_BASE/$repoto/os/"
-svnrepo_from="$repofrom-$_arch"
-svnrepo_to="$repoto-$_arch"
+svnrepo_from="$repofrom-$arch"
+svnrepo_to="$repoto-$arch"
 
-repo_lock $repoto $_arch || exit 1
-repo_lock $repofrom $_arch || exit 1
+repo_lock $repoto $arch || exit 1
+repo_lock $repofrom $arch || exit 1
 
 cd "$WORKDIR"
 /usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
@@ -32,7 +32,9 @@ cd checkout
 
 /usr/bin/svn up -q $packagebase
 if [ -d "$packagebase/repos/$svnrepo_from" ]; then
-	. "$packagebase/repos/$svnrepo_from/PKGBUILD"
+	pkgname=($(. "$packagebase/repos/$svnrepo_from/PKGBUILD"; echo ${pkgname[@]}))
+	pkgver=$(. "$packagebase/repos/$svnrepo_from/PKGBUILD"; echo ${pkgver})
+	pkgrel=$(. "$packagebase/repos/$svnrepo_from/PKGBUILD"; echo ${pkgrel})
 
 	echo -n "Moving $packagebase from $repofrom to $repoto..."
 	if [ -d "$packagebase/repos/$svnrepo_to" ]; then
@@ -41,28 +43,28 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 	fi
 
 	/usr/bin/svn mv -q -r HEAD "$packagebase/repos/$svnrepo_from" "$packagebase/repos/$svnrepo_to"
-	/usr/bin/svn commit -q -m "$(basename $0): moved $packagebase from [$repofrom] to [$repoto] ($_arch)"
+	/usr/bin/svn commit -q -m "$(basename $0): moved $packagebase from [$repofrom] to [$repoto] ($arch)"
 
-	_pkgfiles=''
+	pkgfiles=''
 	for i in ${pkgname[@]}; do
-		for _tarch in ${_tarches[@]}; do
-			_pkgpath=$(getpkgfile "$ftppath_from/${_tarch}/"$i-$pkgver-$pkgrel-$_arch$PKGEXT)
-			_pkgfile=$(basename "${_pkgpath}")
+		for tarch in ${tarches[@]}; do
+			pkgpath=$(getpkgfile "$ftppath_from/${tarch}/"$i-$pkgver-$pkgrel-$arch$PKGEXT)
+			pkgfile=$(basename "${pkgpath}")
 
 			# copy package to pool if needed
 			# TODO: can be removed once every package has been moved to the package pool
-			if [ ! -f $FTP_BASE/$(get_pkgpool_for_host)/${_arch}/$_pkgfile ]; then
-				cp $_pkgpath $FTP_BASE/$(get_pkgpool_for_host)/${_arch}/
+			if [ ! -f $FTP_BASE/$(get_pkgpool_for_host)/${arch}/$pkgfile ]; then
+				cp $pkgpath $FTP_BASE/$(get_pkgpool_for_host)/${arch}/
 			fi
-			ln -s "../../../$(get_pkgpool_for_host)/${_arch}/${_pkgfile}" $ftppath_to/${_tarch}/
+			ln -s "../../../$(get_pkgpool_for_host)/${arch}/${pkgfile}" $ftppath_to/${tarch}/
 		done
 
-		_pkgfiles="${_pkgfiles} $FTP_BASE/$(get_pkgpool_for_host)/${_arch}/${_pkgfile}"
+		pkgfiles="${pkgfiles} $FTP_BASE/$(get_pkgpool_for_host)/${arch}/${pkgfile}"
 	done
 
-	for _tarch in ${_tarches[@]}; do
-		/usr/bin/repo-add -q "$ftppath_to/${_tarch}/$repoto$DBEXT" ${_pkgfiles} >/dev/null || die "Error in repo-add $_pkgfiles"
-		/usr/bin/repo-remove -q "$ftppath_from/${_tarch}/$repofrom$DBEXT" ${pkgname[@]} >/dev/null || die "Error in repo-remove ${pkgname[@]}"
+	for tarch in ${tarches[@]}; do
+		/usr/bin/repo-add -q "$ftppath_to/${tarch}/$repoto$DBEXT" ${pkgfiles} >/dev/null || die "Error in repo-add $pkgfiles"
+		/usr/bin/repo-remove -q "$ftppath_from/${tarch}/$repofrom$DBEXT" ${pkgname[@]} >/dev/null || die "Error in repo-remove ${pkgname[@]}"
 	done
 
 	echo 'done'
@@ -70,5 +72,5 @@ else
 	die "Error: $packagebase is not in repo $repofrom"
 fi
 
-repo_unlock $repoto $_arch || exit 1
-repo_unlock $repofrom $_arch || exit 1
+repo_unlock $repoto $arch || exit 1
+repo_unlock $repofrom $arch || exit 1

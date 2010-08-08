@@ -10,12 +10,12 @@ fi
 
 packagebase="$1"
 reponame="$2"
-_arch="$3"
+arch="$3"
 
 ftppath="$FTP_BASE/$reponame/os"
-svnrepo="$reponame-$_arch"
+svnrepo="$reponame-$arch"
 
-repo_lock $reponame $_arch || exit 1
+repo_lock $reponame $arch || exit 1
 
 echo -n "Removing $packagebase from $reponame..."
 cd "$WORKDIR"
@@ -24,7 +24,7 @@ cd checkout
 
 /usr/bin/svn up -q $packagebase
 if [ -d "$packagebase/repos/$svnrepo" ]; then
-	. "$packagebase/repos/$svnrepo/PKGBUILD"
+	pkgname=($(. "$packagebase/repos/$svnrepo/PKGBUILD"; echo ${pkgname[@]}))
 	/usr/bin/svn rm --force -q "$packagebase/repos/$svnrepo"
 	/usr/bin/svn commit -q -m "$(basename $0): $packagebase removed by $(id -un)"
 else
@@ -33,23 +33,23 @@ fi
 
 cd "$WORKDIR"
 
-if [ "$_arch" == "any" ]; then
+if [ "$arch" == "any" ]; then
 	arches="i686 x86_64"
 else
-	arches="$_arch"
+	arches="$arch"
 fi
 
 # copy the db file into our working area
-for arch in $arches; do
-	if [ ! -f "$ftppath/$arch/$reponame$DBEXT" ]; then
-		die "No database found at '$ftppath/$arch', nothing more to do"
+for tarch in $arches; do
+	if [ ! -f "$ftppath/$tarch/$reponame$DBEXT" ]; then
+		die "No database found at '$ftppath/$tarch', nothing more to do"
 	fi
 
-	/usr/bin/repo-remove -q "$ftppath/$arch/$reponame$DBEXT" ${pkgname[@]} >/dev/null
+	/usr/bin/repo-remove -q "$ftppath/$tarch/$reponame$DBEXT" ${pkgname[@]} >/dev/null
 done
 
 echo 'done'
 
-repo_unlock $reponame $_arch || exit 1
+repo_unlock $reponame $arch || exit 1
 
 # vim: set ts=4 sw=4 noet ft=sh:

@@ -14,7 +14,8 @@ remove_old() {
         PKGVERS=""
         for repo in *; do
             cd "$repo"
-            . "PKGBUILD"
+            pkgver=$(. PKGBUILD; echo ${pkgver})
+            pkgrel=$(. PKGBUILD; echo ${pkgrel})
             PKGVERS="$PKGVERS $pkgver-$pkgrel"
             cd ..
         done

@@ -62,23 +62,24 @@ if [ -n "$ANYPKGS" ]; then
 	cd checkout
 	to_add_any=""
 	for pkg in $ANYPKGS; do
-		_pkgfile=$(basename $pkg)
-		_pkgname="$(getpkgname $pkg)"
-		_pkgbase="$(getpkgbase $pkg)"
+		pkgfile=$(basename $pkg)
+		pkgname="$(getpkgname $pkg)"
+		pkgbase="$(getpkgbase $pkg)"
 		svnrepo="$reponame-any"
 		if ! check_pkg_arch "$pkg" "any"; then
-			echo "   ERROR: $_pkgfile is not architecture independent!"
+			echo "   ERROR: $pkgfile is not architecture independent!"
 		else
-			/usr/bin/svn up -q $_pkgbase
-			if [ -d "$_pkgbase/repos/$svnrepo" ]; then
-				. "$_pkgbase/repos/$svnrepo/PKGBUILD"
-				if echo "$_pkgfile" | grep -q "$_pkgname-$pkgver-$pkgrel-any"; then
+			/usr/bin/svn up -q $pkgbase
+			if [ -d "$pkgbase/repos/$svnrepo" ]; then
+				pkgver=$(. "$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgver})
+				pkgrel=$(. "$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgrel})
+				if echo "$pkgfile" | grep -q "$pkgname-$pkgver-$pkgrel-any"; then
 					to_add_any="$to_add_any $pkg"
 				else
-					echo "    WARNING: $_pkgfile does not match PKGBUILD in $svnrepo"
+					echo "    WARNING: $pkgfile does not match PKGBUILD in $svnrepo"
 				fi
 			else
-				echo "    WARNING: Package $_pkgbase not found in $svnrepo"
+				echo "    WARNING: Package $pkgbase not found in $svnrepo"
 			fi
 		fi
 	done
@@ -132,23 +133,24 @@ for current_arch in ${ARCHES[@]}; do
 	
 		if [ -n "$ADDPKGS" ]; then
 			for pkg in $ADDPKGS; do
-				_pkgfile=$(basename $pkg)
-				_pkgname="$(getpkgname $pkg)"
-				_pkgbase="$(getpkgbase $pkg)"
+				pkgfile=$(basename $pkg)
+				pkgname="$(getpkgname $pkg)"
+				pkgbase="$(getpkgbase $pkg)"
 
 				if ! check_pkg_arch "$pkg" "$current_arch"; then
-					echo "   ERROR: $_pkgfile was built for the wrong architecture"
+					echo "   ERROR: $pkgfile was built for the wrong architecture"
 				else
-					/usr/bin/svn up -q $_pkgbase
-					if [ -d "$_pkgbase/repos/$svnrepo" ]; then
-						. "$_pkgbase/repos/$svnrepo/PKGBUILD"
-						if echo "$_pkgfile" | grep -q "$_pkgname-$pkgver-$pkgrel-$current_arch"; then
+					/usr/bin/svn up -q $pkgbase
+					if [ -d "$pkgbase/repos/$svnrepo" ]; then
+						pkgver=$(. "$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgver})
+						pkgrel=$(. "$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgrel})
+						if echo "$pkgfile" | grep -q "$pkgname-$pkgver-$pkgrel-$current_arch"; then
 							to_add="$to_add $pkg"
 						else
-							echo "    WARNING: $_pkgfile does not match PKGBUILD in $svnrepo"
+							echo "    WARNING: $pkgfile does not match PKGBUILD in $svnrepo"
 						fi
 					else
-						echo "    WARNING: Package $_pkgbase not found in $svnrepo"
+						echo "    WARNING: Package $pkgbase not found in $svnrepo"
 					fi
 				fi
 			done

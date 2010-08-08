@@ -43,7 +43,7 @@ die() {
 create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
-        . "$BUILDSCRIPT"
+        . "PKGBUILD"
 	if ! [ $FORCE == 1 ] && ! chk_license ${license[@]} ; then
             #Removed so as not to clutter failed.txt
             #echo -e "\t$packagename license (${license[@]}) does not require source tarballs" >&2

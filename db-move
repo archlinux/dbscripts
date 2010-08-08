@@ -60,7 +60,7 @@ cd checkout
 
 /usr/bin/svn up -q $packagebase
 if [ -d "$packagebase/repos/$svnrepo_from" ]; then
-	. "$packagebase/repos/$svnrepo_from/$BUILDSCRIPT"
+	. "$packagebase/repos/$svnrepo_from/PKGBUILD"
 
 	echo -n "Moving $packagebase from $repofrom to $repoto..."
 	if [ -d "$packagebase/repos/$svnrepo_to" ]; then

@@ -27,7 +27,7 @@ remove_old() {
         PKGVERS=""
         for repo in *; do
             cd "$repo"
-            . "$BUILDSCRIPT"
+            . "PKGBUILD"
             PKGVERS="$PKGVERS $pkgver-$pkgrel"
             cd ..
         done
@@ -85,7 +85,7 @@ for sourceball in "$srcpath"/*$SRCEXT; do
     elif [ -z "$(ls -A "$packagename/repos")" ]; then
       echo "$packagename : no longer in repos but trunk is still in svn.  Removing sourceball." >> "$logfile"
       mv $sourceball $SOURCE_CLEANUP_DESTDIR
-    elif !  source  "$packagename/trunk/$BUILDSCRIPT" &&  chk_license ${license[@]}; then
+    elif !  source  "$packagename/trunk/PKGBUILD" &&  chk_license ${license[@]}; then
       echo "$packagename : source hosting no longer required by license.  Removing sourceball." >> "$logfile"
       mv $sourceball $SOURCE_CLEANUP_DESTDIR
     else

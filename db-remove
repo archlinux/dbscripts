@@ -50,7 +50,7 @@ cd checkout
 
 /usr/bin/svn up -q $packagebase
 if [ -d "$packagebase/repos/$svnrepo" ]; then
-	. "$packagebase/repos/$svnrepo/$BUILDSCRIPT"
+	. "$packagebase/repos/$svnrepo/PKGBUILD"
 	/usr/bin/svn rm --force -q "$packagebase/repos/$svnrepo"
 	/usr/bin/svn commit -q -m "$(basename $0): $packagebase removed by $(id -un)"
 else

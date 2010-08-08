@@ -14,7 +14,6 @@ LOCK_TIMEOUT=300
 STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
 ARCHES=(i686 x86_64)
-BUILDSCRIPT="PKGBUILD"
 DBEXT=".db.tar.gz"
 PKGEXT=".pkg.tar.*"
 SRCEXT=".src.tar.gz"

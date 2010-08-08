@@ -93,11 +93,11 @@ if [ -n "$ANYPKGS" ]; then
 		else
 			/usr/bin/svn up -q $_pkgbase
 			if [ -d "$_pkgbase/repos/$svnrepo" ]; then
-				. "$_pkgbase/repos/$svnrepo/$BUILDSCRIPT"
+				. "$_pkgbase/repos/$svnrepo/PKGBUILD"
 				if echo "$_pkgfile" | grep -q "$_pkgname-$pkgver-$pkgrel-any"; then
 					to_add_any="$to_add_any $pkg"
 				else
-					echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
+					echo "    WARNING: $_pkgfile does not match PKGBUILD in $svnrepo"
 				fi
 			else
 				echo "    WARNING: Package $_pkgbase not found in $svnrepo"
@@ -163,11 +163,11 @@ for current_arch in ${ARCHES[@]}; do
 				else
 					/usr/bin/svn up -q $_pkgbase
 					if [ -d "$_pkgbase/repos/$svnrepo" ]; then
-						. "$_pkgbase/repos/$svnrepo/$BUILDSCRIPT"
+						. "$_pkgbase/repos/$svnrepo/PKGBUILD"
 						if echo "$_pkgfile" | grep -q "$_pkgname-$pkgver-$pkgrel-$current_arch"; then
 							to_add="$to_add $pkg"
 						else
-							echo "    WARNING: $_pkgfile does not match $BUILDSCRIPT in $svnrepo"
+							echo "    WARNING: $_pkgfile does not match PKGBUILD in $svnrepo"
 						fi
 					else
 						echo "    WARNING: Package $_pkgbase not found in $svnrepo"

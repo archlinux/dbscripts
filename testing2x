@@ -35,9 +35,9 @@ cd checkout
 for pkg in $*; do
     moved=0
     /usr/bin/svn up -q ${pkg}
-    if [ -f "${pkg}/repos/testing-${_arch}/${BUILDSCRIPT}" ]; then
+    if [ -f "${pkg}/repos/testing-${_arch}/PKGBUILD" ]; then
         for repo in core extra; do
-            if [ -f "${pkg}/repos/${repo}-${_arch}/${BUILDSCRIPT}" ]; then
+            if [ -f "${pkg}/repos/${repo}-${_arch}/PKGBUILD" ]; then
                 echo "===> Moving package '${pkg}': testing-${_arch} -> ${repo}-${_arch}"
                 $(dirname $0)/db-move "${pkg}" "testing" "${repo}" "${_arch}"
                 moved=1

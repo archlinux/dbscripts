@@ -77,7 +77,8 @@ trap abort INT QUIT TERM
 trap cleanup EXIT
 
 
-repo_lock () { #repo_lock <repo-name> <arch> [timeout]
+#repo_lock <repo-name> <arch> [timeout]
+repo_lock () {
 	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	local _count
 	local _trial
@@ -86,36 +87,36 @@ repo_lock () { #repo_lock <repo-name> <arch> [timeout]
 	local _owner
 
 	if [ $# -eq 2 ]; then
-	    _lockblock=true
-	    _trial=0
+		_lockblock=true
+		_trial=0
 	elif [ $# -eq 3 ]; then
-	    _lockblock=false
-	    _timeout=$3
-	    let _trial=$_timeout/$LOCK_DELAY
+		_lockblock=false
+		_timeout=$3
+		let _trial=$_timeout/$LOCK_DELAY
 	fi
 
 	_count=0
 	while [ $_count -le $_trial ] || $_lockblock ; do
-	    if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
-		_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
-		echo "warning: Repo $1-$2 is already locked by $_owner. Retrying in $LOCK_DELAY seconds..." >&2
-	    else
-		LOCKS[${#LOCKS[*]}]="$1.$2"
-		set_umask
-		return 0
-	    fi
-	    sleep $LOCK_DELAY
-	    let _count=$_count+1
+		if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
+			_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
+			echo "Warning: Repo $1-$2 is already locked by $_owner. Retrying in $LOCK_DELAY seconds..." >&2
+		else
+			LOCKS[${#LOCKS[*]}]="$1.$2"
+			set_umask
+			return 0
+		fi
+		sleep $LOCK_DELAY
+		let _count=$_count+1
 	done
 
-	echo "error: Repo $1-$2 is already locked by $_owner. Giving up!" >&2
+	echo "Error: Repo $1-$2 is already locked by $_owner. Giving up!" >&2
 	return 1
 }
 
 repo_unlock () { #repo_unlock <repo-name> <arch>
 	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	if [ ! -d "$LOCKDIR" ]; then
-		echo "warning: Repo lock $1-$2 was not locked!" >&2
+		echo "Warning: Repo lock $1-$2 was not locked!" >&2
 		restore_umask
 		return 1
 	else
@@ -152,7 +153,7 @@ getpkgname() {
 
 	_name="$(_grep_pkginfo "$1" "^pkgname")"
 	if [ -z "$_name" ]; then
-		echo "ERROR: Package '$1' has no pkgname in the PKGINFO. Fail!" >&2
+		echo "Error: Package '$1' has no pkgname in the PKGINFO. Fail!" >&2
 		exit 1
 	fi
 
@@ -165,7 +166,7 @@ getpkgver() {
 
 	_ver="$(_grep_pkginfo "$1" "^pkgver")"
 	if [ -z "$_ver" ]; then
-		echo "ERROR: Package '$1' has no pkgver in the PKGINFO. Fail!" >&2
+		echo "Error: Package '$1' has no pkgver in the PKGINFO. Fail!" >&2
 		exit 1
 	fi
 
@@ -174,10 +175,10 @@ getpkgver() {
 
 getpkgfile() {
 	if [[ ${#} -ne 1 ]]; then
-		echo 'ERROR: No canonical package found!' >&2
+		echo 'Error: No canonical package found!' >&2
 		exit 1
 	elif [ ! -f "${1}" ]; then
-		echo "ERROR: Package ${1} not found!" >&2
+		echo "Error: Package ${1} not found!" >&2
 		exit 1
 	fi
 
@@ -185,14 +186,15 @@ getpkgfile() {
 }
 
 getpkgfiles() {
+	local f
 	if [ ! -z "$(echo ${@%\.*} | sed "s/ /\n/g" | sort | uniq -D)" ]; then
-		echo 'ERROR: Duplicate packages found!'>&2
+		echo 'Error: Duplicate packages found!'>&2
 		exit 1
 	fi
 
 	for f in ${@}; do
 		if  [ ! -f "${f}" ]; then
-			echo "ERROR: Package ${f} not found!" >&2
+			echo "Error: Package ${f} not found!" >&2
 			exit 1
 		fi
 	done
@@ -200,12 +202,13 @@ getpkgfiles() {
 	echo ${@}
 }
 
-check_pkg_arch () { #check_pkg_arch pkgfile arch
+#check_pkg_arch pkgfile arch
+check_pkg_arch () {
 	local _arch
 	_arch="$(_grep_pkginfo "$1" "^arch")"
 
 	if [ -z "$_arch" ]; then
-		echo "ERROR: Package '$1' has no arch in the PKGINFO. Fail!" >&2
+		echo "Error: Package '$1' has no arch in the PKGINFO. Fail!" >&2
 		return 1
 	fi
 	if [ "$_arch" = "$2" ]; then
@@ -233,39 +236,41 @@ get_pkgpool_for_host() {
 
 #usage: chk_license ${license[@]}"
 chk_license() {
-    local l
-    for l in "$@"; do
-        l="$(echo $l | tr '[:upper:]' '[:lower:]')"
-        for allowed in ${ALLOWED_LICENSES[@]}; do
-            allowed="$(echo $allowed | tr '[:upper:]' '[:lower:]')"
-            if [ "$l" = "$allowed" ]; then
-                return 0
-            fi
-        done
-    done
+	local l
+	local allowed
+	for l in "$@"; do
+		l="$(echo $l | tr '[:upper:]' '[:lower:]')"
+		for allowed in ${ALLOWED_LICENSES[@]}; do
+			allowed="$(echo $allowed | tr '[:upper:]' '[:lower:]')"
+			if [ "$l" = "$allowed" ]; then
+				return 0
+			fi
+		done
+	done
 
-    return 1
+	return 1
 }
 
 pkgname_from_src() {
-    local tmp
-    tmp=${1##*/}
-    tmp=${tmp%$SRCEXT}
-    for a in ${ARCHES[@]}; do
-        tmp=${tmp%-$a}
-    done
-    tmp=${tmp%-any}
-    echo ${tmp%-*-*}
+	local tmp
+	local a
+	tmp=${1##*/}
+	tmp=${tmp%$SRCEXT}
+	for a in ${ARCHES[@]}; do
+		tmp=${tmp%-$a}
+	done
+	tmp=${tmp%-any}
+	echo ${tmp%-*-*}
 }
 
 pkgver_from_src() {
-    tmp=${1##*/}
-    tmp=${tmp%$SRCEXT}
-    for a in ${ARCHES[@]}; do
-        tmp=${tmp%-$a}
-    done
-    tmp=${tmp%-any}
-    echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
+	local tmp
+	local a
+	tmp=${1##*/}
+	tmp=${tmp%$SRCEXT}
+	for a in ${ARCHES[@]}; do
+		tmp=${tmp%-$a}
+	done
+	tmp=${tmp%-any}
+	echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
 }
-
-# vim: set ts=4 sw=4 noet ft=sh:

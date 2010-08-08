@@ -54,13 +54,10 @@ if [ -d "$packagebase/repos/$svnrepo" ]; then
 	/usr/bin/svn rm --force -q "$packagebase/repos/$svnrepo"
 	/usr/bin/svn commit -q -m "$(basename $0): $packagebase removed by $(id -un)"
 else
-	echo "    Warning: $packagebase not found in $svnrepo"
-	echo "             Removing split packages is not yet supported"
-	exit 1
+	die "Error: $packagebase not found in $svnrepo"
 fi
 
 cd "$WORKDIR"
-[ -d build/ ] || mkdir build
 
 if [ "$_arch" == "any" ]; then
 	arches="i686 x86_64"
@@ -69,24 +66,14 @@ else
 fi
 
 # copy the db file into our working area
-for architecture in $arches; do
-	if [ -f "$ftppath/$architecture/$reponame$DBEXT" ]; then
-		/bin/cp "$ftppath/$architecture/$reponame$DBEXT" build/
-	else
-		echo "No database found at '$ftppath/$architecture', nothing more to do"
-		exit 0
+for arch in $arches; do
+	if [ ! -f "$ftppath/$arch/$reponame$DBEXT" ]; then
+		die "No database found at '$ftppath/$arch', nothing more to do"
 	fi
 
-	cd build/
-	/usr/bin/repo-remove -q "$reponame$DBEXT" ${pkgname[@]} >/dev/null
-
-	/bin/mv "$reponame$DBEXT" "$ftppath/$architecture"
-
-	cd ..
+	/usr/bin/repo-remove -q "$ftppath/$arch/$reponame$DBEXT" ${pkgname[@]} >/dev/null
 done
 
 echo 'done'
-
-cleanup
 
 # vim: set ts=4 sw=4 noet ft=sh:

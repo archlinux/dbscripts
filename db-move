@@ -53,13 +53,13 @@ if [ -d "$packagebase/repos/$svnrepo_from" ]; then
 
 			# copy package to pool if needed
 			# TODO: can be removed once every package has been moved to the package pool
-			if [ ! -f $FTP_BASE/$(get_pkgpool_for_host)/${arch}/$pkgfile ]; then
-				cp $pkgpath $FTP_BASE/$(get_pkgpool_for_host)/${arch}/
+			if [ ! -f $FTP_BASE/$(get_pkgpool_for_host)/$pkgfile ]; then
+				cp $pkgpath $FTP_BASE/$(get_pkgpool_for_host)
 			fi
-			ln -s "../../../$(get_pkgpool_for_host)/${arch}/${pkgfile}" $ftppath_to/${tarch}/
+			ln -s "../../../$(get_pkgpool_for_host)/${pkgfile}" $ftppath_to/${tarch}/
 		done
 
-		pkgfiles="${pkgfiles} $FTP_BASE/$(get_pkgpool_for_host)/${arch}/${pkgfile}"
+		pkgfiles="${pkgfiles} $FTP_BASE/$(get_pkgpool_for_host)/${pkgfile}"
 	done
 
 	for tarch in ${tarches[@]}; do

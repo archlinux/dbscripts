@@ -240,7 +240,7 @@ testCleanupSimplePackages() {
 	for arch in ${arches[@]}; do
 		local pkg1="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
 		checkRemovedPackage extra 'pkg-simple-a' ${arch}
-		[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg1}" ] && fail "packages/arch/${arch}/${pkg1} found"
+		[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg1}" ] && fail "$(get_pkgpool_for_host)/${pkg1} found"
 		[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
 
 		local pkg2="pkg-simple-b-1-1-${arch}.pkg.tar.xz"
@@ -263,7 +263,7 @@ testCleanupAnyPackages() {
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
 	checkRemovedAnyPackage extra 'pkg-any-a'
-	[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg1}" ] && fail "packages/arch/${arch}/${pkg1} found"
+	[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg1}" ] && fail "$(get_pkgpool_for_host)/${pkg1} found"
 	[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
 
 	local pkg2="pkg-any-b-1-1-${arch}.pkg.tar.xz"
@@ -294,7 +294,7 @@ testCleanupSplitPackages() {
 	for arch in ${arches[@]}; do
 		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}.pkg.tar.*; do
 			checkRemovedPackage extra ${pkgs[0]} ${arch}
-			[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg}" ] && fail "packages/arch/${arch}/${pkg} found"
+			[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] && fail "$(get_pkgpool_for_host)/${pkg} found"
 			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] && fail "${repo}/os/${arch}/${pkg} found"
 		done
 
@@ -329,7 +329,7 @@ testMovePackagesWithoutPool() {
 		for old in 0 2; do
 			for pkg in "${pkgdir}/${pkgs[${old}]}"/*-${arch}.pkg.tar.*; do
 				pkg=$(basename $pkg)
-				mv -f "${FTP_BASE}/packages/arch/${arch}/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
+				mv -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
 			done
 		done
 	done
@@ -369,7 +369,7 @@ testMoveAnyPackagesWithoutPool() {
 	# transform a package to old style layout
 	for pkg in "${pkgdir}/${pkgs[0]}"/*-any.pkg.tar.*; do
 		pkg=$(basename $pkg)
-		mv -f "${FTP_BASE}/packages/arch/any/${pkg}" "${FTP_BASE}/testing/os/any/${pkg}"
+		mv -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" "${FTP_BASE}/testing/os/any/${pkg}"
 		for arch in i686 x86_64; do
 			ln -sf "../any/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
 		done

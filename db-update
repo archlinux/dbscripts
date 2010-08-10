@@ -89,11 +89,9 @@ for current_arch in ${ARCHES[@]}; do
 
 	ftppath="$FTP_BASE/$reponame/os/$current_arch"
 	ftppath_any="$FTP_BASE/$reponame/os/any"
-	poolpath="$FTP_BASE/$(get_pkgpool_for_host)/$current_arch"
-	poolpath_any="$FTP_BASE/$(get_pkgpool_for_host)/any"
+	poolpath="$FTP_BASE/$(get_pkgpool_for_host)"
 	# The following is used to create relative symlinks
-	poolrel="../../../$(get_pkgpool_for_host)/$current_arch"
-	poolrel_any="../../../$(get_pkgpool_for_host)/any"
+	poolrel="../../../$(get_pkgpool_for_host)"
 
 	if [ ! -d "$ftppath" ]; then
 		echo "FTP path for this repo ($reponame) is missing"
@@ -190,11 +188,11 @@ for current_arch in ${ARCHES[@]}; do
 			for f in "$WORKDIR/build/"*-any$PKGEXT; do
 				/bin/chmod 664 "$f" &>/dev/null
 				fname="$(basename $f)"
-				if ! /bin/cp "$f" "$poolpath_any/"; then
-					die "error: failure while copying files to $poolpath_any"
+				if ! /bin/cp "$f" "$poolpath/"; then
+					die "error: failure while copying files to $poolpath"
 				fi
 
-				if ! ln -s "$poolrel_any/$fname" "$ftppath/$fname"; then
+				if ! ln -s "$poolrel/$fname" "$ftppath/$fname"; then
 					die "error: failure symlinking $fname to $ftppath"
 				fi
 			done

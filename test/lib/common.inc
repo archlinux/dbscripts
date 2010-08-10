@@ -28,7 +28,8 @@ setUp() {
 	#echo "Using ${TMP}"
 
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-{packages,community}-{copy,repo}}
-	mkdir -p "${TMP}/ftp/"{{core,extra,community,testing,community-testing}/os,packages/{arch,community}}/{i686,any,x86_64}
+	mkdir -p "${TMP}/ftp/"{core,extra,community,testing,community-testing}/os/{i686,any,x86_64}
+	mkdir -p "${TMP}/ftp/pool/"{packages,community}
 	mkdir -p "${TMP}/staging/"{core,extra,community,testing,community-testing}
 
 	echo -n 'Creating svn repository...'
@@ -81,11 +82,11 @@ checkAnyPackage() {
 	local pkg=$2
 	local arch
 
-	[ -f "${FTP_BASE}/packages/arch/any/${pkg}" ] || fail "packages/arch/any/${pkg} not found"
+	[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "$(get_pkgpool_for_host)/${pkg} not found"
 
 	for arch in i686 x86_64; do
 		[ -L "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} not a symlink"
-		[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/packages/arch/any/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to packages/arch/any/${pkg}"
+		[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to $(get_pkgpool_for_host)/${pkg}"
 	done
 	[ -f "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
 
@@ -99,15 +100,15 @@ checkPackage() {
 	local pkg=$2
 	local arch=$3
 
-	[ -f "${FTP_BASE}/packages/arch/${arch}/${pkg}" ] || fail "packages/arch/${arch}/${pkg} not found"
+	[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "$(get_pkgpool_for_host)/${pkg} not found"
 	[ -L "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} not a symlink"
 	[ -f "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
 
-	[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/packages/arch/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to packages/arch/${arch}/${pkg}"
+	[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to $(get_pkgpool_for_host)/${pkg}"
 
 	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 
-	local pkgbase=$(getpkgbase "${FTP_BASE}/packages/arch/${arch}/${pkg}")
+	local pkgbase=$(getpkgbase "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}")
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] || fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} does not exist"
 }

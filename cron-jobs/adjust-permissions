@@ -17,9 +17,9 @@ get_dir_owner() {
 			echo "root:tusers" ;;
 		community-testing)
 			echo "root:tusers" ;;
-		packages/arch)
+		pool/packages)
 			echo "ftp:ftp-extra" ;;
-		packages/community)
+		pool/community)
 			echo "root:tusers" ;;
 	esac
 }
@@ -35,8 +35,8 @@ for d in $(get_repos_for_host); do
 done
 for p in $(get_pkgpool_for_host); do
 	owner="$(get_dir_owner $p)"
-	/bin/chown -R $owner $p/{any,i686,x86_64}
-	/bin/chmod -R g+w $p/{any,i686,x86_64}
+	/bin/chown $owner $p
+	/bin/chmod g+w $p
 done
 /bin/chmod 555 $FTP_BASE
 popd >/dev/null

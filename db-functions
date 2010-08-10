@@ -228,9 +228,9 @@ get_repos_for_host() {
 
 get_pkgpool_for_host() {
 	if [ "$(hostname)" = "sigurd" ]; then
-		echo "packages/community"
+		echo "pool/community"
 	else
-		echo "packages/arch"
+		echo "pool/packages"
 	fi
 }
 

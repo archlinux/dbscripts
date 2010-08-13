@@ -23,6 +23,11 @@ ftppath_to="$FTP_BASE/$repoto/os/"
 svnrepo_from="$repofrom-$arch"
 svnrepo_to="$repoto-$arch"
 
+if ! check_repo_permission $repoto || ! check_repo_permission $repofrom; then
+	echo "Error: You don't have permission to move packages from ${repofrom} to ${repoto}"
+	exit 1
+fi
+
 repo_lock $repoto $arch || exit 1
 repo_lock $repofrom $arch || exit 1
 

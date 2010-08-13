@@ -15,6 +15,11 @@ arch="$3"
 ftppath="$FTP_BASE/$reponame/os"
 svnrepo="$reponame-$arch"
 
+if ! check_repo_permission $reponame; then
+	echo "Error: You don't have permission to remove packages from ${reponam}"
+	exit 1
+fi
+
 repo_lock $reponame $arch || exit 1
 
 echo -n "Removing $packagebase from $reponame..."

@@ -11,15 +11,7 @@ fi
 reponame="$1"
 current_arch=""
 
-# ensure we should be playing with this DB on this server
-repos="$(get_repos_for_host)"
-found=0
-for r in $repos; do
-	if [ "$r" = "$reponame" ]; then
-		found=1
-	fi
-done
-if [ $found -ne 1 ]; then
+if ! check_repo_permission "$reponame"; then
 	echo "error: you shouldn't be updating $reponame on this server!"
 	exit 1
 fi

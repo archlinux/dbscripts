@@ -73,7 +73,7 @@ die() {
 	cleanup 1
 }
 
-trap abort INT QUIT TERM
+trap abort INT QUIT TERM HUP
 trap cleanup EXIT
 
 
@@ -273,4 +273,31 @@ pkgver_from_src() {
 	done
 	tmp=${tmp%-any}
 	echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
+}
+
+check_repo_permission() {
+	local repo=$1
+
+	local repos="$(get_repos_for_host)"
+	local found=false
+	local r
+	for r in $repos; do
+		if [ "$r" = "$repo" ]; then
+			found=true
+		fi
+	done
+	[ $found ] || return 1
+
+	[ -w "$FTP_BASE/$(get_pkgpool_for_host)" ] || return 1
+
+	local arch
+	for arch in ${ARCHES} any; do
+		local w
+		local ws=("${FTP_BASE}/${repo}/os/${arch}/"{,${repo}${DBEXT}})
+		for w in ws; do
+			[ -w ] || return 1
+		done
+	done
+
+	return 0
 }

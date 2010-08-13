@@ -1,3 +1,5 @@
+set -E
+
 . "${curdir}/../db-functions"
 
 oneTimeSetUp() {
@@ -8,7 +10,9 @@ oneTimeSetUp() {
 	for p in "${pkgdir}"/*; do
 		pushd $p >/dev/null
 		linux32 makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1 || die 'makepkg failed'
-		[ -f *-any.pkg.tar.* ] || linux64 makepkg -cf --config ${curdir}/lib/makepkg-x86_64.conf >/dev/null 2>&1 || die 'makepkg failed'
+		[ -f *-any.pkg.tar.* ] \
+			|| linux64 makepkg -cf --config ${curdir}/lib/makepkg-x86_64.conf >/dev/null 2>&1 \
+			|| die 'makepkg failed'
 		popd >/dev/null
 	done
 	echo 'done'
@@ -23,7 +27,7 @@ setUp() {
 	local p
 	local pkg
 
-	[ -f "${curdir}/../config.local" ] && die "${curdir}/../config.local exists"
+	#[ -f "${curdir}/../config.local" ] && die "${curdir}/../config.local exists"
 	TMP="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
 	#echo "Using ${TMP}"
 
@@ -82,17 +86,20 @@ checkAnyPackage() {
 	local pkg=$2
 	local arch
 
-	[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "$(get_pkgpool_for_host)/${pkg} not found"
+	[ -r "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "$(get_pkgpool_for_host)/${pkg} not found"
 
 	for arch in i686 x86_64; do
 		[ -L "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} not a symlink"
-		[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to $(get_pkgpool_for_host)/${pkg}"
+		[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] \
+			|| fail "${repo}/os/${arch}/${pkg} does not link to $(get_pkgpool_for_host)/${pkg}"
 	done
-	[ -f "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
+	[ -r "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
 
-	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+	( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
+		&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg}) \
+		|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 
-	[ -f "${FTP_BASE}/${repo}/os/any/${pkg}" ] && fail "${repo}/os/any/${pkg} should not exist"
+	[ -r "${FTP_BASE}/${repo}/os/any/${pkg}" ] && fail "${repo}/os/any/${pkg} should not exist"
 }
 
 checkPackage() {
@@ -100,17 +107,21 @@ checkPackage() {
 	local pkg=$2
 	local arch=$3
 
-	[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "$(get_pkgpool_for_host)/${pkg} not found"
+	[ -r "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "$(get_pkgpool_for_host)/${pkg} not found"
 	[ -L "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} not a symlink"
-	[ -f "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
+	[ -r "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
 
-	[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} does not link to $(get_pkgpool_for_host)/${pkg}"
+	[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] \
+		|| fail "${repo}/os/${arch}/${pkg} does not link to $(get_pkgpool_for_host)/${pkg}"
 
-	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg} || fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+	( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
+		&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg}) \
+		|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}")
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] || fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} does not exist"
+	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] \
+		|| fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} does not exist"
 }
 
 checkRemovedPackage() {
@@ -118,10 +129,13 @@ checkRemovedPackage() {
 	local pkgbase=$2
 	local arch=$3
 
-	bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase} && fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+	( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
+		&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
+		&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] && fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} should not exist"
+	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] \
+		&& fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} should not exist"
 }
 
 checkRemovedAnyPackage() {
@@ -130,9 +144,12 @@ checkRemovedAnyPackage() {
 	local arch
 
 	for arch in i686 x86_64; do
-		bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase} && fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
+			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
+			&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
 	done
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] && fail "svn-packages-copy/${pkgbase}/repos/${repo}-any should not exist"
+	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] \
+		&& fail "svn-packages-copy/${pkgbase}/repos/${repo}-any should not exist"
 }

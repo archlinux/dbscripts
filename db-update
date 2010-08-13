@@ -39,15 +39,11 @@ for current_arch in ${ARCHES[@]} any; do
 done
 
 # Process architecture-independent packages first.
-if [ -d "$stagedir" ]; then
-	ANYPKGS="$(getpkgfiles $stagedir/*-any$PKGEXT 2>/dev/null)"
-fi
+ANYPKGS="$(getpkgfiles $stagedir/*-any$PKGEXT 2>/dev/null)"
 
 cd "$WORKDIR"
 
 if [ -n "$ANYPKGS" ]; then
-	pkgtotal=$(echo "$ANYPKGS" | wc -w)
-
 	/usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
 	cd checkout
 	to_add_any=""
@@ -76,13 +72,11 @@ if [ -n "$ANYPKGS" ]; then
 fi
 
 for current_arch in ${ARCHES[@]}; do
-
 	ftppath="$FTP_BASE/$reponame/os/$current_arch"
 	ftppath_any="$FTP_BASE/$reponame/os/any"
 	poolpath="$FTP_BASE/$(get_pkgpool_for_host)"
 	# The following is used to create relative symlinks
 	poolrel="../../../$(get_pkgpool_for_host)"
-
 	svnrepo="$reponame-$current_arch"
 
 	repo_lock $reponame $current_arch || continue
@@ -105,8 +99,6 @@ for current_arch in ${ARCHES[@]}; do
 		if [ -f "$ftppath/$reponame$DBEXT" ]; then
 			/bin/cp "$ftppath/$reponame$DBEXT" build/$reponame-$current_arch$DBEXT
 		fi
-
-		pkgtotal=$(echo "$ADDPKGS $ANYPKGS" | wc -w)
 
 		cd "$WORKDIR"
 		/usr/bin/svn checkout -N $SVNREPO checkout >/dev/null

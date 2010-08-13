@@ -27,15 +27,13 @@ fi
 
 msg "Updating $reponame..."
 
-# Remove any package from $stagedir that is already in the FTP repository
 for current_arch in ${ARCHES[@]} any; do
 	ftppath="$FTP_BASE/$reponame/os/$current_arch"
 	for f in $stagedir/*-$current_arch$PKGEXT; do
 		bf=$(basename $f)
 		if [[ -f $ftppath/$bf ]]; then
-			warning "    Package file $bf already exists in FTP repo" \
-			        "    Removing from $stagedir"
-			/bin/rm $f
+			error "Package $bf already exists in $ftppath"
+			exit 1
 		fi
 	done
 done

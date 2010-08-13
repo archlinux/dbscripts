@@ -83,13 +83,6 @@ for current_arch in ${ARCHES[@]}; do
 	# The following is used to create relative symlinks
 	poolrel="../../../$(get_pkgpool_for_host)"
 
-	if [ ! -d "$ftppath" ]; then
-		error "FTP path for this repo ($reponame) is missing" \
-		       "   -> $ftppath" \
-		       "Please contact a system administrator"
-		exit 1
-	fi
-
 	svnrepo="$reponame-$current_arch"
 
 	repo_lock $reponame $current_arch || continue

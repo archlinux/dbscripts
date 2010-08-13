@@ -23,7 +23,7 @@ case "${DBEXT}" in
 	*.gz)  TAR_OPT="z" ;;
 	*.bz2) TAR_OPT="j" ;;
 	*.xz)  TAR_OPT="J" ;;
-	*) echo "Unknown compression type for DBEXT=${DBEXT}" && exit 1 ;;
+	*) die "Unknown compression type for DBEXT=${DBEXT}" ;;
 esac
 
 FILESEXT="${DBEXT//db/files}"
@@ -42,7 +42,7 @@ for repo in ${repos[@]}; do
             mkdir -p "${DBDIR}/${repodir}"
             bsdtar -xf "${targetdir}/${repodir}/${REPO_DB_FILE}" -C "${DBDIR}/${repodir}"
         else
-            echo "Fail! Does the repo $repo with arch $arch even exist?"
+            error "Fail! Does the repo $repo with arch $arch even exist?"
             continue
         fi
 

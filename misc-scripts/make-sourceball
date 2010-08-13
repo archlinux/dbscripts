@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ $# -ne 3 -a $# -ne 4 ]; then
-    echo "usage: $(basename $0) [-f] <packagename> <repo> <arch>"
-    echo "  -f  Force building. Skip license checks"
+    msg "usage: $(basename $0) [-f] <packagename> <repo> <arch>"
+    msg "  -f  Force building. Skip license checks"
     exit 1
 fi
 
@@ -31,17 +31,17 @@ create_srcpackage() {
 	pkgrel=$(. PKGBUILD; echo ${pkgrel})
 	if ! [ $FORCE == 1 ] && ! chk_license ${license[@]} ; then
             #Removed so as not to clutter failed.txt
-            #echo -e "\t$packagename license (${license[@]}) does not require source tarballs" >&2
+            #warning "$packagename license (${license[@]}) does not require source tarballs"
             cleanup 0
         else
-            echo "Creating source tarball for $packagename-$pkgver-$pkgrel"
+            msg "Creating source tarball for $packagename-$pkgver-$pkgrel"
         fi
 
         local logfile="$logpath/$packagename"
         if ! /usr/bin/makepkg --allsource --ignorearch >"$logfile" 2>&1; then
             popd >/dev/null
             /bin/gzip -f -9 "$logfile"
-            die "\tFailed to download source for $packagename-$pkgver-$pkgrel ($reponame-$arch)"
+            die "Failed to download source for $packagename-$pkgver-$pkgrel ($reponame-$arch)"
         fi
         /bin/rm -f "$logfile"{,.gz}
 
@@ -66,13 +66,13 @@ if [[ "$reponame" = "community" || "$reponame" = "community-testing" ]]; then
     if /usr/bin/svn export -q "$SVNREPOCOMMUNITY/$packagename" $packagename; then
 	create_srcpackage "$packagename/repos/$reponame-$arch"
     else
-	die "\tPackage '$packagename' does not exist in repo '$reponame-$arch'"
+	die "Package '$packagename' does not exist in repo '$reponame-$arch'"
     fi
 else
     if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
 	create_srcpackage "$packagename/repos/$reponame-$arch"
     else
-	die "\tPackage '$packagename' does not exist in repo '$reponame-$arch'"
+	die "Package '$packagename' does not exist in repo '$reponame-$arch'"
     fi
 fi
 

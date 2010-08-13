@@ -29,13 +29,11 @@ done
 popd >/dev/null
 
 if [ -n "$to_cleanup" ]; then
-    echo "    The following packages are no longer in any repo"
-    echo "    They will be moved to $CLEANUP_DESTDIR"
+    msg "The following packages are no longer in any repo"
     for f in $to_cleanup; do
-        echo "        $(basename "$f")"
+        msg2 "$(basename "$f")"
     done
-    echo ""
-    mv $to_cleanup "$CLEANUP_DESTDIR"
+    ${CLEANUP_DRYRUN} || mv $to_cleanup "$CLEANUP_DESTDIR"
 fi
 
 script_unlock

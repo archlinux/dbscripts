@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -ne 1 ]; then
-	echo "usage: $(basename $0) <reponame>"
+	msg "usage: $(basename $0) <reponame>"
 	exit 1
 fi
 
@@ -12,7 +12,7 @@ reponame="$1"
 current_arch=""
 
 if ! check_repo_permission "$reponame"; then
-	echo "error: you shouldn't be updating $reponame on this server!"
+	error "you shouldn't be updating $reponame on this server!"
 	exit 1
 fi
 
@@ -21,11 +21,11 @@ ANYPKGS=""
 
 stagedir="$STAGING/$reponame"
 if [ ! -d $stagedir ]; then
-	echo "error: staging directory missing: $stagedir" >&2
+	error "staging directory missing: $stagedir"
 	exit 1
 fi
 
-echo -n "Updating $reponame..."
+msg "Updating $reponame..."
 
 # Remove any package from $stagedir that is already in the FTP repository
 for current_arch in ${ARCHES[@]} any; do
@@ -33,8 +33,8 @@ for current_arch in ${ARCHES[@]} any; do
 	for f in $stagedir/*-$current_arch$PKGEXT; do
 		bf=$(basename $f)
 		if [[ -f $ftppath/$bf ]]; then
-			echo "    WARNING: Package file $bf already exists in FTP repo"
-			echo "    Removing from $stagedir"
+			warning "    Package file $bf already exists in FTP repo" \
+			        "    Removing from $stagedir"
 			/bin/rm $f
 		fi
 	done
@@ -59,7 +59,7 @@ if [ -n "$ANYPKGS" ]; then
 		pkgbase="$(getpkgbase $pkg)"
 		svnrepo="$reponame-any"
 		if ! check_pkg_arch "$pkg" "any"; then
-			echo "   ERROR: $pkgfile is not architecture independent!"
+			error "$pkgfile is not architecture independent!"
 		else
 			/usr/bin/svn up -q $pkgbase
 			if [ -d "$pkgbase/repos/$svnrepo" ]; then
@@ -68,10 +68,10 @@ if [ -n "$ANYPKGS" ]; then
 				if echo "$pkgfile" | grep -q "$pkgname-$pkgver-$pkgrel-any"; then
 					to_add_any="$to_add_any $pkg"
 				else
-					echo "    WARNING: $pkgfile does not match PKGBUILD in $svnrepo"
+					warning "$pkgfile does not match PKGBUILD in $svnrepo"
 				fi
 			else
-				echo "    WARNING: Package $pkgbase not found in $svnrepo"
+				warning "Package $pkgbase not found in $svnrepo"
 			fi
 		fi
 	done
@@ -86,9 +86,9 @@ for current_arch in ${ARCHES[@]}; do
 	poolrel="../../../$(get_pkgpool_for_host)"
 
 	if [ ! -d "$ftppath" ]; then
-		echo "FTP path for this repo ($reponame) is missing"
-		echo "   -> $ftppath"
-		echo "Please contact a system administrator"
+		error "FTP path for this repo ($reponame) is missing" \
+		       "   -> $ftppath" \
+		       "Please contact a system administrator"
 		exit 1
 	fi
 
@@ -120,7 +120,7 @@ for current_arch in ${ARCHES[@]}; do
 		cd "$WORKDIR"
 		/usr/bin/svn checkout -N $SVNREPO checkout >/dev/null
 		cd checkout
-	
+
 		if [ -n "$ADDPKGS" ]; then
 			for pkg in $ADDPKGS; do
 				pkgfile=$(basename $pkg)
@@ -128,7 +128,7 @@ for current_arch in ${ARCHES[@]}; do
 				pkgbase="$(getpkgbase $pkg)"
 
 				if ! check_pkg_arch "$pkg" "$current_arch"; then
-					echo "   ERROR: $pkgfile was built for the wrong architecture"
+					error "$pkgfile was built for the wrong architecture"
 				else
 					/usr/bin/svn up -q $pkgbase
 					if [ -d "$pkgbase/repos/$svnrepo" ]; then
@@ -137,10 +137,10 @@ for current_arch in ${ARCHES[@]}; do
 						if echo "$pkgfile" | grep -q "$pkgname-$pkgver-$pkgrel-$current_arch"; then
 							to_add="$to_add $pkg"
 						else
-							echo "    WARNING: $pkgfile does not match PKGBUILD in $svnrepo"
+							warning "$pkgfile does not match PKGBUILD in $svnrepo"
 						fi
 					else
-						echo "    WARNING: Package $pkgbase not found in $svnrepo"
+						warning "Package $pkgbase not found in $svnrepo"
 					fi
 				fi
 			done
@@ -156,10 +156,10 @@ for current_arch in ${ARCHES[@]}; do
 			/usr/bin/repo-add -q "$reponame-$current_arch$DBEXT" $pkgs >/dev/null
 		else
 			rm -f "build/$reponame-$current_arch$DBEXT"
-			echo "Errors found when adding packages"
+			error "Errors found when adding packages"
 		fi
 	else
-		echo "No packages to add"
+		warning "No packages to add"
 	fi
 
 	# if non empty, move all build dirs
@@ -168,11 +168,11 @@ for current_arch in ${ARCHES[@]}; do
 			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
 				/bin/chmod 664 "$f" &>/dev/null
 				if ! /bin/cp "$f" "$poolpath/"; then
-					die "error: failure while copying files to $poolpath"
+					die "failure while copying files to $poolpath"
 				fi
 				fname="$(basename $f)"
 				if ! ln -s "$poolrel/$fname" "$ftppath/$fname"; then
-					die "error: failure symlinking $fname to $ftppath"
+					die "failure symlinking $fname to $ftppath"
 				fi
 			done
 		fi
@@ -181,11 +181,11 @@ for current_arch in ${ARCHES[@]}; do
 				/bin/chmod 664 "$f" &>/dev/null
 				fname="$(basename $f)"
 				if ! /bin/cp "$f" "$poolpath/"; then
-					die "error: failure while copying files to $poolpath"
+					die "failure while copying files to $poolpath"
 				fi
 
 				if ! ln -s "$poolrel/$fname" "$ftppath/$fname"; then
-					die "error: failure symlinking $fname to $ftppath"
+					die "failure symlinking $fname to $ftppath"
 				fi
 			done
 		fi
@@ -194,7 +194,7 @@ for current_arch in ${ARCHES[@]}; do
 		fi
 		ln -sf "$reponame$DBEXT" "$ftppath/$reponame${DBEXT%.tar.*}"
 	else
-		echo "Nothing to copy, no work done"
+		warning "Nothing to copy, no work done"
 	fi
 
 	if [ -n "$to_add" ]; then
@@ -207,7 +207,5 @@ done
 if [ -n "$to_add_any" ]; then
 	/bin/rm $to_add_any
 fi
-
-echo 'done'
 
 # vim: set ts=4 sw=4 noet ft=sh:

@@ -6,7 +6,7 @@ oneTimeSetUp() {
 	local p
 	pkgdir="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
 	cp -r ${curdir}/packages/* "${pkgdir}"
-	echo -n 'Building packages...'
+	msg 'Building packages...'
 	for p in "${pkgdir}"/*; do
 		pushd $p >/dev/null
 		linux32 makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1 || die 'makepkg failed'
@@ -15,7 +15,6 @@ oneTimeSetUp() {
 			|| die 'makepkg failed'
 		popd >/dev/null
 	done
-	echo 'done'
 	echo
 }
 
@@ -29,14 +28,14 @@ setUp() {
 
 	#[ -f "${curdir}/../config.local" ] && die "${curdir}/../config.local exists"
 	TMP="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
-	#echo "Using ${TMP}"
+	#msg "Using ${TMP}"
 
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-{packages,community}-{copy,repo}}
 	mkdir -p "${TMP}/ftp/"{core,extra,community,testing,community-testing}/os/{i686,any,x86_64}
 	mkdir -p "${TMP}/ftp/pool/"{packages,community}
 	mkdir -p "${TMP}/staging/"{core,extra,community,testing,community-testing}
 
-	echo -n 'Creating svn repository...'
+	msg 'Creating svn repository...'
 	svnadmin create "${TMP}/svn-packages-repo"
 	svnadmin create "${TMP}/svn-community-repo"
 	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
@@ -49,7 +48,6 @@ setUp() {
 		svn add -q "${TMP}/svn-packages-copy"/${pkg}
 		svn commit -q -m"initial commit of ${pkg}" "${TMP}/svn-packages-copy"
 	done
-	echo 'done'
 
 	cat <<eot > "${curdir}/../config.local"
 	FTP_BASE="${TMP}/ftp"

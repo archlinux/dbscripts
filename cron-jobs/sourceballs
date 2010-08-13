@@ -22,7 +22,7 @@ for repo in ${repos[@]}; do
     for arch in ${ARCHES[@]} any; do
         ftppath="$ftpbase/$repo/os/$arch"
         if [ ! -d "$ftppath" ]; then
-            echo "FTP path does not exist: $ftppath" >2
+            error "FTP path does not exist: $ftppath"
             continue
         fi
         cd $ftppath

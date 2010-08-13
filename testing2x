@@ -22,16 +22,16 @@ for pkg in $*; do
     if [ -f "${pkg}/repos/testing-${_arch}/PKGBUILD" ]; then
         for repo in core extra; do
             if [ -f "${pkg}/repos/${repo}-${_arch}/PKGBUILD" ]; then
-                echo "===> Moving package '${pkg}': testing-${_arch} -> ${repo}-${_arch}"
+                msg "Moving package '${pkg}': testing-${_arch} -> ${repo}-${_arch}"
                 $(dirname $0)/db-move "${pkg}" "testing" "${repo}" "${_arch}"
                 moved=1
                 break
             fi
         done
         if [ ${moved} -eq 0 ]; then
-            echo "===> Warning: ${pkg} is only in testing-${_arch}, cannot determine where to move it"
+            warning "${pkg} is only in testing-${_arch}, cannot determine where to move it"
         fi
     else
-        echo "===> Warning: ${pkg} is not in testing-${_arch}"
+        warning "${pkg} is not in testing-${_arch}"
     fi
 done

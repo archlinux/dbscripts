@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -ne 1 ]; then
-	echo "usage: $(basename $0) <reponame>"
+	msg "usage: $(basename $0) <reponame>"
 	exit 1
 fi
 
@@ -13,6 +13,7 @@ reponame=$1
 . "$(dirname $0)/../config"
 
 clean_pkgs () {
+  if ! ${CLEANUP_DRYRUN}; then
     for pkg in "$@"; do
         if [ -h "$pkg" ]; then
             rm -f "$pkg"
@@ -20,9 +21,10 @@ clean_pkgs () {
             mv "$pkg" "$CLEANUP_DESTDIR"
         fi
     done
+  fi
 }
 
-${CLEANUP_DRYRUN} && echo 'dry run mode is active'
+${CLEANUP_DRYRUN} && warning 'dry run mode is active'
 
 ftppath_base="$FTP_BASE/$reponame/os"
 
@@ -38,26 +40,23 @@ for arch in ${ARCHES[@]}; do
   EXTRAFILES=""
 
   if [ ! -d "$ftppath" ]; then
-      echo "FTP path '$ftppath' does not exist"
+      error "FTP path '$ftppath' does not exist"
       exit 1
   fi
 
   if ! cd "${CLEANUP_TMPDIR}" ; then
-      echo "Failed to cd to ${CLEANUP_TMPDIR}"
+      error "Failed to cd to ${CLEANUP_TMPDIR}"
       exit 1
   fi
 
   if [ ! -f "$ftppath/$reponame$DBEXT" ]; then
-    echo ""
-    echo "WARNING: The file \"$ftppath/$reponame$DBEXT\" could not be found, skipping."
-    echo ""
+    msg "The file \"$ftppath/$reponame$DBEXT\" could not be found, skipping."
     repo_unlock $reponame $arch
     continue
   fi
 
   if ! bsdtar xf "$ftppath/$reponame$DBEXT"; then
-    echo ""
-    echo "ERROR: Command failed: bsdtar xf \"$ftppath/$reponame$DBEXT\""
+    error "Command failed: bsdtar xf \"$ftppath/$reponame$DBEXT\""
     exit 1
   fi
 
@@ -106,7 +105,7 @@ for arch in ${ARCHES[@]}; do
   MISSINGFILES=""
   for mf in $missfiles; do
       if [ -e "${ftppath_base}/any/${mf}" ]; then
-          echo "Restoring missing 'any' symlink: ${mf}"
+          msg "Restoring missing 'any' symlink: ${mf}"
           ${CLEANUP_DRYRUN} || ln -s "../any/${mf}" "${ftppath}"
       else
           MISSINGFILES="${MISSINGFILES} ${mf}"
@@ -120,53 +119,36 @@ for arch in ${ARCHES[@]}; do
       continue
   fi
 
-  echo "Scan complete for $reponame ($arch) at ${ftppath}"
-
-  if [ -n "$DELETEFILES" ]; then
-      echo "    The following files are out of date"
-      for f in $DELETEFILES; do
-          echo "        $f"
-      done
-      echo ""
-  fi
-
-  if [ -n "$DELETESYMLINKS" ]; then
-      echo "    The following symlinks are out of date"
-      echo "    They will be deleted"
-      for f in $DELETESYMLINKS; do
-          echo "        $f"
-      done
-      echo ""
-  fi
+  msg "Scan complete for $reponame ($arch) at ${ftppath}"
 
   if [ -n "$MISSINGFILES" ]; then
-      echo "    The following files are missing in the repo"
       for f in $MISSINGFILES; do
-          echo "        $f"
-      done
-      echo ""
-  fi
-
-  if [ -n "$EXTRAFILES" ]; then
-      echo "    The following files are in the repo but not the db"
-      for f in $EXTRAFILES; do
-          echo "        $f"
+          error "$f is missing"
       done
   fi
 
   if [ -n "${DELETEFILES}" ]; then
-      ${CLEANUP_DRYRUN} || clean_pkgs ${DELETEFILES}
-      echo ""
+      msg "The following files are out of date"
+      for f in $DELETEFILES; do
+          msg2 "$f"
+      done
+      clean_pkgs ${DELETEFILES}
   fi
 
   if [ -n "${DELETESYMLINKS}" ]; then
-      ${CLEANUP_DRYRUN} || clean_pkgs ${DELETESYMLINKS}
-      echo ""
+      msg "The following symlinks are out of date"
+      for f in $DELETESYMLINKS; do
+          msg2 "$f"
+      done
+      clean_pkgs ${DELETESYMLINKS}
   fi
 
   if [ -n "${EXTRAFILES}" ]; then
-      ${CLEANUP_DRYRUN} || clean_pkgs ${EXTRAFILES}
-      echo ""
+      msg "The following files are in the repo but not the db"
+      for f in $EXTRAFILES; do
+          msg2 "$f"
+      done
+      clean_pkgs ${EXTRAFILES}
   fi
 
 done
@@ -193,15 +175,13 @@ if [ -d "$ftppath_base/any" ]; then
 fi
 
 if [ -n "$ARCHINDEPFILES" ]; then
-  echo "    The following architecture independent packages"
-  echo "    are not symlinked in the architecture repositories."
+  msg "The following architecture independent packages are not symlinked in the architecture repositories."
     for f in $ARCHINDEPFILES; do
-        echo "        $f"
+        msg2 "$f"
     done
 fi
 
 if [ -d "$ftppath_base/any" -a -n "${ARCHINDEPFILES}" ]; then
   cd "$ftppath_base/any"
-  ${CLEANUP_DRYRUN} || clean_pkgs ${ARCHINDEPFILES}
-  echo ""
+  clean_pkgs ${ARCHINDEPFILES}
 fi

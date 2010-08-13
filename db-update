@@ -9,7 +9,6 @@ fi
 . "$(dirname $0)/config"
 
 reponame="$1"
-current_arch=""
 
 if ! check_repo_permission "$reponame"; then
 	error "you shouldn't be updating $reponame on this server!"
@@ -27,15 +26,11 @@ fi
 
 msg "Updating $reponame..."
 
-for current_arch in ${ARCHES[@]} any; do
-	ftppath="$FTP_BASE/$reponame/os/$current_arch"
-	for f in $stagedir/*-$current_arch$PKGEXT; do
-		bf=$(basename $f)
-		if [[ -f $ftppath/$bf ]]; then
-			error "Package $bf already exists in $ftppath"
-			exit 1
-		fi
-	done
+for f in $stagedir/*$PKGEXT; do
+	if [ -f "$FTP_BASE/$(get_pkgpool_for_host)/$(basename f)" ]; then
+		error "Package $(basename f) already exists"
+		exit 1
+	fi
 done
 
 # Process architecture-independent packages first.

@@ -39,13 +39,13 @@ fi
 cd "$WORKDIR"
 
 if [ "$arch" == "any" ]; then
-	arches="i686 x86_64"
+	tarches=(${ARCHES[@]})
 else
-	arches="$arch"
+	tarches=("$arch")
 fi
 
 # copy the db file into our working area
-for tarch in $arches; do
+for tarch in ${tarches[@]}; do
 	if [ ! -f "$ftppath/$tarch/$reponame$DBEXT" ]; then
 		die "No database found at '$ftppath/$tarch', nothing more to do"
 	fi

@@ -53,6 +53,21 @@ error() {
 	printf "${RED}==> ERROR${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
 }
 
+##
+#  usage : in_array( $needle, $haystack )
+# return : 0 - found
+#          1 - not found
+##
+in_array() {
+	local needle=$1; shift
+	[[ -z $1 ]] && return 1 # Not Found
+	local item
+	for item in "$@"; do
+		[[ $item = $needle ]] && return 0 # Found
+	done
+	return 1 # Not Found
+}
+
 script_lock() {
 	local LOCKDIR="$TMPDIR/.scriptlock.$(basename $0)"
 	if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
@@ -262,6 +277,8 @@ check_pkgfile() {
 	local pkgarch="$(getpkgarch ${pkgfile})"
 	[ $? -ge 1 ] && return 1
 
+	in_array "${pkgarch}" ${ARCHES[@]} 'any' || return 1
+
 	if echo "$(basename ${pkgfile})" | grep -q "${pkgname}-${pkgver}-${pkgarch}"; then
 		return 0
 	else
@@ -276,6 +293,8 @@ check_pkgsvn() {
 	local pkgarch="$(getpkgarch ${pkgfile})"
 	[ $? -ge 1 ] && return 1
 	local repo="${2}"
+
+	in_array "${repo}" $(get_repos_for_host) || return 1
 
 	if [ ! -f "${WORKDIR}/pkgbuilds/${pkgbase}" ]; then
 		mkdir -p "${WORKDIR}/pkgbuilds"
@@ -352,15 +371,7 @@ pkgver_from_src() {
 check_repo_permission() {
 	local repo=$1
 
-	local repos="$(get_repos_for_host)"
-	local found=false
-	local r
-	for r in $repos; do
-		if [ "$r" = "$repo" ]; then
-			found=true
-		fi
-	done
-	[ $found ] || return 1
+	in_array "${repo}" $(get_repos_for_host) || return 1
 
 	[ -w "$FTP_BASE/$(get_pkgpool_for_host)" ] || return 1
 

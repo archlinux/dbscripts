@@ -33,7 +33,7 @@ testAddSimplePackages() {
 		done
 	done
 
-	../db-update extra
+	../db-update
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -50,7 +50,7 @@ testAddAnyPackages() {
 		releasePackage extra ${pkgbase} any
 	done
 
-	../db-update extra
+	../db-update
 
 	for pkgbase in ${pkgs[@]}; do
 		checkAnyPackage extra ${pkgbase}-1-1-any.pkg.tar.xz
@@ -70,7 +70,7 @@ testAddSplitPackages() {
 		done
 	done
 
-	../db-update extra
+	../db-update
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -98,7 +98,7 @@ testRemovePackages() {
 		done
 	done
 
-	../db-update extra
+	../db-update
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
@@ -121,7 +121,7 @@ testRemoveAnyPackages() {
 		releasePackage extra ${pkgbase} any
 	done
 
-	../db-update extra
+	../db-update
 
 	for pkgbase in ${pkgs[@]}; do
 		../db-remove ${pkgbase} extra any
@@ -149,7 +149,7 @@ testMoveSimplePackages() {
 		done
 	done
 
-	../db-update testing
+	../db-update
 
 	for arch in ${arches[@]}; do
 		../db-move pkg-simple-a testing extra ${arch}
@@ -171,7 +171,7 @@ testMoveAnyPackages() {
 		releasePackage testing ${pkgbase} any
 	done
 
-	../db-update testing
+	../db-update
 	../db-move pkg-any-a testing extra any
 
 	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz
@@ -192,7 +192,7 @@ testMoveSplitPackages() {
 		done
 	done
 
-	../db-update testing
+	../db-update
 
 	for arch in ${arches[@]}; do
 		../db-move pkg-split-a testing extra ${arch}
@@ -229,7 +229,7 @@ testCleanupSimplePackages() {
 		done
 	done
 
-	../db-update extra
+	../db-update
 
 	for arch in ${arches[@]}; do
 		../db-remove pkg-simple-a extra ${arch}
@@ -257,7 +257,7 @@ testCleanupAnyPackages() {
 		releasePackage extra ${pkgbase} any
 	done
 
-	../db-update extra
+	../db-update
 	../db-remove pkg-any-a extra any
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
@@ -283,7 +283,7 @@ testCleanupSplitPackages() {
 		done
 	done
 
-	../db-update extra
+	../db-update
 
 	for arch in ${arches[@]}; do
 		../db-remove ${pkgs[0]} extra ${arch}
@@ -322,7 +322,7 @@ testMovePackagesWithoutPool() {
 		done
 	done
 
-	../db-update testing
+	../db-update
 
 	# transform two packages to old style layout
 	for arch in ${arches[@]}; do
@@ -364,7 +364,7 @@ testMoveAnyPackagesWithoutPool() {
 		releasePackage testing ${pkgbase} any
 	done
 
-	../db-update testing
+	../db-update
 
 	# transform a package to old style layout
 	for pkg in "${pkgdir}/${pkgs[0]}"/*-any.pkg.tar.*; do

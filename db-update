@@ -1,189 +1,78 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]; then
-	msg "usage: $(basename $0) <reponame>"
-	exit 1
-fi
-
 . "$(dirname $0)/db-functions"
 . "$(dirname $0)/config"
 
-reponame="$1"
-
-if ! check_repo_permission "$reponame"; then
-	error "you shouldn't be updating $reponame on this server!"
+if [ $# -ge 1 ]; then
+	warning "Calling $(basename $0) with a specific repository is no longer supported"
 	exit 1
 fi
 
-ADDPKGS=""
-ANYPKGS=""
-
-stagedir="$STAGING/$reponame"
-if [ ! -d $stagedir ]; then
-	error "staging directory missing: $stagedir"
+# Find repos with packages to release
+repos=($(find  "${STAGING}" -mindepth 1 -type d ! -empty -printf '%f ' 2>/dev/null))
+if [ $? -ge 1 ]; then
+	error "Could not read ${STAGING}"
 	exit 1
 fi
 
-msg "Updating $reponame..."
-
-for f in $stagedir/*$PKGEXT; do
-	if [ -f "$FTP_BASE/$(get_pkgpool_for_host)/$(basename f)" ]; then
-		error "Package $(basename f) already exists"
+for repo in ${repos[@]}; do
+	if ! check_repo_permission "${repo}"; then
+		error "You don't have permission to update packages in ${repo}"
+		exit 1
+	fi
+	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXT}))
+	if [ $? -eq 0 ]; then
+		for pkg in ${pkgs[@]}; do
+			if ! check_pkgfile "${pkg}"; then
+				error "Package ${repo}/$(basename ${pkg}) is not consistent with its meta data"
+				exit 1
+			fi
+			if ! check_pkgsvn "${pkg}" "${repo}"; then
+				error "Package ${repo}/$(basename ${pkg}) is not consistent with svn repository"
+				exit 1
+			fi
+			if [ -f "${FTP_BASE}/$(get_pkgpool_for_host)/$(basename ${pkg})" ]; then
+				error "Package ${repo}/$(basename pkg) already exists in ${FTP_BASE}/$(get_pkgpool_for_host)"
+				exit 1
+			fi
+		done
+	else
 		exit 1
 	fi
 done
 
-# Process architecture-independent packages first.
-ANYPKGS="$(getpkgfiles $stagedir/*-any$PKGEXT 2>/dev/null)"
-
-cd "$WORKDIR"
-
-if [ -n "$ANYPKGS" ]; then
-	/usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
-	cd checkout
-	to_add_any=""
-	for pkg in $ANYPKGS; do
-		pkgfile=$(basename $pkg)
-		pkgname="$(getpkgname $pkg)"
-		pkgbase="$(getpkgbase $pkg)"
-		svnrepo="$reponame-any"
-		if ! check_pkg_arch "$pkg" "any"; then
-			error "$pkgfile is not architecture independent!"
-		else
-			/usr/bin/svn up -q $pkgbase
-			if [ -d "$pkgbase/repos/$svnrepo" ]; then
-				pkgver=$(. "$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgver})
-				pkgrel=$(. "$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgrel})
-				if echo "$pkgfile" | grep -q "$pkgname-$pkgver-$pkgrel-any"; then
-					to_add_any="$to_add_any $pkg"
-				else
-					warning "$pkgfile does not match PKGBUILD in $svnrepo"
-				fi
-			else
-				warning "Package $pkgbase not found in $svnrepo"
-			fi
-		fi
+# TODO: this might lock too much (architectures)
+for repo in ${repos[@]}; do
+	for pkgarch in ${ARCHES[@]}; do
+		repo_lock ${repo} ${pkgarch} || exit 1
 	done
-fi
-
-for current_arch in ${ARCHES[@]}; do
-	ftppath="$FTP_BASE/$reponame/os/$current_arch"
-	ftppath_any="$FTP_BASE/$reponame/os/any"
-	poolpath="$FTP_BASE/$(get_pkgpool_for_host)"
-	# The following is used to create relative symlinks
-	poolrel="../../../$(get_pkgpool_for_host)"
-	svnrepo="$reponame-$current_arch"
-
-	repo_lock $reponame $current_arch || continue
-
-	/bin/mkdir -p "$WORKDIR/build"
-	cd "$WORKDIR"
-
-	# copy the db file into our working area
-	if [ -f "$ftppath/$reponame$DBEXT" ]; then
-		/bin/cp "$ftppath/$reponame$DBEXT" build/$reponame-$current_arch$DBEXT
-	fi
-
-	to_add=""
-	if [ -d "$stagedir" ]; then
-		ADDPKGS="$(getpkgfiles $stagedir/*-${current_arch}$PKGEXT 2>/dev/null)"
-	fi
-
-	if [ -n "$ADDPKGS" -o -n "$ANYPKGS" ]; then
-
-		if [ -f "$ftppath/$reponame$DBEXT" ]; then
-			/bin/cp "$ftppath/$reponame$DBEXT" build/$reponame-$current_arch$DBEXT
-		fi
-
-		cd "$WORKDIR"
-		/usr/bin/svn checkout -N $SVNREPO checkout >/dev/null
-		cd checkout
-
-		if [ -n "$ADDPKGS" ]; then
-			for pkg in $ADDPKGS; do
-				pkgfile=$(basename $pkg)
-				pkgname="$(getpkgname $pkg)"
-				pkgbase="$(getpkgbase $pkg)"
-
-				if ! check_pkg_arch "$pkg" "$current_arch"; then
-					error "$pkgfile was built for the wrong architecture"
-				else
-					/usr/bin/svn up -q $pkgbase
-					if [ -d "$pkgbase/repos/$svnrepo" ]; then
-						pkgver=$(. "$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgver})
-						pkgrel=$(. "$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgrel})
-						if echo "$pkgfile" | grep -q "$pkgname-$pkgver-$pkgrel-$current_arch"; then
-							to_add="$to_add $pkg"
-						else
-							warning "$pkgfile does not match PKGBUILD in $svnrepo"
-						fi
-					else
-						warning "Package $pkgbase not found in $svnrepo"
-					fi
-				fi
-			done
-		fi
-
-		if [ -n "$to_add" -o -n "$to_add_any" ]; then
-			cd "$WORKDIR/build/"
-			for f in $to_add $to_add_any; do /bin/cp "$f" .; done
-
-			pkgs=""
-			for pkg in $to_add $to_add_any; do pkgs="$pkgs $(basename $pkg)"; done
-
-			/usr/bin/repo-add -q "$reponame-$current_arch$DBEXT" $pkgs >/dev/null
-		else
-			rm -f "build/$reponame-$current_arch$DBEXT"
-			error "Errors found when adding packages"
-		fi
-	else
-		warning "No packages to add"
-	fi
-
-	# if non empty, move all build dirs
-	if [ $(/bin/ls "$WORKDIR/build/" 2>/dev/null | wc -l) != 0 ]; then
-		if [ $(getpkgfiles "$WORKDIR/build/"*-$current_arch$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
-			for f in "$WORKDIR/build/"*-$current_arch$PKGEXT; do
-				/bin/chmod 664 "$f" &>/dev/null
-				if ! /bin/cp "$f" "$poolpath/"; then
-					die "failure while copying files to $poolpath"
-				fi
-				fname="$(basename $f)"
-				if ! ln -s "$poolrel/$fname" "$ftppath/$fname"; then
-					die "failure symlinking $fname to $ftppath"
-				fi
-			done
-		fi
-		if [ $(getpkgfiles "$WORKDIR/build/"*-any$PKGEXT 2>/dev/null | wc -l) != 0 ]; then
-			for f in "$WORKDIR/build/"*-any$PKGEXT; do
-				/bin/chmod 664 "$f" &>/dev/null
-				fname="$(basename $f)"
-				if ! /bin/cp "$f" "$poolpath/"; then
-					die "failure while copying files to $poolpath"
-				fi
-
-				if ! ln -s "$poolrel/$fname" "$ftppath/$fname"; then
-					die "failure symlinking $fname to $ftppath"
-				fi
-			done
-		fi
-		if ! /bin/cp "$WORKDIR/build/$reponame-$current_arch$DBEXT" "$ftppath/$reponame$DBEXT"; then
-			die "failed to move repository $reponame-$current_arch".
-		fi
-		ln -sf "$reponame$DBEXT" "$ftppath/$reponame${DBEXT%.tar.*}"
-	else
-		warning "Nothing to copy, no work done"
-	fi
-
-	if [ -n "$to_add" ]; then
-		/bin/rm $to_add
-	fi
-
-	repo_unlock $reponame $current_arch
 done
 
-if [ -n "$to_add_any" ]; then
-	/bin/rm $to_add_any
-fi
+for repo in ${repos[@]}; do
+	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXT} 2>/dev/null))
+	for pkgarch in ${ARCHES[@]}; do
+		msg "Updating [${repo}] (${pkgarch})..."
+		add_pkgs=()
+		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-${pkgarch}${PKGEXT} 2>/dev/null))
+		for pkg in ${arch_pkgs[@]} ${any_pkgs[@]}; do
+			pkgfile="$(basename ${pkg})"
+			msg2 "${pkgfile}"
+			# any packages might have been moved by the previous run
+			if [ -f "${pkg}" ]; then
+				mv "${pkg}" "$FTP_BASE/$(get_pkgpool_for_host)"
+			fi
+			ln -s "../../../$(get_pkgpool_for_host)/${pkgfile}" "$FTP_BASE/$repo/os/${pkgarch}"
+			add_pkgs[${#add_pkgs[*]}]=${pkgfile}
+		done
+		pushd "$FTP_BASE/$repo/os/${pkgarch}" >/dev/null
+		/usr/bin/repo-add -q "$repo$DBEXT" ${add_pkgs[@]} >/dev/null \
+			|| die "Could not add packages"
+		popd >/dev/null
+	done
+done
 
-# vim: set ts=4 sw=4 noet ft=sh:
+for repo in ${repos[@]}; do
+	for pkgarch in ${ARCHES[@]}; do
+		repo_unlock ${repo} ${pkgarch}
+	done
+done

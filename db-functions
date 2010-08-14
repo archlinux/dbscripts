@@ -211,6 +211,18 @@ getpkgver() {
 	echo "$_ver"
 }
 
+getpkgarch() {
+	local _ver
+
+	_ver="$(_grep_pkginfo "$1" "^arch")"
+	if [ -z "$_ver" ]; then
+		error "Package '$1' has no arch in the PKGINFO. Fail!"
+		exit 1
+	fi
+
+	echo "$_ver"
+}
+
 getpkgfile() {
 	if [[ ${#} -ne 1 ]]; then
 		error 'No canonical package found!'
@@ -240,16 +252,40 @@ getpkgfiles() {
 	echo ${@}
 }
 
-#check_pkg_arch pkgfile arch
-check_pkg_arch () {
-	local _arch
-	_arch="$(_grep_pkginfo "$1" "^arch")"
+check_pkgfile() {
+	local pkgfile=$1
 
-	if [ -z "$_arch" ]; then
-		error "Package '$1' has no arch in the PKGINFO. Fail!"
+	local pkgname="$(getpkgname ${pkgfile})"
+	[ $? -ge 1 ] && return 1
+	local pkgver="$(getpkgver ${pkgfile})"
+	[ $? -ge 1 ] && return 1
+	local pkgarch="$(getpkgarch ${pkgfile})"
+	[ $? -ge 1 ] && return 1
+
+	if echo "$(basename ${pkgfile})" | grep -q "${pkgname}-${pkgver}-${pkgarch}"; then
+		return 0
+	else
 		return 1
 	fi
-	if [ "$_arch" = "$2" ]; then
+}
+
+check_pkgsvn() {
+	local pkgfile="${1}"
+	local pkgbase="$(getpkgbase $pkg)"
+	[ $? -ge 1 ] && return 1
+	local pkgarch="$(getpkgarch ${pkgfile})"
+	[ $? -ge 1 ] && return 1
+	local repo="${2}"
+
+	if [ ! -f "${WORKDIR}/pkgbuilds/${pkgbase}" ]; then
+		mkdir -p "${WORKDIR}/pkgbuilds"
+		svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}/PKGBUILD" \
+			"${WORKDIR}/pkgbuilds/${pkgbase}" >/dev/null
+		[ $? -ge 1 ] && return 1
+	fi
+
+	local pkgver="$(. "${WORKDIR}/pkgbuilds/${pkgbase}"; echo "${pkgver}-${pkgrel}")"
+	if echo "$(basename ${pkgfile})" | grep -q "${pkgver}-${pkgarch}"; then
 		return 0
 	else
 		return 1

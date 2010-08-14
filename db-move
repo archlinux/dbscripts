@@ -13,7 +13,7 @@ repofrom="$2"
 repoto="$3"
 arch="$4"
 if [ "${arch}" == 'any' ]; then
-	tarches=('i686' 'x86_64')
+	tarches=(${ARCHES[@]})
 else
 	tarches=("${arch}")
 fi

@@ -3,35 +3,44 @@
 . "$(dirname $0)/db-functions"
 . "$(dirname $0)/config"
 
-case "$0" in
-    *64)
-    _arch="x86_64"
-    ;;
-    *)
-    _arch="i686"
-    ;;
-esac
+if [ $# -lt 1 ]; then
+	msg "usage: $(basename $0) <pkgname|pkgbase> ..."
+	exit 1
+fi
 
-cd "${WORKDIR}"
-/usr/bin/svn checkout -N $SVNREPO checkout
-cd checkout
 
-for pkg in $*; do
-    moved=0
-    /usr/bin/svn up -q ${pkg}
-    if [ -f "${pkg}/repos/testing-${_arch}/PKGBUILD" ]; then
-        for repo in core extra; do
-            if [ -f "${pkg}/repos/${repo}-${_arch}/PKGBUILD" ]; then
-                msg "Moving package '${pkg}': testing-${_arch} -> ${repo}-${_arch}"
-                $(dirname $0)/db-move "${pkg}" "testing" "${repo}" "${_arch}"
-                moved=1
-                break
-            fi
-        done
-        if [ ${moved} -eq 0 ]; then
-            warning "${pkg} is only in testing-${_arch}, cannot determine where to move it"
-        fi
-    else
-        warning "${pkg} is not in testing-${_arch}"
-    fi
+declare -A pkgs
+
+for pkgbase in $*; do
+	if [ ! -d "${WORKDIR}/${pkgbase}" ]; then
+		/usr/bin/svn export -q "${SVNREPO}/${pkgbase}/repos" "${WORKDIR}/${pkgbase}" >/dev/null
+
+		found_source=false
+		for pkgarch in ${ARCHES[@]} 'any'; do
+			svnrepo_from="${WORKDIR}/${pkgbase}/testing-${pkgarch}"
+			if [ -r "${svnrepo_from}/PKGBUILD" ]; then
+				found_source=true
+				break
+			fi
+		done
+		${found_source} || die "${pkgbase} not found in [testing]"
+		found_target=false
+		for pkgarch in ${ARCHES[@]} 'any'; do
+			for repo in 'core' 'extra'; do
+				svnrepo_to="${WORKDIR}/${pkgbase}/${repo}-${pkgarch}"
+				if [ -r "${svnrepo_to}/PKGBUILD" ]; then
+					found_target=true
+					pkgs[${repo}]+="${pkgbase} "
+					break 2
+				fi
+			done
+		done
+		${found_target} || die "${pkgbase} neither found in [core] nor [extra]"
+	fi
+done
+
+for repo in  'core' 'extra'; do
+	if [ -n "${pkgs[${repo}]}" ]; then
+		"$(dirname $0)/db-move" 'testing' "${repo}" ${pkgs[${repo}]}
+	fi
 done

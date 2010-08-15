@@ -151,9 +151,7 @@ testMoveSimplePackages() {
 
 	../db-update
 
-	for arch in ${arches[@]}; do
-		../db-move testing extra ${arch} pkg-simple-a
-	done
+	../db-move testing extra pkg-simple-a
 
 	for arch in ${arches[@]}; do
 		checkPackage extra pkg-simple-a-1-1-${arch}.pkg.tar.xz ${arch}
@@ -172,7 +170,7 @@ testMoveAnyPackages() {
 	done
 
 	../db-update
-	../db-move testing extra any pkg-any-a
+	../db-move testing extra pkg-any-a
 
 	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz
 	checkRemovedAnyPackage testing pkg-any-a
@@ -193,10 +191,7 @@ testMoveSplitPackages() {
 	done
 
 	../db-update
-
-	for arch in ${arches[@]}; do
-		../db-move testing extra ${arch} pkg-split-a
-	done
+	../db-move testing extra pkg-split-a
 
 	for arch in ${arches[@]}; do
 		for pkg in "${pkgdir}/pkg-split-a"/*-${arch}.pkg.tar.*; do
@@ -336,11 +331,7 @@ testMovePackagesWithoutPool() {
 
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
-	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			../db-move testing extra ${arch} ${pkgbase}
-		done
-	done
+	../db-move testing extra ${pkgs[@]}
 
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
@@ -377,9 +368,7 @@ testMoveAnyPackagesWithoutPool() {
 
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
-	for pkgbase in ${pkgs[@]}; do
-		../db-move testing extra any ${pkgbase}
-	done
+	../db-move testing extra ${pkgs[@]}
 
 	../cron-jobs/ftpdir-cleanup >/dev/null
 

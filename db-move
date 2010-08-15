@@ -1,88 +1,97 @@
 #!/bin/bash
 
-if [ $# -ne 4 ]; then
-	msg "usage: $(basename $0) <repo-from> <repo-to> <arch> <pkgname|pkgbase> ..."
-	exit 1
-fi
-
 . "$(dirname $0)/db-functions"
 . "$(dirname $0)/config"
 
-args=(${@})
-repofrom="${args[0]}"
-repoto="${args[1]}"
-arch="${args[2]}"
-# TODO: make db-move arch-independent?
-if [ "${arch}" == 'any' ]; then
-	tarches=(${ARCHES[@]})
-else
-	tarches=("${arch}")
-fi
-
-ftppath_from="$FTP_BASE/$repofrom/os/"
-ftppath_to="$FTP_BASE/$repoto/os/"
-svnrepo_from="$repofrom-$arch"
-svnrepo_to="$repoto-$arch"
-
-if ! check_repo_permission $repoto || ! check_repo_permission $repofrom; then
-	error "You don't have permission to move packages from ${repofrom} to ${repoto}"
+if [ $# -lt 3 ]; then
+	msg "usage: $(basename $0) <repo-from> <repo-to> <pkgname|pkgbase> ..."
 	exit 1
 fi
-# TODO: add other tests before touch the repos
 
-repo_lock $repoto $arch || exit 1
-repo_lock $repofrom $arch || exit 1
+args=(${@})
+repo_from="${args[0]}"
+repo_to="${args[1]}"
+ftppath_from="${FTP_BASE}/${repo_from}/os/"
+ftppath_to="${FTP_BASE}/${repo_to}/os/"
 
-pushd "$WORKDIR" >/dev/null
-/usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
-pushd checkout >/dev/null
+if ! check_repo_permission $repo_to || ! check_repo_permission $repo_from; then
+	die "You don't have permission to move packages from ${repo_from} to ${repo_to}"
+fi
 
-add_pkgs=()
-remove_pkgs=()
-for pkgbase in ${args[@]:3}; do
-	# TODO: optimize
-	/usr/bin/svn up -q $pkgbase
-	if [ -d "$pkgbase/repos/$svnrepo_from" ]; then
-		pkgname=($(. "$pkgbase/repos/$svnrepo_from/PKGBUILD"; echo ${pkgname[@]}))
-		pkgver=$(. "$pkgbase/repos/$svnrepo_from/PKGBUILD"; echo ${pkgver})
-		pkgrel=$(. "$pkgbase/repos/$svnrepo_from/PKGBUILD"; echo ${pkgrel})
-
-		msg "Moving $pkgbase from $repofrom to $repoto..."
-		if [ -d "$pkgbase/repos/$svnrepo_to" ]; then
-			/usr/bin/svn rm --force -q "$pkgbase/repos/$svnrepo_to"
-			/usr/bin/svn commit -q -m "$(basename $0): $pkgbase removed by $(id -un) for move to $repoto"
+/usr/bin/svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
+for pkgbase in ${args[@]:2}; do
+	/usr/bin/svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
+	for pkgarch in ${ARCHES[@]} 'any'; do
+		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
+		if [ -r "${svnrepo_from}/PKGBUILD" ]; then
+			continue 2
 		fi
+	done
+	die "${pkgbase} not found in ${repo_from}"
+done
 
-		/usr/bin/svn mv -q -r HEAD "$pkgbase/repos/$svnrepo_from" "$pkgbase/repos/$svnrepo_to"
-		/usr/bin/svn commit -q -m "$(basename $0): moved $pkgbase from [$repofrom] to [$repoto] ($arch)"
+# TODO: this might lock too much (architectures)
+for pkgarch in ${ARCHES[@]}; do
+	repo_lock ${repo_to} ${pkgarch} || exit 1
+	repo_lock ${repo_from} ${pkgarch} || exit 1
+done
 
-		for i in ${pkgname[@]}; do
-			for tarch in ${tarches[@]}; do
-				pkgpath=$(getpkgfile "$ftppath_from/${tarch}/"$i-$pkgver-$pkgrel-$arch$PKGEXT)
-				pkgfile=$(basename "${pkgpath}")
+msg "Moving packages from [${repo_from}] to [${repo_to}]..."
 
-				# copy package to pool if needed
-				# TODO: can be removed once every package has been moved to the package pool
-				if [ ! -f $FTP_BASE/$(get_pkgpool_for_host)/$pkgfile ]; then
-					cp $pkgpath $FTP_BASE/$(get_pkgpool_for_host)
-				fi
-				ln -s "../../../$(get_pkgpool_for_host)/${pkgfile}" $ftppath_to/${tarch}/
+declare -A add_pkgs
+declare -A remove_pkgs
+for pkgbase in ${args[@]:2}; do
+	for pkgarch in ${ARCHES[@]} 'any'; do
+		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
+		svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
+
+		if [ -f "${svnrepo_from}/PKGBUILD" ]; then
+			if [ "${pkgarch}" == 'any' ]; then
+				tarches=(${ARCHES[@]})
+			else
+				tarches=("${pkgarch}")
+			fi
+			msg2 "${pkgbase} ($(echo ${tarches[@]}))"
+			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
+			pkgver=$(. "${svnrepo_from}/PKGBUILD"; echo "${pkgver}-${pkgrel}")
+
+			if [ -d "${svnrepo_to}" ]; then
+				/usr/bin/svn rm --force -q "${svnrepo_to}"
+				/usr/bin/svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "$(basename $0): ${pkgbase} removed by $(id -un) for move to [${repo_to}] (${pkgarch})"
+			fi
+
+			/usr/bin/svn mv -q -r HEAD "${svnrepo_from}" "${svnrepo_to}"
+			/usr/bin/svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "$(basename $0): moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${pkgarch})"
+
+			for pkgname in ${pkgnames[@]}; do
+				for tarch in ${tarches[@]}; do
+					pkgpath=$(getpkgfile "${ftppath_from}/${tarch}/"${pkgname}-${pkgver}-${pkgarch}${PKGEXT})
+					pkgfile=$(basename "${pkgpath}")
+
+					# copy package to pool if needed
+					# TODO: can be removed once every package has been moved to the package pool
+					if [ ! -f ${FTP_BASE}/$(get_pkgpool_for_host)/${pkgfile} ]; then
+						cp ${pkgpath} ${FTP_BASE}/$(get_pkgpool_for_host)
+					fi
+					ln -s "../../../$(get_pkgpool_for_host)/${pkgfile}" ${ftppath_to}/${tarch}/
+					add_pkgs[${tarch}]+="${FTP_BASE}/$(get_pkgpool_for_host)/${pkgfile} "
+					remove_pkgs[${tarch}]+="${pkgname} "
+				done
 			done
-			add_pkgs[${#add_pkgs[*]}]="$FTP_BASE/$(get_pkgpool_for_host)/${pkgfile}"
-			remove_pkgs[${#remove_pkgs[*]}]=${i}
-		done
-	else
-		die "$pkgbase is not in repo $repofrom"
+		fi
+	done
+done
+
+for tarch in ${ARCHES[@]}; do
+	if [ -n "${add_pkgs[${tarch}]}" ]; then
+		/usr/bin/repo-add -q "${ftppath_to}/${tarch}/${repo_to}${DBEXT}" ${add_pkgs[${tarch}]} >/dev/null \
+			|| die "Error in repo-add ${add_pkgs[${tarch}]}"
+		/usr/bin/repo-remove -q "${ftppath_from}/${tarch}/${repo_from}${DBEXT}" ${remove_pkgs[${tarch}]} >/dev/null \
+			|| die "Error in repo-remove ${remove_pkgs[${tarch}]}"
 	fi
 done
 
-for tarch in ${tarches[@]}; do
-	/usr/bin/repo-add -q "$ftppath_to/${tarch}/$repoto$DBEXT" ${add_pkgs[@]} >/dev/null || die "Error in repo-add"
-	/usr/bin/repo-remove -q "$ftppath_from/${tarch}/$repofrom$DBEXT" ${remove_pkgs[@]} >/dev/null || die "Error in repo-remove"
+for pkgarch in ${ARCHES[@]}; do
+	repo_unlock ${repo_from} ${pkgarch}
+	repo_unlock ${repo_to} ${pkgarch}
 done
-
-popd >/dev/null
-popd >/dev/null
-
-repo_unlock $repoto $arch || exit 1
-repo_unlock $repofrom $arch || exit 1

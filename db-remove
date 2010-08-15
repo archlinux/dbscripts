@@ -22,7 +22,7 @@ fi
 
 repo_lock $reponame $arch || exit 1
 
-msg "Removing $packagebase from $reponame..."
+msg "Removing $packagebase from [$reponame]..."
 cd "$WORKDIR"
 /usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
 cd checkout

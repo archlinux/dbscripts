@@ -49,14 +49,14 @@ for repo in ${repos[@]}; do
 done
 
 for repo in ${repos[@]}; do
+	msg "Updating [${repo}]..."
 	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXT} 2>/dev/null))
 	for pkgarch in ${ARCHES[@]}; do
-		msg "Updating [${repo}] (${pkgarch})..."
 		add_pkgs=()
 		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-${pkgarch}${PKGEXT} 2>/dev/null))
 		for pkg in ${arch_pkgs[@]} ${any_pkgs[@]}; do
 			pkgfile="$(basename ${pkg})"
-			msg2 "${pkgfile}"
+			msg2 "${pkgfile} (${pkgarch})"
 			# any packages might have been moved by the previous run
 			if [ -f "${pkg}" ]; then
 				mv "${pkg}" "$FTP_BASE/$(get_pkgpool_for_host)"

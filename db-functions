@@ -103,7 +103,7 @@ cleanup() {
 		repo=${l%.*}
 		arch=${l#*.}
 		if [ -d "$TMPDIR/.repolock.$repo.$arch" ]; then
-			msg "Removing left over lock from $repo/$arch"
+			msg "Removing left over lock from [${repo}] (${arch})"
 			repo_unlock $repo $arch
 		fi
 	done
@@ -151,7 +151,7 @@ repo_lock () {
 	while [ $_count -le $_trial ] || $_lockblock ; do
 		if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
 			_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
-			warning "Repo $1-$2 is already locked by $_owner. " \
+			warning "Repo [${1}] (${2}) is already locked by $_owner. " \
 			        "Retrying in $LOCK_DELAY seconds..."
 		else
 			LOCKS[${#LOCKS[*]}]="$1.$2"
@@ -162,14 +162,14 @@ repo_lock () {
 		let _count=$_count+1
 	done
 
-	error "Repo $1-$2 is already locked by $_owner. Giving up!"
+	error "Repo [${1}] (${2}) is already locked by $_owner. Giving up!"
 	return 1
 }
 
 repo_unlock () { #repo_unlock <repo-name> <arch>
 	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	if [ ! -d "$LOCKDIR" ]; then
-		warning "Repo lock $1-$2 was not locked!"
+		warning "Repo lock [${1}] (${2}) was not locked!"
 		restore_umask
 		return 1
 	else

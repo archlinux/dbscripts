@@ -75,8 +75,9 @@ releasePackage() {
 
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/ >/dev/null
 	archrelease ${repo}-${arch} >/dev/null 2&>1
+	pkgver=$(. PKGBUILD; echo "${pkgver}-${pkgrel}")
 	popd >/dev/null
-	cp "${pkgdir}/${pkgbase}"/*.pkg.tar.* "${STAGING}"/${repo}/
+	cp "${pkgdir}/${pkgbase}"/*-${pkgver}-${arch}.pkg.tar.* "${STAGING}"/${repo}/
 }
 
 checkAnyPackage() {

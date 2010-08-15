@@ -11,41 +11,37 @@ fi
 # Find repos with packages to release
 repos=($(find  "${STAGING}" -mindepth 1 -type d ! -empty -printf '%f ' 2>/dev/null))
 if [ $? -ge 1 ]; then
-	error "Could not read ${STAGING}"
-	exit 1
+	die "Could not read ${STAGING}"
 fi
-
-for repo in ${repos[@]}; do
-	if ! check_repo_permission "${repo}"; then
-		error "You don't have permission to update packages in ${repo}"
-		exit 1
-	fi
-	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXT}))
-	if [ $? -eq 0 ]; then
-		for pkg in ${pkgs[@]}; do
-			if ! check_pkgfile "${pkg}"; then
-				error "Package ${repo}/$(basename ${pkg}) is not consistent with its meta data"
-				exit 1
-			fi
-			if ! check_pkgsvn "${pkg}" "${repo}"; then
-				error "Package ${repo}/$(basename ${pkg}) is not consistent with svn repository"
-				exit 1
-			fi
-			if [ -f "${FTP_BASE}/$(get_pkgpool_for_host)/$(basename ${pkg})" ]; then
-				error "Package ${repo}/$(basename pkg) already exists in ${FTP_BASE}/$(get_pkgpool_for_host)"
-				exit 1
-			fi
-		done
-	else
-		exit 1
-	fi
-done
 
 # TODO: this might lock too much (architectures)
 for repo in ${repos[@]}; do
 	for pkgarch in ${ARCHES[@]}; do
 		repo_lock ${repo} ${pkgarch} || exit 1
 	done
+done
+
+# check if packages are valid
+for repo in ${repos[@]}; do
+	if ! check_repo_permission "${repo}"; then
+		die "You don't have permission to update packages in ${repo}"
+	fi
+	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXT}))
+	if [ $? -eq 0 ]; then
+		for pkg in ${pkgs[@]}; do
+			if ! check_pkgfile "${pkg}"; then
+				die "Package ${repo}/$(basename ${pkg}) is not consistent with its meta data"
+			fi
+			if ! check_pkgsvn "${pkg}" "${repo}"; then
+				die "Package ${repo}/$(basename ${pkg}) is not consistent with svn repository"
+			fi
+			if [ -f "${FTP_BASE}/$(get_pkgpool_for_host)/$(basename ${pkg})" ]; then
+				die "Package ${repo}/$(basename pkg) already exists in ${FTP_BASE}/$(get_pkgpool_for_host)"
+			fi
+		done
+	else
+		die "Could not read ${STAGING}"
+	fi
 done
 
 for repo in ${repos[@]}; do

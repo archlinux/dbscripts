@@ -8,6 +8,13 @@ if [ $# -lt 1 ]; then
 	exit 1
 fi
 
+# Lock everything to reduce  possibility of interfering task between the different repo-updates
+script_lock
+for repo in  'core' 'extra' 'testing'; do
+	for pkgarch in ${ARCHES[@]}; do
+		repo_lock ${repo} ${pkgarch} || exit 1
+	done
+done
 
 declare -A pkgs
 
@@ -39,8 +46,16 @@ for pkgbase in $*; do
 	fi
 done
 
+for pkgarch in ${ARCHES[@]}; do
+	repo_unlock 'testing' ${pkgarch}
+done
 for repo in  'core' 'extra'; do
+	for pkgarch in ${ARCHES[@]}; do
+		repo_unlock ${repo} ${pkgarch}
+	done
 	if [ -n "${pkgs[${repo}]}" ]; then
 		"$(dirname $0)/db-move" 'testing' "${repo}" ${pkgs[${repo}]}
 	fi
 done
+
+script_unlock

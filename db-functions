@@ -151,8 +151,8 @@ repo_lock () {
 	while [ $_count -le $_trial ] || $_lockblock ; do
 		if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
 			_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
-			warning "Repo [${1}] (${2}) is already locked by $_owner. " \
-			        "Retrying in $LOCK_DELAY seconds..."
+			warning "Repo [${1}] (${2}) is already locked by $_owner. "
+			msg2 "Retrying in $LOCK_DELAY seconds..."
 		else
 			LOCKS[${#LOCKS[*]}]="$1.$2"
 			set_umask

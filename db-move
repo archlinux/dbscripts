@@ -18,22 +18,35 @@ if ! check_repo_permission $repo_to || ! check_repo_permission $repo_from; then
 	die "You don't have permission to move packages from ${repo_from} to ${repo_to}"
 fi
 
+# TODO: this might lock too much (architectures)
+for pkgarch in ${ARCHES[@]}; do
+	repo_lock ${repo_to} ${pkgarch} || exit 1
+	repo_lock ${repo_from} ${pkgarch} || exit 1
+done
+
+# check if packages to be moved exist in svn and ftp dir
 /usr/bin/svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
 for pkgbase in ${args[@]:2}; do
 	/usr/bin/svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
 	for pkgarch in ${ARCHES[@]} 'any'; do
 		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
 		if [ -r "${svnrepo_from}/PKGBUILD" ]; then
+			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
+			pkgver=$(. "${svnrepo_from}/PKGBUILD"; echo "${pkgver}-${pkgrel}")
+			if [ "${pkgarch}" == 'any' ]; then
+				tarches=(${ARCHES[@]})
+			else
+				tarches=("${pkgarch}")
+			fi
+			for pkgname in ${pkgnames[@]}; do
+				for tarch in ${tarches[@]}; do
+					getpkgfile "${ftppath_from}/${tarch}/"${pkgname}-${pkgver}-${pkgarch}${PKGEXT} >/dev/null
+				done
+			done
 			continue 2
 		fi
 	done
 	die "${pkgbase} not found in ${repo_from}"
-done
-
-# TODO: this might lock too much (architectures)
-for pkgarch in ${ARCHES[@]}; do
-	repo_lock ${repo_to} ${pkgarch} || exit 1
-	repo_lock ${repo_from} ${pkgarch} || exit 1
 done
 
 msg "Moving packages from [${repo_from}] to [${repo_to}]..."

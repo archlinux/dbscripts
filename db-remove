@@ -1,42 +1,23 @@
 #!/bin/bash
 
 if [ $# -ne 3 ]; then
-	msg "usage: $(basename $0) <pkgname|packagebase> <reponame> <arch>"
+	msg "usage: $(basename $0) <pkgname|pkgbase> <repo> <arch>"
 	exit 1
 fi
 
 . "$(dirname $0)/db-functions"
 . "$(dirname $0)/config"
 
-packagebase="$1"
-reponame="$2"
+pkgbase="$1"
+repo="$2"
 arch="$3"
 
-ftppath="$FTP_BASE/$reponame/os"
-svnrepo="$reponame-$arch"
+ftppath="$FTP_BASE/$repo/os"
+svnrepo="$repo-$arch"
 
-if ! check_repo_permission $reponame; then
-	error "You don't have permission to remove packages from ${reponam}"
-	exit 1
+if ! check_repo_permission $repo; then
+	die "You don't have permission to remove packages from ${reponam}"
 fi
-
-repo_lock $reponame $arch || exit 1
-
-msg "Removing $packagebase from [$reponame]..."
-cd "$WORKDIR"
-/usr/bin/svn checkout -q -N $SVNREPO checkout >/dev/null
-cd checkout
-
-/usr/bin/svn up -q $packagebase
-if [ -d "$packagebase/repos/$svnrepo" ]; then
-	pkgname=($(. "$packagebase/repos/$svnrepo/PKGBUILD"; echo ${pkgname[@]}))
-	/usr/bin/svn rm --force -q "$packagebase/repos/$svnrepo"
-	/usr/bin/svn commit -q -m "$(basename $0): $packagebase removed by $(id -un)"
-else
-	die "$packagebase not found in $svnrepo"
-fi
-
-cd "$WORKDIR"
 
 if [ "$arch" == "any" ]; then
 	tarches=(${ARCHES[@]})
@@ -44,15 +25,28 @@ else
 	tarches=("$arch")
 fi
 
+for tarch in ${tarches[@]}; do
+	repo_lock $repo $tarch || exit 1
+done
+
+msg "Removing $pkgbase from [$repo]..."
+/usr/bin/svn checkout -q "${SVNREPO}/${pkgbase}" "${WORKDIR}/svn/${pkgbase}" >/dev/null
+
+if [ -d "${WORKDIR}/svn/$pkgbase/repos/$svnrepo" ]; then
+	pkgnames=($(. "${WORKDIR}/svn/$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgname[@]}))
+	/usr/bin/svn rm --force -q "${WORKDIR}/svn/$pkgbase/repos/$svnrepo"
+	/usr/bin/svn commit -q "${WORKDIR}/svn/$pkgbase" -m "$(basename $0): $pkgbase removed by $(id -un)"
+else
+	die "$pkgbase not found in $svnrepo"
+fi
+
+
 # copy the db file into our working area
 for tarch in ${tarches[@]}; do
-	if [ ! -f "$ftppath/$tarch/$reponame$DBEXT" ]; then
+	if [ ! -f "$ftppath/$tarch/$repo$DBEXT" ]; then
 		die "No database found at '$ftppath/$tarch', nothing more to do"
 	fi
 
-	/usr/bin/repo-remove -q "$ftppath/$tarch/$reponame$DBEXT" ${pkgname[@]} >/dev/null
+	/usr/bin/repo-remove -q "$ftppath/$tarch/$repo$DBEXT" ${pkgnames[@]} >/dev/null
+	repo_unlock $repo $tarch
 done
-
-repo_unlock $reponame $arch || exit 1
-
-# vim: set ts=4 sw=4 noet ft=sh:

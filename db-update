@@ -63,7 +63,7 @@ for repo in ${repos[@]}; do
 		if [ ${#add_pkgs[@]} -ge 1 ]; then
 			pushd "$FTP_BASE/$repo/os/${pkgarch}" >/dev/null
 			/usr/bin/repo-add -q "$repo$DBEXT" ${add_pkgs[@]} >/dev/null \
-				|| die "Could not add packages"
+				|| die "repo-add $repo$DBEXT ${add_pkgs[@]}"
 			popd >/dev/null
 		fi
 	done

@@ -304,6 +304,7 @@ check_pkgsvn() {
 	fi
 
 	local pkgver="$(. "${WORKDIR}/pkgbuilds/${pkgbase}"; echo "${pkgver}-${pkgrel}")"
+	[ -z "${pkgver}" ] && return 1
 	if echo "$(basename ${pkgfile})" | grep -q "${pkgver}-${pkgarch}"; then
 		return 0
 	else

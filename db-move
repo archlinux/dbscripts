@@ -32,12 +32,21 @@ for pkgbase in ${args[@]:2}; do
 		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
 		if [ -r "${svnrepo_from}/PKGBUILD" ]; then
 			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
+			if [ ${#pkgnames[@]} -lt 1 ]; then
+				die "Could not read pkgname"
+			fi
+
 			pkgver=$(. "${svnrepo_from}/PKGBUILD"; echo "${pkgver}-${pkgrel}")
+			if [ -z "${pkgver}" ]; then
+				die "Could not read pkgver"
+			fi
+
 			if [ "${pkgarch}" == 'any' ]; then
 				tarches=(${ARCHES[@]})
 			else
 				tarches=("${pkgarch}")
 			fi
+
 			for pkgname in ${pkgnames[@]}; do
 				for tarch in ${tarches[@]}; do
 					getpkgfile "${ftppath_from}/${tarch}/"${pkgname}-${pkgver}-${pkgarch}${PKGEXT} >/dev/null
@@ -98,9 +107,9 @@ done
 for tarch in ${ARCHES[@]}; do
 	if [ -n "${add_pkgs[${tarch}]}" ]; then
 		/usr/bin/repo-add -q "${ftppath_to}/${tarch}/${repo_to}${DBEXT}" ${add_pkgs[${tarch}]} >/dev/null \
-			|| die "Error in repo-add ${add_pkgs[${tarch}]}"
+			|| error "repo-add ${tarch}/${repo_to}${DBEXT} ${add_pkgs[${tarch}]}"
 		/usr/bin/repo-remove -q "${ftppath_from}/${tarch}/${repo_from}${DBEXT}" ${remove_pkgs[${tarch}]} >/dev/null \
-			|| die "Error in repo-remove ${remove_pkgs[${tarch}]}"
+			|| error "repo-remove ${tarch}/${repo_from}${DBEXT} ${remove_pkgs[${tarch}]}"
 	fi
 done
 

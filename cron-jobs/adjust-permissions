@@ -13,6 +13,8 @@ get_dir_owner() {
 			echo "ftp:ftp-extra" ;;
 		testing)
 			echo "ftp:ftp-extra" ;;
+		staging)
+			echo "ftp:ftp-extra" ;;
 		community)
 			echo "root:tusers" ;;
 		community-testing)

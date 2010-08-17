@@ -5,7 +5,7 @@
 
 ftpbase="${FTP_BASE}"
 srcbase="${FTP_BASE}/sources"
-repos=(core extra testing community community-testing)
+repos=(core extra testing community community-testing staging)
 
 script_lock
 

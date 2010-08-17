@@ -315,7 +315,7 @@ get_repos_for_host() {
 	if [ "$(hostname)" = "sigurd" ]; then
 		echo "community community-testing"
 	else
-		echo "core extra testing"
+		echo "core extra testing staging"
 	fi
 }
 

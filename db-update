@@ -36,7 +36,7 @@ for repo in ${repos[@]}; do
 				die "Package ${repo}/$(basename ${pkg}) is not consistent with svn repository"
 			fi
 			if [ -f "${FTP_BASE}/$(get_pkgpool_for_host)/$(basename ${pkg})" ]; then
-				die "Package ${repo}/$(basename pkg) already exists in ${FTP_BASE}/$(get_pkgpool_for_host)"
+				die "Package ${repo}/$(basename ${pkg}) already exists in ${FTP_BASE}/$(get_pkgpool_for_host)"
 			fi
 		done
 	else

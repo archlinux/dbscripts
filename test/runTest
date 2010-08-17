@@ -42,6 +42,12 @@ testAddSimplePackages() {
 	done
 }
 
+testAddSingleSimplePackage() {
+	releasePackage extra 'pkg-simple-a' 'i686'
+	../db-update
+	checkPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+}
+
 testAddAnyPackages() {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase

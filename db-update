@@ -60,10 +60,12 @@ for repo in ${repos[@]}; do
 			ln -s "../../../$(get_pkgpool_for_host)/${pkgfile}" "$FTP_BASE/$repo/os/${pkgarch}"
 			add_pkgs[${#add_pkgs[*]}]=${pkgfile}
 		done
-		pushd "$FTP_BASE/$repo/os/${pkgarch}" >/dev/null
-		/usr/bin/repo-add -q "$repo$DBEXT" ${add_pkgs[@]} >/dev/null \
-			|| die "Could not add packages"
-		popd >/dev/null
+		if [ ${#add_pkgs[@]} -ge 1 ]; then
+			pushd "$FTP_BASE/$repo/os/${pkgarch}" >/dev/null
+			/usr/bin/repo-add -q "$repo$DBEXT" ${add_pkgs[@]} >/dev/null \
+				|| die "Could not add packages"
+			popd >/dev/null
+		fi
 	done
 done
 

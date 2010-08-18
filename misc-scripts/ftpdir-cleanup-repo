@@ -63,7 +63,7 @@ for arch in ${ARCHES[@]}; do
   cd "$ftppath"
 
   for pkg in $CLEANUP_TMPDIR/*; do
-    [ -f "${pkg}" ] || continue
+    [ ! -d "${pkg}" ] && continue
     filename=$(grep -A1 '^%FILENAME%$' "${pkg}/desc" | tail -n1)
 
     if [ ! -e "${filename}" ]; then

@@ -395,6 +395,42 @@ testMovePackagesWithoutPool() {
 	done
 }
 
+testUpdateAnyPackageWithoutPool() {
+	local pkgname='pkg-any-a'
+	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
+	local pkg2='pkg-any-a-1-2-any.pkg.tar.xz'
+	local arch
+
+
+	releasePackage extra pkg-any-a any
+	../db-update
+	# transform two packages to old style layout
+	mv -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg1}" "${FTP_BASE}/extra/os/any"
+	for arch in i686 x86_64; do
+		ln -sf "../any/${pkg1}" "${FTP_BASE}/extra/os/${arch}"
+	done
+
+	pushd "${TMP}/svn-packages-copy/${pkgname}/trunk/" >/dev/null
+	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
+	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
+	makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1
+	mv "${pkg2}" "${pkgdir}/${pkgname}/"
+	popd >/dev/null
+
+	releasePackage extra ${pkgname} any
+	../db-update
+	rm "${pkgdir}/${pkgname}/${pkg2}"
+
+	../cron-jobs/ftpdir-cleanup >/dev/null
+
+	checkAnyPackage extra "${pkg2}"
+
+	[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg1}" ] && fail "$(get_pkgpool_for_host)/${pkg1} found"
+	for arch in any i686 x86_64; do
+		[ -f "${FTP_BASE}/extra/os/${arch}/${pkg1}" ] && fail "extra/os/${arch}/${pkg1} found"
+	done
+}
+
 testMoveAnyPackagesWithoutPool() {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
@@ -427,6 +463,13 @@ testMoveAnyPackagesWithoutPool() {
 			checkAnyPackage extra $(basename ${pkg})
 		done
 		checkRemovedAnyPackage testing ${pkgbase}
+	done
+
+	for pkg in "${pkgdir}/${pkgs[0]}"/*-any.pkg.tar.*; do
+		pkg=$(basename $pkg)
+		for arch in any i686 x86_64; do
+			[ -f "${FTP_BASE}/testing/os/${arch}/${pkg}" ] && fail "testing/os/${arch}/${pkg} found"
+		done
 	done
 }
 

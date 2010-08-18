@@ -81,7 +81,7 @@ for repo in ${repos[@]}; do
 	fi
 	if [ -n "$(find "${FTP_BASE}/${repo}/os/any" -type d -empty)" ]; then
 		msg "Removing empty legacy directory ${repo}/os/any"
-		${CLEANUP_DRYRUN} && rmdir "${FTP_BASE}/${repo}/os/any"
+		${CLEANUP_DRYRUN} || rmdir "${FTP_BASE}/${repo}/os/any"
 		continue
 	fi
 	find "${FTP_BASE}/${repo}/os/any" -name "*${PKGEXT}" -printf '%f\n' | sort > "${WORKDIR}/any-${repo}"

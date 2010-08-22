@@ -19,6 +19,8 @@ get_dir_owner() {
 			echo "root:tusers" ;;
 		community-testing)
 			echo "root:tusers" ;;
+		multilib)
+			echo "root:tusers" ;;
 		pool/packages)
 			echo "ftp:ftp-extra" ;;
 		pool/community)

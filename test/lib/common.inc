@@ -31,9 +31,9 @@ setUp() {
 	#msg "Using ${TMP}"
 
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-{packages,community}-{copy,repo}}
-	mkdir -p "${TMP}/ftp/"{core,extra,community,testing,community-testing,staging}/os/{i686,any,x86_64}
+	mkdir -p "${TMP}/ftp/"{core,extra,community,testing,community-testing,staging,multilib}/os/{i686,any,x86_64}
 	mkdir -p "${TMP}/ftp/pool/"{packages,community}
-	mkdir -p "${TMP}/staging/"{core,extra,community,testing,community-testing,staging}
+	mkdir -p "${TMP}/staging/"{core,extra,community,testing,community-testing,staging,multilib}
 
 	msg 'Creating svn repository...'
 	svnadmin create "${TMP}/svn-packages-repo"

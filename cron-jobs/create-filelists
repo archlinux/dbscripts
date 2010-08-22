@@ -5,7 +5,7 @@
 
 reposdir=${FTP_BASE}
 targetdir=${FTP_BASE}
-repos=(core extra testing community community-testing staging)
+repos=(core extra testing community community-testing staging multilib)
 
 script_lock
 

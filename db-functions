@@ -314,7 +314,7 @@ check_pkgsvn() {
 
 get_repos_for_host() {
 	if [ "$(hostname)" = "sigurd" ]; then
-		echo "community community-testing"
+		echo "community community-testing multilib"
 	else
 		echo "core extra testing staging"
 	fi

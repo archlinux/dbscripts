@@ -29,6 +29,9 @@ for repo in ${repos[@]}; do
 	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXT}))
 	if [ $? -eq 0 ]; then
 		for pkg in ${pkgs[@]}; do
+			if [ -h "${pkg}" ]; then
+				die "Package ${repo}/$(basename ${pkg}) is a symbolic link"
+			fi
 			if ! check_pkgfile "${pkg}"; then
 				die "Package ${repo}/$(basename ${pkg}) is not consistent with its meta data"
 			fi

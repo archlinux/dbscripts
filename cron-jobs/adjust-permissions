@@ -20,7 +20,7 @@ get_dir_owner() {
 		community-testing)
 			echo "root:tusers" ;;
 		multilib)
-			echo "root:tusers" ;;
+			echo "root:multilib" ;;
 		pool/packages)
 			echo "ftp:ftp-extra" ;;
 		pool/community)

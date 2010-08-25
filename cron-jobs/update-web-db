@@ -25,7 +25,6 @@ echo "$cmd: Updating DB at $(date)" >> "${LOGOUT}"
 cd $SPATH
 for arch in ${ARCHES}; do
     for repo in ${REPOS}; do
-        echo "Updating ${repo}-${arch}"
 		case "$cmd" in
 			update-web-db)
 				dbfile="/srv/ftp/${repo}/os/${arch}/${repo}.db.tar.gz"
@@ -34,14 +33,17 @@ for arch in ${ARCHES}; do
 				dbfile="/srv/ftp/${repo}/os/${arch}/${repo}.files.tar.gz"
 				flags="--filesonly" ;;
 		esac
-		./manage.py reporead ${flags} ${arch} ${dbfile}
-        echo ""
+		if [[ -f $dbfile ]]; then
+			echo "Updating ${repo}-${arch}"
+			./manage.py reporead ${flags} ${arch} ${dbfile}
+			echo ""
+		fi
     done
-done >> "${LOGOUT}" 2>&1 
+done >> "${LOGOUT}" 2>&1
 
 echo "" >> "${LOGOUT}"
 
 # rotate the file if it is getting big (> 10M), overwriting any old backup
-if [[ $(stat -c%s update-web-db) -gt 10485760 ]]; then
+if [[ $(stat -c%s "${LOGOUT}") -gt 10485760 ]]; then
 	mv "${LOGOUT}" "${LOGOUT}.old"
 fi

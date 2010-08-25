@@ -23,8 +23,8 @@ echo "$cmd: Updating DB at $(date)" >> "${LOGOUT}"
 
 ## do the dirty, then output the result to a file.
 cd $SPATH
-for arch in ${ARCHES}; do
-    for repo in ${REPOS}; do
+for repo in ${REPOS}; do
+    for arch in ${ARCHES}; do
         case "$cmd" in
             update-web-db)
                 dbfile="/srv/ftp/${repo}/os/${arch}/${repo}.db.tar.gz"

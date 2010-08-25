@@ -15,8 +15,8 @@ LOGOUT="/tmp/archweb_update.log"
 # figure out what operation to perform
 cmd="$(basename $0)"
 if [[ $cmd != "update-web-db" && $cmd != "update-web-files-db" ]]; then
-	echo "Invalid command name '$cmd' specified!"
-	exit 1
+    echo "Invalid command name '$cmd' specified!"
+    exit 1
 fi
 
 echo "$cmd: Updating DB at $(date)" >> "${LOGOUT}"
@@ -25,19 +25,19 @@ echo "$cmd: Updating DB at $(date)" >> "${LOGOUT}"
 cd $SPATH
 for arch in ${ARCHES}; do
     for repo in ${REPOS}; do
-		case "$cmd" in
-			update-web-db)
-				dbfile="/srv/ftp/${repo}/os/${arch}/${repo}.db.tar.gz"
-				flags="" ;;
-			update-web-files-db)
-				dbfile="/srv/ftp/${repo}/os/${arch}/${repo}.files.tar.gz"
-				flags="--filesonly" ;;
-		esac
-		if [[ -f $dbfile ]]; then
-			echo "Updating ${repo}-${arch}"
-			./manage.py reporead ${flags} ${arch} ${dbfile}
-			echo ""
-		fi
+        case "$cmd" in
+            update-web-db)
+                dbfile="/srv/ftp/${repo}/os/${arch}/${repo}.db.tar.gz"
+                flags="" ;;
+            update-web-files-db)
+                dbfile="/srv/ftp/${repo}/os/${arch}/${repo}.files.tar.gz"
+                flags="--filesonly" ;;
+        esac
+        if [[ -f $dbfile ]]; then
+            echo "Updating ${repo}-${arch}"
+            ./manage.py reporead ${flags} ${arch} ${dbfile}
+            echo ""
+        fi
     done
 done >> "${LOGOUT}" 2>&1
 
@@ -45,5 +45,7 @@ echo "" >> "${LOGOUT}"
 
 # rotate the file if it is getting big (> 10M), overwriting any old backup
 if [[ $(stat -c%s "${LOGOUT}") -gt 10485760 ]]; then
-	mv "${LOGOUT}" "${LOGOUT}.old"
+    mv "${LOGOUT}" "${LOGOUT}.old"
 fi
+
+# vim: set ts=4 sw=4 et ft=sh:

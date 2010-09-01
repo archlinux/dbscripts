@@ -15,9 +15,15 @@ get_dir_owner() {
 			echo "ftp:ftp-extra" ;;
 		staging)
 			echo "ftp:ftp-extra" ;;
+		kde-unstable)
+			echo "ftp:ftp-extra" ;;
+		gnome-unstable)
+			echo "ftp:ftp-extra" ;;
 		community)
 			echo "root:tusers" ;;
 		community-testing)
+			echo "root:tusers" ;;
+		community-staging)
 			echo "root:tusers" ;;
 		multilib)
 			echo "root:multilib" ;;

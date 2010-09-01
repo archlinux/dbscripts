@@ -5,7 +5,6 @@
 
 ftpbase="${FTP_BASE}"
 srcbase="${FTP_BASE}/sources"
-repos=(core extra testing community community-testing staging multilib)
 
 script_lock
 
@@ -18,7 +17,7 @@ FAILED_PKGS=""
 [ -e "$srcbase/errors.txt" ] && /bin/mv "$srcbase/errors.txt" "$srcbase/errors.txt.old"
 echo "Errors occured during run:" > "$srcbase/errors.txt"
 
-for repo in ${repos[@]}; do
+for repo in ${PKGREPO[@]}; do
     for arch in ${ARCHES[@]} any; do
         ftppath="$ftpbase/$repo/os/$arch"
         if [ ! -d "$ftppath" ]; then

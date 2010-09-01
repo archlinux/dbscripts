@@ -313,18 +313,18 @@ check_pkgsvn() {
 }
 
 get_repos_for_host() {
-	if [ "$(hostname)" = "sigurd" ]; then
-		echo "community community-testing multilib"
+	if [ -n "${PKGREPO[$(hostname -s)]}" ]; then
+		echo "${PKGREPO[$(hostname -s)]}"
 	else
-		echo "core extra testing staging"
+		echo "${PKGREPO['default']}"
 	fi
 }
 
 get_pkgpool_for_host() {
-	if [ "$(hostname)" = "sigurd" ]; then
-		echo "pool/community"
+	if [ -n "${PKGPOOL[$(hostname -s)]}" ]; then
+		echo "${PKGPOOL[$(hostname -s)]}"
 	else
-		echo "pool/packages"
+		echo "${PKGPOOL['default']}"
 	fi
 }
 

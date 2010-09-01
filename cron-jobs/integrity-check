@@ -7,7 +7,7 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
-for arch in i686 x86_64; do
+for arch in ${ARCHES[@]}; do
     $basedir/check_archlinux/check_packages.py \
         --repos="$1" \
         --abs-tree="/srv/abs/rsync/$arch,/srv/abs/rsync/any" --arch="$arch" |\

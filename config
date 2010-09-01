@@ -4,6 +4,14 @@ FTP_BASE="/srv/ftp"
 SVNREPO="file:///srv/svn-packages"
 SVNREPOCOMMUNITY="file:///srv/svn-community"
 
+declare -A PKGREPO
+PKGREPO['default']='core extra testing staging kde-unstable gnome-unstable'
+PKGREPO['sigurd']='community community-testing community-staging multilib'
+
+declare -A PKGPOOL
+PKGPOOL['default']='pool/packages'
+PKGPOOL['sigurd']='pool/community'
+
 CLEANUP_DESTDIR="/srv/package-cleanup"
 CLEANUP_DRYRUN=false
 SOURCE_CLEANUP_DESTDIR="/srv/source-cleanup"

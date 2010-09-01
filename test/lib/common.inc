@@ -1,5 +1,6 @@
 set -E
 
+. "${curdir}/../config"
 . "${curdir}/../db-functions"
 
 oneTimeSetUp() {
@@ -25,15 +26,24 @@ oneTimeTearDown() {
 setUp() {
 	local p
 	local pkg
+	local r
+	local a
 
 	#[ -f "${curdir}/../config.local" ] && die "${curdir}/../config.local exists"
 	TMP="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
 	#msg "Using ${TMP}"
 
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-{packages,community}-{copy,repo}}
-	mkdir -p "${TMP}/ftp/"{core,extra,community,testing,community-testing,staging,multilib}/os/{i686,any,x86_64}
-	mkdir -p "${TMP}/ftp/pool/"{packages,community}
-	mkdir -p "${TMP}/staging/"{core,extra,community,testing,community-testing,staging,multilib}
+
+	for r in ${PKGREPO[@]}; do
+		mkdir -p "${TMP}/staging/${r}"
+		for a in ${ARCHES[@]} any; do
+			mkdir -p "${TMP}/ftp/${r}/os/${a}"
+		done
+	done
+	for p in ${PKGPOOL[@]}; do
+		mkdir -p "${TMP}/ftp/${p}"
+	done
 
 	msg 'Creating svn repository...'
 	svnadmin create "${TMP}/svn-packages-repo"

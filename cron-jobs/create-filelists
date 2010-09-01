@@ -5,7 +5,6 @@
 
 reposdir=${FTP_BASE}
 targetdir=${FTP_BASE}
-repos=(core extra testing community community-testing staging multilib)
 
 script_lock
 
@@ -28,7 +27,7 @@ esac
 
 FILESEXT="${DBEXT//db/files}"
 
-for repo in ${repos[@]}; do
+for repo in ${PKGREPO[@]}; do
     REPO_DB_FILE="${repo}$DBEXT"
     FILES_DB_FILE="${repo}$FILESEXT"
     for arch in ${ARCHES[@]}; do

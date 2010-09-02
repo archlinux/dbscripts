@@ -7,30 +7,17 @@ script_lock
 
 get_dir_owner() {
 	case $1 in
+		# on main server, e.g. gerolde
 		core)
 			echo "ftp:ftp-arch" ;;
-		extra)
+		extra|testing|staging|kde-unstable|gnome-unstable|pool/packages)
 			echo "ftp:ftp-extra" ;;
-		testing)
-			echo "ftp:ftp-extra" ;;
-		staging)
-			echo "ftp:ftp-extra" ;;
-		kde-unstable)
-			echo "ftp:ftp-extra" ;;
-		gnome-unstable)
-			echo "ftp:ftp-extra" ;;
-		community)
-			echo "root:tusers" ;;
-		community-testing)
-			echo "root:tusers" ;;
-		community-staging)
+
+		# on community server, e.g. sigurd
+		community|community-testing|community-staging|pool/community)
 			echo "root:tusers" ;;
 		multilib)
 			echo "root:multilib" ;;
-		pool/packages)
-			echo "ftp:ftp-extra" ;;
-		pool/community)
-			echo "root:tusers" ;;
 	esac
 }
 

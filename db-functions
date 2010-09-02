@@ -387,3 +387,17 @@ check_repo_permission() {
 
 	return 0
 }
+
+set_repo_permission() {
+	local repo=$1
+	local arch=$2
+	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}"
+
+	if [ -w "${dbfile}" ]; then
+		local group=$(/usr/bin/stat --printf='%G' "$(dirname "${dbfile}")")
+		chgrp $group "${dbfile}" || error "Could not change group of ${dbfile} to $group"
+		chmod g+w "${dbfile}" || error "Could not set write permission for group $group to ${dbfile}"
+	else
+		error "You don't have permission to change ${dbfile}"
+	fi
+}

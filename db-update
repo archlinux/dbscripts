@@ -68,6 +68,7 @@ for repo in ${repos[@]}; do
 			/usr/bin/repo-add -q "$repo$DBEXT" ${add_pkgs[@]} >/dev/null \
 				|| die "repo-add $repo$DBEXT ${add_pkgs[@]}"
 			popd >/dev/null
+			set_repo_permission "${repo}" "${pkgarch}"
 		fi
 	done
 done

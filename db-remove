@@ -48,5 +48,6 @@ for tarch in ${tarches[@]}; do
 	fi
 
 	/usr/bin/repo-remove -q "$ftppath/$tarch/$repo$DBEXT" ${pkgnames[@]} >/dev/null
+	set_repo_permission "${repo}" "${tarch}"
 	repo_unlock $repo $tarch
 done

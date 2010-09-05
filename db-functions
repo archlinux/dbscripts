@@ -296,14 +296,14 @@ check_pkgsvn() {
 
 	in_array "${repo}" $(get_repos_for_host) || return 1
 
-	if [ ! -f "${WORKDIR}/pkgbuilds/${pkgbase}" ]; then
-		mkdir -p "${WORKDIR}/pkgbuilds"
+	if [ ! -f "${WORKDIR}/pkgbuilds/${repo}/${pkgbase}" ]; then
+		mkdir -p "${WORKDIR}/pkgbuilds/${repo}"
 		svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}/PKGBUILD" \
-			"${WORKDIR}/pkgbuilds/${pkgbase}" >/dev/null
+			"${WORKDIR}/pkgbuilds/${repo}/${pkgbase}" >/dev/null
 		[ $? -ge 1 ] && return 1
 	fi
 
-	local pkgver="$(. "${WORKDIR}/pkgbuilds/${pkgbase}"; echo "${pkgver}-${pkgrel}")"
+	local pkgver="$(. "${WORKDIR}/pkgbuilds/${repo}/${pkgbase}"; echo "${pkgver}-${pkgrel}")"
 	[ -z "${pkgver}" ] && return 1
 	if echo "$(basename ${pkgfile})" | grep -q "${pkgver}-${pkgarch}"; then
 		return 0

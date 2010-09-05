@@ -106,6 +106,26 @@ testUpdateAnyPackage() {
 	rm "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
 }
 
+testUpdateAnyPackageInDifferentRepositoriesAtOnce() {
+	releasePackage extra pkg-any-a any
+
+	pushd "${TMP}/svn-packages-copy/pkg-any-a/trunk/" >/dev/null
+	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
+	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
+	makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1
+	mv pkg-any-a-1-2-any.pkg.tar.xz "${pkgdir}/pkg-any-a/"
+	popd >/dev/null
+
+	releasePackage testing pkg-any-a any
+
+	../db-update
+
+	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
+	checkAnyPackage testing pkg-any-a-1-2-any.pkg.tar.xz any
+
+	rm "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
+}
+
 #
 # db-remove
 #

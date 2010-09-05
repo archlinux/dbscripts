@@ -312,6 +312,31 @@ check_pkgsvn() {
 	fi
 }
 
+check_pkgrepos() {
+	local pkgfile=$1
+
+	local pkgname="$(getpkgname ${pkgfile})"
+	[ $? -ge 1 ] && return 1
+	local pkgver="$(getpkgver ${pkgfile})"
+	[ $? -ge 1 ] && return 1
+
+	if [ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkgname}-${pkgver}-"*${PKGEXT} ]; then
+		return 1
+	fi
+
+	local repo
+	local arch
+	for repo in $(get_repos_for_host); do
+		for arch in ${ARCHES[@]}; do
+			if [ -f "${FTP_BASE}/${repo}/os/${arch}/${pkgname}-${pkgver}"*${PKGEXT} ]; then
+				return 1
+			fi
+		done
+	done
+
+	return 0
+}
+
 get_repos_for_host() {
 	if [ -n "${PKGREPO[$(hostname -s)]}" ]; then
 		echo "${PKGREPO[$(hostname -s)]}"

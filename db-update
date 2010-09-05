@@ -38,8 +38,8 @@ for repo in ${repos[@]}; do
 			if ! check_pkgsvn "${pkg}" "${repo}"; then
 				die "Package ${repo}/$(basename ${pkg}) is not consistent with svn repository"
 			fi
-			if [ -f "${FTP_BASE}/$(get_pkgpool_for_host)/$(basename ${pkg})" ]; then
-				die "Package ${repo}/$(basename ${pkg}) already exists in ${FTP_BASE}/$(get_pkgpool_for_host)"
+			if ! check_pkgrepos "${pkg}"; then
+				die "Package ${repo}/$(basename ${pkg}) already exists in another repository"
 			fi
 		done
 	else

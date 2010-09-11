@@ -6,7 +6,7 @@ SVNREPOCOMMUNITY="file:///srv/svn-community"
 
 declare -A PKGREPO
 PKGREPO['default']='core extra testing staging kde-unstable gnome-unstable'
-PKGREPO['sigurd']='community community-testing community-staging multilib'
+PKGREPO['sigurd']='community community-testing community-staging multilib multilib-testing'
 
 declare -A PKGPOOL
 PKGPOOL['default']='pool/packages'

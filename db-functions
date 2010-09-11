@@ -402,12 +402,10 @@ check_repo_permission() {
 	[ -w "$FTP_BASE/$(get_pkgpool_for_host)" ] || return 1
 
 	local arch
-	for arch in ${ARCHES} any; do
-		local w
-		local ws=("${FTP_BASE}/${repo}/os/${arch}/"{,${repo}${DBEXT}})
-		for w in ws; do
-			[ -w ] || return 1
-		done
+	for arch in ${ARCHES}; do
+		local dir="${FTP_BASE}/${repo}/os/${arch}/"
+		[ -w "${dir}" ] || return 1
+		[ -f "${dir}"${repo}${DBEXT} -a ! -w "${dir}"${repo}${DBEXT} ] && return 1
 	done
 
 	return 0

@@ -319,18 +319,18 @@ check_pkgrepos() {
 	[ $? -ge 1 ] && return 1
 	local pkgver="$(getpkgver ${pkgfile})"
 	[ $? -ge 1 ] && return 1
+	local pkgarch="$(getpkgarch ${pkgfile})"
+	[ $? -ge 1 ] && return 1
 
-	if [ -f "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-"*${PKGEXT} ]; then
-		return 1
-	fi
+	[ -f "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXT} ] && return 1
+	[ -f "${FTP_BASE}/${PKGPOOL}/$(basename ${pkgfile})" ] && return 1
 
 	local repo
 	local arch
 	for repo in ${PKGREPOS[@]}; do
 		for arch in ${ARCHES[@]}; do
-			if [ -f "${FTP_BASE}/${repo}/os/${arch}/${pkgname}-${pkgver}"*${PKGEXT} ]; then
-				return 1
-			fi
+			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXT} ] && return 1
+			[ -f "${FTP_BASE}/${repo}/os/${arch}/$(basename ${pkgfile})" ] && return 1
 		done
 	done
 

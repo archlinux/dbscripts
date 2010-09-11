@@ -1,0 +1,2 @@
+PKGREPOS=('community' 'community-testing' 'community-staging' 'multilib' 'multilib-testing')
+PKGPOOL='pool/community'

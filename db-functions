@@ -294,7 +294,7 @@ check_pkgsvn() {
 	[ $? -ge 1 ] && return 1
 	local repo="${2}"
 
-	in_array "${repo}" $(get_repos_for_host) || return 1
+	in_array "${repo}" ${PKGREPOS[@]} || return 1
 
 	if [ ! -f "${WORKDIR}/pkgbuilds/${repo}/${pkgbase}" ]; then
 		mkdir -p "${WORKDIR}/pkgbuilds/${repo}"
@@ -320,13 +320,13 @@ check_pkgrepos() {
 	local pkgver="$(getpkgver ${pkgfile})"
 	[ $? -ge 1 ] && return 1
 
-	if [ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkgname}-${pkgver}-"*${PKGEXT} ]; then
+	if [ -f "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-"*${PKGEXT} ]; then
 		return 1
 	fi
 
 	local repo
 	local arch
-	for repo in $(get_repos_for_host); do
+	for repo in ${PKGREPOS[@]}; do
 		for arch in ${ARCHES[@]}; do
 			if [ -f "${FTP_BASE}/${repo}/os/${arch}/${pkgname}-${pkgver}"*${PKGEXT} ]; then
 				return 1
@@ -335,22 +335,6 @@ check_pkgrepos() {
 	done
 
 	return 0
-}
-
-get_repos_for_host() {
-	if [ -n "${PKGREPO[$(hostname -s)]}" ]; then
-		echo "${PKGREPO[$(hostname -s)]}"
-	else
-		echo "${PKGREPO['default']}"
-	fi
-}
-
-get_pkgpool_for_host() {
-	if [ -n "${PKGPOOL[$(hostname -s)]}" ]; then
-		echo "${PKGPOOL[$(hostname -s)]}"
-	else
-		echo "${PKGPOOL['default']}"
-	fi
 }
 
 #usage: chk_license ${license[@]}"
@@ -397,9 +381,12 @@ pkgver_from_src() {
 check_repo_permission() {
 	local repo=$1
 
-	in_array "${repo}" $(get_repos_for_host) || return 1
+	[ ${#PKGREPOS[@]} -eq 0 ] && return 1
+	[ -z "${PKGPOOL}" ] && return 1
 
-	[ -w "$FTP_BASE/$(get_pkgpool_for_host)" ] || return 1
+	in_array "${repo}" ${PKGREPOS[@]} || return 1
+
+	[ -w "$FTP_BASE/${PKGPOOL}" ] || return 1
 
 	local arch
 	for arch in ${ARCHES}; do

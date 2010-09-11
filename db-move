@@ -92,11 +92,11 @@ for pkgbase in ${args[@]:2}; do
 
 					# copy package to pool if needed
 					# TODO: can be removed once every package has been moved to the package pool
-					if [ ! -f ${FTP_BASE}/$(get_pkgpool_for_host)/${pkgfile} ]; then
-						cp ${pkgpath} ${FTP_BASE}/$(get_pkgpool_for_host)
+					if [ ! -f ${FTP_BASE}/${PKGPOOL}/${pkgfile} ]; then
+						cp ${pkgpath} ${FTP_BASE}/${PKGPOOL}
 					fi
-					ln -s "../../../$(get_pkgpool_for_host)/${pkgfile}" ${ftppath_to}/${tarch}/
-					add_pkgs[${tarch}]+="${FTP_BASE}/$(get_pkgpool_for_host)/${pkgfile} "
+					ln -s "../../../${PKGPOOL}/${pkgfile}" ${ftppath_to}/${tarch}/
+					add_pkgs[${tarch}]+="${FTP_BASE}/${PKGPOOL}/${pkgfile} "
 					remove_pkgs[${tarch}]+="${pkgname} "
 				done
 			done

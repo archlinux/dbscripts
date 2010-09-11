@@ -58,9 +58,9 @@ for repo in ${repos[@]}; do
 			msg2 "${pkgfile} (${pkgarch})"
 			# any packages might have been moved by the previous run
 			if [ -f "${pkg}" ]; then
-				mv "${pkg}" "$FTP_BASE/$(get_pkgpool_for_host)"
+				mv "${pkg}" "$FTP_BASE/${PKGPOOL}"
 			fi
-			ln -s "../../../$(get_pkgpool_for_host)/${pkgfile}" "$FTP_BASE/$repo/os/${pkgarch}"
+			ln -s "../../../${PKGPOOL}/${pkgfile}" "$FTP_BASE/$repo/os/${pkgarch}"
 			add_pkgs[${#add_pkgs[*]}]=${pkgfile}
 		done
 		if [ ${#add_pkgs[@]} -ge 1 ]; then

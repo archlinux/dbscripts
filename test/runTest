@@ -321,7 +321,7 @@ testCleanupSimplePackages() {
 	for arch in ${arches[@]}; do
 		local pkg1="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
 		checkRemovedPackage extra 'pkg-simple-a' ${arch}
-		[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg1}" ] && fail "$(get_pkgpool_for_host)/${pkg1} found"
+		[ -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ] && fail "${PKGPOOL}/${pkg1} found"
 		[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
 
 		local pkg2="pkg-simple-b-1-1-${arch}.pkg.tar.xz"
@@ -344,7 +344,7 @@ testCleanupAnyPackages() {
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
 	checkRemovedAnyPackage extra 'pkg-any-a'
-	[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg1}" ] && fail "$(get_pkgpool_for_host)/${pkg1} found"
+	[ -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ] && fail "${PKGPOOL}/${pkg1} found"
 	[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
 
 	local pkg2="pkg-any-b-1-1-${arch}.pkg.tar.xz"
@@ -375,7 +375,7 @@ testCleanupSplitPackages() {
 	for arch in ${arches[@]}; do
 		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}.pkg.tar.*; do
 			checkRemovedPackage extra ${pkgs[0]} ${arch}
-			[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" ] && fail "$(get_pkgpool_for_host)/${pkg} found"
+			[ -f "${FTP_BASE}/${PKGPOOL}/${pkg}" ] && fail "${PKGPOOL}/${pkg} found"
 			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] && fail "${repo}/os/${arch}/${pkg} found"
 		done
 
@@ -410,7 +410,7 @@ testMovePackagesWithoutPool() {
 		for old in 0 2; do
 			for pkg in "${pkgdir}/${pkgs[${old}]}"/*-${arch}.pkg.tar.*; do
 				pkg=$(basename $pkg)
-				mv -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
+				mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
 			done
 		done
 	done
@@ -441,7 +441,7 @@ testUpdateAnyPackageWithoutPool() {
 	releasePackage extra pkg-any-a any
 	../db-update
 	# transform two packages to old style layout
-	mv -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg1}" "${FTP_BASE}/extra/os/any"
+	mv -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" "${FTP_BASE}/extra/os/any"
 	for arch in i686 x86_64; do
 		ln -sf "../any/${pkg1}" "${FTP_BASE}/extra/os/${arch}"
 	done
@@ -461,7 +461,7 @@ testUpdateAnyPackageWithoutPool() {
 
 	checkAnyPackage extra "${pkg2}"
 
-	[ -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg1}" ] && fail "$(get_pkgpool_for_host)/${pkg1} found"
+	[ -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ] && fail "${PKGPOOL}/${pkg1} found"
 	for arch in any i686 x86_64; do
 		[ -f "${FTP_BASE}/extra/os/${arch}/${pkg1}" ] && fail "extra/os/${arch}/${pkg1} found"
 	done
@@ -482,7 +482,7 @@ testMoveAnyPackagesWithoutPool() {
 	# transform a package to old style layout
 	for pkg in "${pkgdir}/${pkgs[0]}"/*-any.pkg.tar.*; do
 		pkg=$(basename $pkg)
-		mv -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" "${FTP_BASE}/testing/os/any/${pkg}"
+		mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/testing/os/any/${pkg}"
 		for arch in i686 x86_64; do
 			ln -sf "../any/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
 		done
@@ -519,7 +519,7 @@ testUpdateSameAnyPackageToDifferentRepositoriesWithoutPool() {
 	# transform a package to old style layout
 	for pkg in "${pkgdir}/pkg-any-a"/*-any.pkg.tar.*; do
 		pkg=$(basename $pkg)
-		mv -f "${FTP_BASE}/$(get_pkgpool_for_host)/${pkg}" "${FTP_BASE}/extra/os/any/${pkg}"
+		mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/extra/os/any/${pkg}"
 		for arch in i686 x86_64; do
 			ln -sf "../any/${pkg}" "${FTP_BASE}/extra/os/${arch}/${pkg}"
 		done

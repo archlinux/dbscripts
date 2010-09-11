@@ -18,11 +18,9 @@ clean_pkg() {
 	fi
 }
 
-repos=($(get_repos_for_host))
-
 script_lock
 
-for repo in ${repos[@]}; do
+for repo in ${PKGREPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
 		repo_lock ${repo} ${arch} || exit 1
 	done
@@ -30,7 +28,7 @@ done
 
 ${CLEANUP_DRYRUN} && warning 'dry run mode is active'
 
-for repo in ${repos[@]}; do
+for repo in ${PKGREPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
 		if [ ! -f "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" ]; then
 			warning "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} not found, skipping"
@@ -61,7 +59,7 @@ for repo in ${repos[@]}; do
 done
 
 # get a list of all available packages in the pacakge pool
-find "$FTP_BASE/$(get_pkgpool_for_host)" -name "*${PKGEXT}" -printf '%f\n' | sort > "${WORKDIR}/pool"
+find "$FTP_BASE/${PKGPOOL}" -name "*${PKGEXT}" -printf '%f\n' | sort > "${WORKDIR}/pool"
 # create a list of packages in our db
 cat "${WORKDIR}/db-"* | sort -u > "${WORKDIR}/db"
 
@@ -70,12 +68,12 @@ if [ ${#old_pkgs[@]} -ge 1 ]; then
 	msg "Removing old packages from package pool..."
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 "${old_pkg}"
-		clean_pkg "$FTP_BASE/$(get_pkgpool_for_host)/${old_pkg}"
+		clean_pkg "$FTP_BASE/${PKGPOOL}/${old_pkg}"
 	done
 fi
 
 # cleanup of legacy $repo/os/any directories
-for repo in ${repos[@]}; do
+for repo in ${PKGREPOS[@]}; do
 	if [ ! -d "${FTP_BASE}/${repo}/os/any" ]; then
 		continue
 	fi
@@ -98,7 +96,7 @@ for repo in ${repos[@]}; do
 done
 
 
-for repo in ${repos[@]}; do
+for repo in ${PKGREPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
 		repo_unlock ${repo} ${arch}
 	done

@@ -300,17 +300,17 @@ check_pkgsvn() {
 
 	in_array "${repo}" ${PKGREPOS[@]} || return 1
 
-	if [ ! -f "${WORKDIR}/pkgbuilds/${repo}/${_pkgbase}" ]; then
-		mkdir -p "${WORKDIR}/pkgbuilds/${repo}"
+	if [ ! -f "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" ]; then
+		mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
 		svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
-			"${WORKDIR}/pkgbuilds/${repo}/${_pkgbase}" >/dev/null
+			"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null
 		[ $? -ge 1 ] && return 1
 	fi
 
-	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}/${_pkgbase}"; echo "${pkgver}-${pkgrel}")"
+	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo "${pkgver}-${pkgrel}")"
 	[ "${svnver}" == "${_pkgver}" ] || return 1
 
-	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}/${_pkgbase}"; echo ${pkgname[@]}))
+	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))
 	in_array "${_pkgname}" ${svnnames[@]} || return 1
 
 	return 0

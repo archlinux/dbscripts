@@ -183,8 +183,8 @@ repo_unlock () { #repo_unlock <repo-name> <arch>
 _grep_pkginfo() {
 	local _ret
 
-	_ret="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | /bin/grep -m 1 -E "$2" | /bin/sed 's|\w*\s*=\s*\(.*\)|\1|')"
-	echo "$_ret"
+	_ret="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | /bin/grep -m 1 "^${2} = ")"
+	echo "${_ret#${2} = }"
 }
 
 
@@ -192,7 +192,7 @@ _grep_pkginfo() {
 getpkgbase() {
 	local _base
 
-	_base="$(_grep_pkginfo "$1" "^pkgbase")"
+	_base="$(_grep_pkginfo "$1" "pkgbase")"
 	if [ -z "$_base" ]; then
 		getpkgname "$1"
 	fi
@@ -204,7 +204,7 @@ getpkgbase() {
 getpkgname() {
 	local _name
 
-	_name="$(_grep_pkginfo "$1" "^pkgname")"
+	_name="$(_grep_pkginfo "$1" "pkgname")"
 	if [ -z "$_name" ]; then
 		error "Package '$1' has no pkgname in the PKGINFO. Fail!"
 		exit 1
@@ -217,7 +217,7 @@ getpkgname() {
 getpkgver() {
 	local _ver
 
-	_ver="$(_grep_pkginfo "$1" "^pkgver")"
+	_ver="$(_grep_pkginfo "$1" "pkgver")"
 	if [ -z "$_ver" ]; then
 		error "Package '$1' has no pkgver in the PKGINFO. Fail!"
 		exit 1
@@ -229,7 +229,7 @@ getpkgver() {
 getpkgarch() {
 	local _ver
 
-	_ver="$(_grep_pkginfo "$1" "^arch")"
+	_ver="$(_grep_pkginfo "$1" "arch")"
 	if [ -z "$_ver" ]; then
 		error "Package '$1' has no arch in the PKGINFO. Fail!"
 		exit 1

@@ -9,7 +9,7 @@ ARCHES="i686 x86_64"
 # having "more important repos" last should make [core] trickle to the top of
 # the updates list each hour rather than being overwhelmed by big [extra] and
 # [community] updates
-REPOS="community-testing multilib community extra testing core"
+REPOS="community-testing multilib-testing multilib community extra testing core"
 LOGOUT="/tmp/archweb_update.log"
 
 # figure out what operation to perform

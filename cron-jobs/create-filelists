@@ -27,7 +27,7 @@ esac
 
 FILESEXT="${DBEXT//db/files}"
 
-for repo in ${PKGREPO[@]}; do
+for repo in ${PKGREPOS[@]}; do
     REPO_DB_FILE="${repo}$DBEXT"
     FILES_DB_FILE="${repo}$FILESEXT"
     for arch in ${ARCHES[@]}; do

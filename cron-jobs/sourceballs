@@ -17,7 +17,7 @@ FAILED_PKGS=""
 [ -e "$srcbase/errors.txt" ] && /bin/mv "$srcbase/errors.txt" "$srcbase/errors.txt.old"
 echo "Errors occured during run:" > "$srcbase/errors.txt"
 
-for repo in ${PKGREPO[@]}; do
+for repo in ${PKGREPOS[@]}; do
     for arch in ${ARCHES[@]} any; do
         ftppath="$ftpbase/$repo/os/$arch"
         if [ ! -d "$ftppath" ]; then

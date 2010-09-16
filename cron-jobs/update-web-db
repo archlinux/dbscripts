@@ -34,12 +34,12 @@ for repo in ${REPOS}; do
                 flags="--filesonly" ;;
         esac
         if [[ -f $dbfile ]]; then
-            echo "Updating ${repo}-${arch}"
-            ./manage.py reporead ${flags} ${arch} ${dbfile}
+            echo "Updating ${repo}-${arch}" >> "${LOGOUT}"
+            ./manage.py reporead ${flags} ${arch} ${dbfile} >> "${LOGOUT}" 2>&1
             echo ""
         fi
     done
-done >> "${LOGOUT}" 2>&1
+done
 
 echo "" >> "${LOGOUT}"
 

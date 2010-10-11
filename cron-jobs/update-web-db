@@ -36,7 +36,7 @@ for repo in ${REPOS}; do
         if [[ -f $dbfile ]]; then
             echo "Updating ${repo}-${arch}" >> "${LOGOUT}"
             ./manage.py reporead ${flags} ${arch} ${dbfile} >> "${LOGOUT}" 2>&1
-            echo ""
+            echo "" >> "${LOGOUT}"
         fi
     done
 done

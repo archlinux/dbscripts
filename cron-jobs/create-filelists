@@ -41,7 +41,7 @@ for repo in ${PKGREPOS[@]}; do
             mkdir -p "${DBDIR}/${repodir}"
             bsdtar -xf "${targetdir}/${repodir}/${REPO_DB_FILE}" -C "${DBDIR}/${repodir}"
         else
-            error "Fail! Does the repo $repo with arch $arch even exist?"
+            warning "The repo $repo with arch $arch does not exist"
             continue
         fi
 
@@ -71,7 +71,7 @@ for repo in ${PKGREPOS[@]}; do
         done
 
         # create new file archive
-        if [ "$cached" == "no" ]; then
+        if [ "$cached" == "no" -a -d "${MYTMPDIR}/${repodir}" ]; then
             # at least one package has changed, so let's rebuild the archive
             pkgdir="${targetdir}/${repodir}"
             mkdir -p "$pkgdir"

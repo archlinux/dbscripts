@@ -30,7 +30,7 @@ create_srcpackage() {
         if ! [ $FORCE == 1 ] && ! chk_license ${license[@]} ; then
             # Removed so as not to clutter failed.txt
             #warning "$packagename license (${license[@]}) does not require source tarballs"
-            cleanup 0
+            return 0
         else
             msg "Creating source tarball for $packagename-$pkgver-$pkgrel"
         fi

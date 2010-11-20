@@ -9,58 +9,46 @@ set_umask
 
 dirname="$(/bin/readlink -f $(/usr/bin/dirname $0))"
 
-FAILED_PKGS=""
-
 [ ! -d "${LOGDIR}/sourceballs" ] && mkdir -p "${LOGDIR}/sourceballs"
 [ -e "${LOGDIR}/sourceballs/errors.txt" ] && /bin/mv "${LOGDIR}/sourceballs/errors.txt" "${LOGDIR}/sourceballs/errors.txt.old"
+[ -e "${LOGDIR}/sourceballs/failed.txt" ] && /bin/mv "${LOGDIR}/sourceballs/failed.txt" "${LOGDIR}/sourceballs/failed.txt.old"
 
 for repo in ${PKGREPOS[@]}; do
     for arch in ${ARCHES[@]}; do
         ftppath="${FTP_BASE}/$repo/os/$arch"
-        if [ ! -d "$ftppath" ]; then
-            error "FTP path does not exist: $ftppath"
+        dbfile="${ftppath}/${repo}${DBEXT}"
+        if [ ! -r "${dbfile}" ]; then
+            warning "DB file does not exist: ${dbfile}"
             continue
         fi
-        cd $ftppath
-        for pkg in *$PKGEXT; do
-            [ -f "$pkg" ] || continue
-            pkgbase=$(getpkgbase $pkg)
-            srcpkg="${pkg//$PKGEXT/$SRCEXT}"
-            srcpkg="${srcpkg//-$arch/}"
-            srcpkgname="${srcpkg%-*-*$SRCEXT}"
-            srcpkgbase="${srcpkg/$srcpkgname/$pkgbase}"
+        for pkg in $(bsdtar -xOf "${dbfile}" \
+            | awk '/^%NAME%/{getline b};/^%BASE%/{getline b};/^%VERSION%/{getline v};/^%ARCH%/{printf "%s/%s\n", b, v}' \
+            | sort -u); do
+            pkgbase=${pkg%/*}
+            pkgver=${pkg#*/}
+            srcpkg="${pkgbase}-${pkgver}${SRCEXT}"
 
-            #Don't do anything for package in this 'blacklist'
-            if grep "^$pkgbase\$" "$dirname/sourceballs.skip" >/dev/null 2>&1; then
+            # Don't do anything for package in this 'blacklist'
+            if grep -q "^${pkgbase}\$" "$dirname/sourceballs.skip"; then
                 continue
             fi
 
-            #This pkgbase has already failed. No sense in trying it again this run
-            if echo $FAILED_PKGS | grep "\<$pkgbase\>" >&/dev/null; then
-                continue
-            fi
-
-            #Use this file to 'whitelist' or force building some sourceballs,
+            # Use this file to 'whitelist' or force building some sourceballs,
             # skipping the license check
             force=""
-            if grep "^$pkgbase\$" "$dirname/sourceballs.force" >/dev/null 2>&1; then
+            if grep -q "^$pkgbase\$" "$dirname/sourceballs.force"; then
                 force="-f"
             fi
 
-            if [ ! \( -f "${FTP_BASE}/${SRCPOOL}/$srcpkg" -o -f "${FTP_BASE}/${SRCPOOL}/$srcpkgbase" \) ]; then
+            if [ ! -f "${FTP_BASE}/${SRCPOOL}/$srcpkg" ]; then
                 if ! $dirname/../misc-scripts/make-sourceball $force \
                     $pkgbase $repo $arch 2>>"${LOGDIR}/sourceballs/errors.txt"; then
-                    FAILED_PKGS="$FAILED_PKGS $pkgbase"
+                    echo "$pkgbase" >> "${LOGDIR}/sourceballs/failed.txt"
                 fi
             fi
         done
     done
 done
-
-if [ -n "$FAILED_PKGS" ]; then
-    [ -e "${LOGDIR}/sourceballs/failed.txt" ] && /bin/mv "${LOGDIR}/sourceballs/failed.txt" "${LOGDIR}/sourceballs/failed.txt.old"
-    echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u >> "${LOGDIR}/sourceballs/failed.txt"
-fi
 
 $dirname/../misc-scripts/sourceballs-cleanup
 

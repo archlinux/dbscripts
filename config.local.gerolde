@@ -1,3 +1,4 @@
 PKGREPOS=('core' 'extra' 'testing' 'staging' 'kde-unstable' 'gnome-unstable')
 PKGPOOL='pool/packages'
 SRCPOOL='sources/packages'
+SVNREPO='file:///srv/svn-packages'

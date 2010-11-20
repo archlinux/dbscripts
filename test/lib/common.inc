@@ -62,7 +62,6 @@ setUp() {
 	cat <<eot > "${curdir}/../config.local"
 	FTP_BASE="${TMP}/ftp"
 	SVNREPO="file://${TMP}/svn-packages-repo"
-	SVNREPOCOMMUNITY="file://${TMP}/svn-community-repo"
 	PKGREPOS=(${PKGREPOS[@]})
 	PKGPOOL="${PKGPOOL}"
 	CLEANUP_DESTDIR="${TMP}/package-cleanup"

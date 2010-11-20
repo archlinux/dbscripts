@@ -1,8 +1,5 @@
 FTP_BASE="/srv/ftp"
-
-SVNREPO="file:///srv/svn-packages"
-SVNREPOCOMMUNITY="file:///srv/svn-community"
-
+SVNREPO=''
 PKGREPOS=()
 PKGPOOL=''
 SRCPOOL=''

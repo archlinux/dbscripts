@@ -21,9 +21,16 @@ for repo in ${PKGREPOS[@]}; do
             warning "DB file does not exist: ${dbfile}"
             continue
         fi
-        for pkg in $(bsdtar -xOf "${dbfile}" \
-            | awk '/^%NAME%/{getline b};/^%BASE%/{getline b};/^%VERSION%/{getline v};/^%ARCH%/{printf "%s/%s\n", b, v}' \
-            | sort -u); do
+
+        repo_lock ${repo} ${arch} || exit 1
+        # Read packages from db file
+        # Format is: <pkgbase|pkgname>/<pkgver>-<pkgrel>
+        pkgs=($(bsdtar -xOf "${dbfile}" \
+            | awk '/^%NAME%/{getline b};/^%BASE%/{getline b};/^%VERSION%/{getline v};/^%ARCH%/{printf "%s/%s ", b, v}' \
+            | sort -u))
+        repo_unlock ${repo} ${arch}
+
+        for pkg in ${pkgs[@]}; do
             pkgbase=${pkg%/*}
             pkgver=${pkg#*/}
             srcpkg="${pkgbase}-${pkgver}${SRCEXT}"

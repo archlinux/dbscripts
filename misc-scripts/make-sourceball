@@ -19,9 +19,6 @@ packagename="$1"
 reponame="$2"
 arch="$3"
 
-srcpath="$FTP_BASE/sources/"
-logpath="/var/log/sourceballs/"
-
 script_lock
 
 create_srcpackage() {
@@ -29,6 +26,7 @@ create_srcpackage() {
         pushd "$1" >/dev/null
 	pkgver=$(. PKGBUILD; echo ${pkgver})
 	pkgrel=$(. PKGBUILD; echo ${pkgrel})
+	license=($(. PKGBUILD; echo ${license[@]}))
 	if ! [ $FORCE == 1 ] && ! chk_license ${license[@]} ; then
             #Removed so as not to clutter failed.txt
             #warning "$packagename license (${license[@]}) does not require source tarballs"
@@ -37,7 +35,7 @@ create_srcpackage() {
             msg "Creating source tarball for $packagename-$pkgver-$pkgrel"
         fi
 
-        local logfile="$logpath/$packagename"
+        local logfile="${LOGDIR}/sourceballs/$packagename"
         if ! /usr/bin/makepkg --allsource --ignorearch >"$logfile" 2>&1; then
             popd >/dev/null
             /bin/gzip -f -9 "$logfile"
@@ -47,10 +45,7 @@ create_srcpackage() {
 
         local pkg_file="${packagename}-${pkgver}-${pkgrel}${SRCEXT}"
 
-        if [ ! -d "$srcpath" ]; then
-            mkdir -p "$srcpath"
-        fi
-        cp "$pkg_file" "$srcpath"
+        cp "$pkg_file" "${FTP_BASE}/${SRCPOOL}"
 
         popd >/dev/null
 
@@ -59,7 +54,7 @@ create_srcpackage() {
 }
 
 set_umask
-/bin/mkdir -p "$logpath"
+[ ! -d "${LOGDIR}/sourceballs" ] && mkdir -p "${LOGDIR}/sourceballs"
 cd "$WORKDIR"
 
 if [[ "$reponame" = "community" || "$reponame" = "community-testing" ]]; then

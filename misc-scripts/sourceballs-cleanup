@@ -3,8 +3,8 @@
 . "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"
 
-srcpath="$FTP_BASE/sources/"
-logfile="$srcpath/cleanup.txt"
+[ ! -d "${LOGDIR}/sourceballs" ] && mkdir -p "${LOGDIR}/sourceballs"
+logfile="${LOGDIR}/sourceballs/cleanup.txt"
 
 script_lock
 
@@ -20,7 +20,7 @@ remove_old() {
             cd ..
         done
 
-        for srcpkg in "$srcpath/$packagename-"*; do
+        for srcpkg in "${FTP_BASE}/${SRCPOOL}/$packagename-"*; do
             [ -f "$srcpkg" ] || continue
             if [ "$(pkgname_from_src $srcpkg)" == "$packagename" ]; then
                 skip=0
@@ -47,10 +47,11 @@ remove_old() {
 set_umask
 cd "$WORKDIR"
 
+
 [ -e "$logfile" ] && /bin/mv "$logfile" "$logfile.old"
 echo  "Orphaned sourceballs:" > "$logfile"
 
-for sourceball in "$srcpath"/*$SRCEXT; do
+for sourceball in "${FTP_BASE}/${SRCPOOL}"/*$SRCEXT; do
     packagename=$(basename $sourceball)
     packagename=${packagename%-*-*$SRCEXT}
 

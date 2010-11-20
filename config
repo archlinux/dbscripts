@@ -5,6 +5,7 @@ SVNREPOCOMMUNITY="file:///srv/svn-community"
 
 PKGREPOS=()
 PKGPOOL=''
+SRCPOOL=''
 
 CLEANUP_DESTDIR="/srv/package-cleanup"
 CLEANUP_DRYRUN=false
@@ -15,6 +16,7 @@ LOCK_TIMEOUT=300
 
 STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
+LOGDIR="/var/log/dbscripts"
 ARCHES=(i686 x86_64)
 DBEXT=".db.tar.gz"
 PKGEXT=".pkg.tar.*"

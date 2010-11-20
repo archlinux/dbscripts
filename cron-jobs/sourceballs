@@ -3,9 +3,6 @@
 . "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"
 
-ftpbase="${FTP_BASE}"
-srcbase="${FTP_BASE}/sources"
-
 script_lock
 
 set_umask
@@ -14,12 +11,12 @@ dirname="$(/bin/readlink -f $(/usr/bin/dirname $0))"
 
 FAILED_PKGS=""
 
-[ -e "$srcbase/errors.txt" ] && /bin/mv "$srcbase/errors.txt" "$srcbase/errors.txt.old"
-echo "Errors occured during run:" > "$srcbase/errors.txt"
+[ ! -d "${LOGDIR}/sourceballs" ] && mkdir -p "${LOGDIR}/sourceballs"
+[ -e "${LOGDIR}/sourceballs/errors.txt" ] && /bin/mv "${LOGDIR}/sourceballs/errors.txt" "${LOGDIR}/sourceballs/errors.txt.old"
 
 for repo in ${PKGREPOS[@]}; do
-    for arch in ${ARCHES[@]} any; do
-        ftppath="$ftpbase/$repo/os/$arch"
+    for arch in ${ARCHES[@]}; do
+        ftppath="${FTP_BASE}/$repo/os/$arch"
         if [ ! -d "$ftppath" ]; then
             error "FTP path does not exist: $ftppath"
             continue
@@ -28,7 +25,6 @@ for repo in ${PKGREPOS[@]}; do
         for pkg in *$PKGEXT; do
             [ -f "$pkg" ] || continue
             pkgbase=$(getpkgbase $pkg)
-            srcpath="$srcbase/"
             srcpkg="${pkg//$PKGEXT/$SRCEXT}"
             srcpkg="${srcpkg//-$arch/}"
             srcpkgname="${srcpkg%-*-*$SRCEXT}"
@@ -51,9 +47,9 @@ for repo in ${PKGREPOS[@]}; do
                 force="-f"
             fi
 
-            if [ ! \( -f "$srcpath$srcpkg" -o -f "$srcpath$srcpkgbase" \) ]; then
+            if [ ! \( -f "${FTP_BASE}/${SRCPOOL}/$srcpkg" -o -f "${FTP_BASE}/${SRCPOOL}/$srcpkgbase" \) ]; then
                 if ! $dirname/../misc-scripts/make-sourceball $force \
-                    $pkgbase $repo $arch 2>>"$srcbase/errors.txt"; then
+                    $pkgbase $repo $arch 2>>"${LOGDIR}/sourceballs/errors.txt"; then
                     FAILED_PKGS="$FAILED_PKGS $pkgbase"
                 fi
             fi
@@ -62,9 +58,8 @@ for repo in ${PKGREPOS[@]}; do
 done
 
 if [ -n "$FAILED_PKGS" ]; then
-    [ -e "$srcbase/failed.txt" ] && /bin/mv "$srcbase/failed.txt" "$srcbase/failed.txt.old"
-    echo "The following package bases failed:" > "$srcbase/failed.txt"
-    echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u >> "$srcbase/failed.txt"
+    [ -e "${LOGDIR}/sourceballs/failed.txt" ] && /bin/mv "${LOGDIR}/sourceballs/failed.txt" "${LOGDIR}/sourceballs/failed.txt.old"
+    echo -e $FAILED_PKGS | sed "s| |\n|g" | sort -u >> "${LOGDIR}/sourceballs/failed.txt"
 fi
 
 $dirname/../misc-scripts/sourceballs-cleanup

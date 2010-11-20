@@ -535,5 +535,64 @@ testUpdateSameAnyPackageToDifferentRepositoriesWithoutPool() {
 	done
 }
 
+#
+#sourceballs tests
+#
+
+testSourceballs() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+	../db-update
+
+	../cron-jobs/sourceballs
+
+	for log in errors failed; do
+		if [ -s "${LOGDIR}/sourceballs/${log}.txt" ]; then
+			fail "${LOGDIR}/sourceballs/${log}.txt includes the following errors:"
+			cat "${LOGDIR}/sourceballs/${log}.txt"
+		fi
+	done
+	for pkgbase in ${pkgs[@]}; do
+		[ ! -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ] && fail "source package not found!"
+	done
+}
+
+testSourceballsCleanup() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+	../db-update
+	../cron-jobs/sourceballs
+
+	for arch in ${arches[@]}; do
+		../db-remove pkg-simple-a extra ${arch}
+	done
+	../cron-jobs/ftpdir-cleanup >/dev/null
+
+	../cron-jobs/sourceballs
+	for log in errors failed; do
+		if [ -s "${LOGDIR}/sourceballs/${log}.txt" ]; then
+			fail "${LOGDIR}/sourceballs/${log}.txt includes the following errors:"
+			cat "${LOGDIR}/sourceballs/${log}.txt"
+		fi
+	done
+	[ -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-a-*${SRCEXT} ] && fail "source package was not removed!"
+	[ ! -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-b-*${SRCEXT} ] && fail "source package not found!"
+}
 
 . "${curdir}/lib/shunit2"

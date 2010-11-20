@@ -20,7 +20,7 @@ PKGEXT=".pkg.tar.*"
 SRCEXT=".src.tar.gz"
 
 # Allowed licenses: get sourceballs only for licenses in this array
-ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2')
+ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1')
 
 # Override default config with config.local
 [ -f "$(dirname ${BASH_SOURCE[0]})/config.local" ] && . "$(dirname ${BASH_SOURCE[0]})/config.local"

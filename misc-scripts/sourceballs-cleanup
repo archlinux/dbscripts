@@ -52,13 +52,17 @@ cd "$WORKDIR"
 echo  "Orphaned sourceballs:" > "$logfile"
 
 for sourceball in "${FTP_BASE}/${SRCPOOL}"/*$SRCEXT; do
+    [ -f "$sourceball" ] || continue
     packagename=$(basename $sourceball)
     packagename=${packagename%-*-*$SRCEXT}
 
-    if ! /usr/bin/svn export -q --force "$SVNREPO/$packagename" "$packagename" >/dev/null 2>&1 \
-	&& ! /usr/bin/svn export -q --force "$SVNREPOCOMMUNITY/$packagename" "$packagename" >/dev/null 2>&1 ; then
-      echo "$packagename : no longer in svn.  Removing sourceball." >> "$logfile"
-      mv $sourceball $SOURCE_CLEANUP_DESTDIR
+    if ! /usr/bin/svn export -q --force "$SVNREPO/$packagename" "$packagename" >/dev/null 2>&1; then
+      if [ $? -ne 1 ]; then
+        echo "$packagename : svn died during export. Skipping sourceball." >> "$logfile"
+      else
+        echo "$packagename : no longer in svn.  Removing sourceball." >> "$logfile"
+        mv $sourceball $SOURCE_CLEANUP_DESTDIR
+      fi
     elif [ -z "$(ls -A "$packagename/repos")" ]; then
       echo "$packagename : no longer in repos but trunk is still in svn.  Removing sourceball." >> "$logfile"
       mv $sourceball $SOURCE_CLEANUP_DESTDIR

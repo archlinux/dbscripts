@@ -25,8 +25,20 @@ create_srcpackage() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
         pkgver=$(. PKGBUILD; echo ${pkgver})
+        if [ $? -ne 0 ]; then
+            error "Failed to read pkgver from $1"
+            return 1
+        fi
         pkgrel=$(. PKGBUILD; echo ${pkgrel})
+        if [ $? -ne 0 ]; then
+            error "Failed to read pkgrel from $1"
+            return 1
+        fi
         license=($(. PKGBUILD; echo ${license[@]}))
+        if [ $? -ne 0 ]; then
+            error "Failed to read license from $1"
+            return 1
+        fi
         if ! [ $FORCE == 1 ] && ! chk_license ${license[@]} ; then
             # Removed so as not to clutter failed.txt
             #warning "$packagename license (${license[@]}) does not require source tarballs"
@@ -35,9 +47,11 @@ create_srcpackage() {
             msg "Creating source tarball for $packagename-$pkgver-$pkgrel"
         fi
 
-        local logfile="${LOGDIR}/sourceballs/$packagename.gz"
-        if ! /usr/bin/makepkg --allsource --ignorearch 2>&1 | gzip >"$logfile"; then
-            die "Failed to download source for $packagename-$pkgver-$pkgrel ($reponame-$arch)"
+        local logfile="${LOGDIR}/sourceballs/$packagename"
+        if ! /usr/bin/makepkg --allsource --ignorearch >"$logfile" 2>&1; then
+            error "Failed to download source for $packagename-$pkgver-$pkgrel ($reponame-$arch)"
+            popd >/dev/null
+            return 1
         fi
         /bin/rm -f "$logfile"
 
@@ -55,10 +69,15 @@ set_umask
 [ ! -d "${LOGDIR}/sourceballs" ] && mkdir -p "${LOGDIR}/sourceballs"
 cd "$WORKDIR"
 
+failed=0
+
 if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
-  create_srcpackage "$packagename/repos/$reponame-$arch"
+  create_srcpackage "$packagename/repos/$reponame-$arch" || failed=1
 else
-  die "Package '$packagename' does not exist in repo '$reponame-$arch'"
+  error "Package '$packagename' does not exist in repo '$reponame-$arch'"
+  failed=1
 fi
 
 script_unlock
+
+exit $failed

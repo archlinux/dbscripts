@@ -14,9 +14,13 @@ remove_old() {
         PKGVERS=""
         for repo in *; do
             cd "$repo"
-            pkgver=$(. PKGBUILD; echo ${pkgver})
-            pkgrel=$(. PKGBUILD; echo ${pkgrel})
-            PKGVERS="$PKGVERS $pkgver-$pkgrel"
+            if [ -f PKGBUILD ]; then
+                pkgver=$(. PKGBUILD; echo ${pkgver})
+                pkgrel=$(. PKGBUILD; echo ${pkgrel})
+                PKGVERS="$PKGVERS $pkgver-$pkgrel"
+            else
+                error "PKGBUILD not found in $1/$repo"
+            fi
             cd ..
         done
 

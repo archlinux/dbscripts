@@ -22,7 +22,7 @@ arch="$3"
 script_lock
 
 create_srcpackage() {
-    if [ -d "$1" ]; then
+    if [ -f "$1/PKGBUILD" ]; then
         pushd "$1" >/dev/null
         pkgver=$(. PKGBUILD; echo ${pkgver})
         if [ $? -ne 0 ]; then
@@ -62,6 +62,8 @@ create_srcpackage() {
         popd >/dev/null
 
         return 0
+    else
+        error "PKGBUILD not found in $1"
     fi
 }
 

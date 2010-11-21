@@ -62,8 +62,6 @@ create_srcpackage() {
         popd >/dev/null
 
         return 0
-    else
-        error "PKGBUILD not found in $1"
     fi
 }
 
@@ -73,7 +71,14 @@ cd "$WORKDIR"
 failed=0
 
 if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
-  create_srcpackage "$packagename/repos/$reponame-$arch" || failed=1
+  if [ -f "$packagename/repos/$reponame-$arch/PKGBUILD" ]; then
+    create_srcpackage "$packagename/repos/$reponame-$arch" || failed=1
+  elif [ -f "$packagename/repos/$reponame-any/PKGBUILD" ]; then
+    create_srcpackage "$packagename/repos/$reponame-any" || failed=1
+  else
+    error "PKGBUILD for '$packagename' does not exist in repo '$reponame-$arch' or '$reponame-any'"
+    failed=1
+  fi
 else
   error "Package '$packagename' does not exist in repo '$reponame-$arch'"
   failed=1

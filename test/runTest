@@ -558,6 +558,21 @@ testSourceballs() {
 	done
 }
 
+testAnySourceballs() {
+	local pkgs=('pkg-any-a' 'pkg-any-b')
+	local pkgbase
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase} any
+	done
+	../db-update
+
+	../cron-jobs/sourceballs
+	for pkgbase in ${pkgs[@]}; do
+		[ ! -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ] && fail "source package not found!"
+	done
+}
+
 testSourceballsCleanup() {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')

@@ -8,6 +8,8 @@ logfile="${LOGDIR}/sourceballs/cleanup.txt"
 
 script_lock
 
+${CLEANUP_DRYRUN} && warning 'dry run mode is active'
+
 remove_old() {
     if [ -d "$1" ]; then
         pushd "$1" >/dev/null
@@ -36,7 +38,7 @@ remove_old() {
                     fi
                 done
                 if [ $skip -ne 1 ]; then
-                    mv "$srcpkg" $SOURCE_CLEANUP_DESTDIR
+                    ${CLEANUP_DRYRUN} || mv "$srcpkg" $SOURCE_CLEANUP_DESTDIR
                 fi
             fi
         done
@@ -65,14 +67,14 @@ for sourceball in "${FTP_BASE}/${SRCPOOL}"/*$SRCEXT; do
         echo "$packagename : svn died during export. Skipping sourceball." >> "$logfile"
       else
         echo "$packagename : no longer in svn.  Removing sourceball." >> "$logfile"
-        mv $sourceball $SOURCE_CLEANUP_DESTDIR
+        ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
       fi
     elif [ -z "$(ls -A "$packagename/repos")" ]; then
       echo "$packagename : no longer in repos but trunk is still in svn.  Removing sourceball." >> "$logfile"
-      mv $sourceball $SOURCE_CLEANUP_DESTDIR
+      ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
     elif !  source  "$packagename/trunk/PKGBUILD" &&  chk_license ${license[@]}; then
       echo "$packagename : source hosting no longer required by license.  Removing sourceball." >> "$logfile"
-      mv $sourceball $SOURCE_CLEANUP_DESTDIR
+      ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
     else
       remove_old "$packagename/repos/"
     fi

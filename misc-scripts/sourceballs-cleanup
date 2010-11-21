@@ -3,9 +3,6 @@
 . "$(dirname $0)/../db-functions"
 . "$(dirname $0)/../config"
 
-[ ! -d "${LOGDIR}/sourceballs" ] && mkdir -p "${LOGDIR}/sourceballs"
-logfile="${LOGDIR}/sourceballs/cleanup.txt"
-
 script_lock
 
 ${CLEANUP_DRYRUN} && warning 'dry run mode is active'
@@ -53,10 +50,6 @@ remove_old() {
 set_umask
 cd "$WORKDIR"
 
-
-[ -e "$logfile" ] && /bin/mv "$logfile" "$logfile.old"
-echo  "Orphaned sourceballs:" > "$logfile"
-
 for sourceball in "${FTP_BASE}/${SRCPOOL}"/*$SRCEXT; do
     [ -f "$sourceball" ] || continue
     packagename=$(basename $sourceball)
@@ -64,16 +57,16 @@ for sourceball in "${FTP_BASE}/${SRCPOOL}"/*$SRCEXT; do
 
     if ! /usr/bin/svn export -q --force "$SVNREPO/$packagename" "$packagename" >/dev/null 2>&1; then
       if [ $? -ne 1 ]; then
-        echo "$packagename : svn died during export. Skipping sourceball." >> "$logfile"
+        error "$packagename : svn died during export. Skipping sourceball."
       else
-        echo "$packagename : no longer in svn.  Removing sourceball." >> "$logfile"
+        msg "$packagename : no longer in svn.  Removing sourceball."
         ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
       fi
     elif [ -z "$(ls -A "$packagename/repos")" ]; then
-      echo "$packagename : no longer in repos but trunk is still in svn.  Removing sourceball." >> "$logfile"
+      warning "$packagename : no longer in repos but trunk is still in svn.  Removing sourceball."
       ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
-    elif !  source  "$packagename/trunk/PKGBUILD" &&  chk_license ${license[@]}; then
-      echo "$packagename : source hosting no longer required by license.  Removing sourceball." >> "$logfile"
+    elif ! chk_license $(. "$packagename/trunk/PKGBUILD"; echo ${license[@]}); then
+      msg "$packagename : source hosting no longer required by license.  Removing sourceball."
       ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
     else
       remove_old "$packagename/repos/"

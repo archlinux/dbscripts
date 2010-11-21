@@ -9,16 +9,12 @@ set_umask
 
 dirname="$(/bin/readlink -f $(/usr/bin/dirname $0))"
 
-[ ! -d "${LOGDIR}/sourceballs" ] && mkdir -p "${LOGDIR}/sourceballs"
-[ -e "${LOGDIR}/sourceballs/errors.txt" ] && /bin/mv "${LOGDIR}/sourceballs/errors.txt" "${LOGDIR}/sourceballs/errors.txt.old"
-[ -e "${LOGDIR}/sourceballs/failed.txt" ] && /bin/mv "${LOGDIR}/sourceballs/failed.txt" "${LOGDIR}/sourceballs/failed.txt.old"
-
 for repo in ${PKGREPOS[@]}; do
     for arch in ${ARCHES[@]}; do
         ftppath="${FTP_BASE}/$repo/os/$arch"
         dbfile="${ftppath}/${repo}${DBEXT}"
         if [ ! -r "${dbfile}" ]; then
-            warning "DB file does not exist: ${dbfile}"
+            warning "${dbfile} not found, skipping"
             continue
         fi
 
@@ -48,9 +44,8 @@ for repo in ${PKGREPOS[@]}; do
             fi
 
             if [ ! -f "${FTP_BASE}/${SRCPOOL}/$srcpkg" ]; then
-                if ! $dirname/../misc-scripts/make-sourceball $force \
-                    $pkgbase $repo $arch 2>>"${LOGDIR}/sourceballs/errors.txt"; then
-                    echo "$pkgbase" >> "${LOGDIR}/sourceballs/failed.txt"
+                if ! $dirname/../misc-scripts/make-sourceball $force $pkgbase $repo $arch; then
+                    error "Failed to download sources for $pkgbase"
                 fi
             fi
         done

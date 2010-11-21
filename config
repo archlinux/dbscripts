@@ -13,7 +13,6 @@ LOCK_TIMEOUT=300
 
 STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
-LOGDIR="/var/log/dbscripts"
 ARCHES=(i686 x86_64)
 DBEXT=".db.tar.gz"
 PKGEXT=".pkg.tar.*"

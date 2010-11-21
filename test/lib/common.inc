@@ -45,7 +45,6 @@ setUp() {
 	done
 	mkdir -p "${TMP}/ftp/${PKGPOOL}"
 	mkdir -p "${TMP}/ftp/${SRCPOOL}"
-	mkdir -p "${TMP}/log"
 
 	msg 'Creating svn repository...'
 	svnadmin create "${TMP}/svn-packages-repo"
@@ -68,7 +67,6 @@ setUp() {
 	SOURCE_CLEANUP_DESTDIR="${TMP}/source-cleanup"
 	STAGING="${TMP}/staging"
 	TMPDIR="${TMP}/tmp"
-	LOGDIR="${TMP}/log"
 	CLEANUP_DRYRUN=false
 eot
 	. "${curdir}/../config"

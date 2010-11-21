@@ -47,17 +47,17 @@ create_srcpackage() {
             msg "Creating source tarball for $packagename-$pkgver-$pkgrel"
         fi
 
-        local logfile="${LOGDIR}/sourceballs/$packagename"
-        if ! /usr/bin/makepkg --allsource --ignorearch >"$logfile" 2>&1; then
+        /usr/bin/makepkg --allsource --ignorearch > "$WORKDIR/makepkg.log" 2>&1
+        if [ $? -ne 0 ]; then
             error "Failed to download source for $packagename-$pkgver-$pkgrel ($reponame-$arch)"
-            popd >/dev/null
+            local line
+            while read line; do
+                msg2 "${line}"
+            done < "$WORKDIR/makepkg.log"
             return 1
         fi
-        /bin/rm -f "$logfile"
 
-        local pkg_file="${packagename}-${pkgver}-${pkgrel}${SRCEXT}"
-
-        mv "$pkg_file" "${FTP_BASE}/${SRCPOOL}"
+        mv "${packagename}-${pkgver}-${pkgrel}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}"
 
         popd >/dev/null
 
@@ -68,7 +68,6 @@ create_srcpackage() {
 }
 
 set_umask
-[ ! -d "${LOGDIR}/sourceballs" ] && mkdir -p "${LOGDIR}/sourceballs"
 cd "$WORKDIR"
 
 failed=0

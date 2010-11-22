@@ -1,5 +1,5 @@
 1) Build the python module
-$ python setup.py build
+$ python2 setup.py build
 
 2) copy it back to the current working directory
 $ cp build/lib.*/alpm.* .

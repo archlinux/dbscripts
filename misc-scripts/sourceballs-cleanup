@@ -55,6 +55,10 @@ for sourceball in "${FTP_BASE}/${SRCPOOL}"/*$SRCEXT; do
     packagename=$(basename $sourceball)
     packagename=${packagename%-*-*$SRCEXT}
 
+    if grep -q "^${packagename}\$" "$(dirname $0)/../cron-jobs/sourceballs.skip"; then
+      msg "$packagename : package found in sourceballs.skip. Removing sourceball."
+      ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
+    fi
     if ! /usr/bin/svn export -q --force "$SVNREPO/$packagename" "$packagename" >/dev/null 2>&1; then
       if [ $? -ne 1 ]; then
         error "$packagename : svn died during export. Skipping sourceball."
@@ -66,8 +70,10 @@ for sourceball in "${FTP_BASE}/${SRCPOOL}"/*$SRCEXT; do
       warning "$packagename : no longer in repos but trunk is still in svn.  Removing sourceball."
       ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
     elif ! chk_license $(. "$packagename/trunk/PKGBUILD"; echo ${license[@]}); then
-      msg "$packagename : source hosting no longer required by license.  Removing sourceball."
-      ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
+      if ! grep -q "^${packagename}\$" "$(dirname $0)/../cron-jobs/sourceballs.force"; then
+        msg "$packagename : source hosting no longer required by license.  Removing sourceball."
+        ${CLEANUP_DRYRUN} || mv $sourceball $SOURCE_CLEANUP_DESTDIR
+      fi
     else
       remove_old "$packagename/repos/"
     fi

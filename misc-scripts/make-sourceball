@@ -71,10 +71,10 @@ cd "$WORKDIR"
 failed=0
 
 if /usr/bin/svn export -q "$SVNREPO/$packagename" $packagename; then
-  if [ -f "$packagename/repos/$reponame-$arch/PKGBUILD" ]; then
-    create_srcpackage "$packagename/repos/$reponame-$arch" || failed=1
-  elif [ -f "$packagename/repos/$reponame-any/PKGBUILD" ]; then
+  if [ -f "$packagename/repos/$reponame-any/PKGBUILD" ]; then
     create_srcpackage "$packagename/repos/$reponame-any" || failed=1
+  elif [ -f "$packagename/repos/$reponame-$arch/PKGBUILD" ]; then
+    create_srcpackage "$packagename/repos/$reponame-$arch" || failed=1
   else
     error "PKGBUILD for '$packagename' does not exist in repo '$reponame-$arch' or '$reponame-any'"
     failed=1

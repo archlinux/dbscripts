@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Some PKGBUILDs need CARCH to be set
+CARCH="x86_64"
+
 # Useful functions
 UMASK=""
 set_umask () {

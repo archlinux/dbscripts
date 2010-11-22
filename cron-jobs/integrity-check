@@ -1,15 +1,16 @@
 #!/bin/bash
 
-basedir="$(dirname $0)"
+. "$(dirname $0)/../db-functions"
+. "$(dirname $0)/../config"
+
 
 if [ $# -ne 2 ]; then
-    echo "usage: $(basename $0) <repo>[,<repo>,...] <mailto>" >&2
-    exit 1
+    die "usage: $(basename $0) <repo>[,<repo>,...] <mailto>"
 fi
 
 for arch in ${ARCHES[@]}; do
-    $basedir/check_archlinux/check_packages.py \
+    $(dirname $0)/check_archlinux/check_packages.py \
         --repos="$1" \
         --abs-tree="/srv/abs/rsync/$arch,/srv/abs/rsync/any" --arch="$arch" |\
-        $basedir/devlist-mailer "Integrity Check $arch: $1" "$2"
+        $(dirname $0)/devlist-mailer "Integrity Check $arch: $1" "$2"
 done

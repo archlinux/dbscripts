@@ -47,17 +47,25 @@ create_srcpackage() {
             msg "Creating source tarball for $packagename-$pkgver-$pkgrel"
         fi
 
+        local line
         /usr/bin/makepkg --allsource --ignorearch > "$WORKDIR/makepkg.log" 2>&1
         if [ $? -ne 0 ]; then
             error "Failed to download source for $packagename-$pkgver-$pkgrel ($reponame-$arch)"
-            local line
             while read line; do
                 msg2 "${line}"
             done < "$WORKDIR/makepkg.log"
             return 1
         fi
 
-        mv "${packagename}-${pkgver}-${pkgrel}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}"
+        if [ -f "${packagename}-${pkgver}-${pkgrel}${SRCEXT}" ]; then
+            mv "${packagename}-${pkgver}-${pkgrel}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}"
+        else
+            error "Source package not found: ${packagename}-${pkgver}-${pkgrel}${SRCEXT}"
+            while read line; do
+                msg2 "${line}"
+            done < "$WORKDIR/makepkg.log"
+            return 1
+        fi
 
         popd >/dev/null
 

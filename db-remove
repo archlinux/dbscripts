@@ -16,7 +16,7 @@ ftppath="$FTP_BASE/$repo/os"
 svnrepo="$repo-$arch"
 
 if ! check_repo_permission $repo; then
-	die "You don't have permission to remove packages from ${reponam}"
+	die "You don't have permission to remove packages from ${repo}"
 fi
 
 if [ "$arch" == "any" ]; then
@@ -40,8 +40,6 @@ else
 	die "$pkgbase not found in $svnrepo"
 fi
 
-
-# copy the db file into our working area
 for tarch in ${tarches[@]}; do
 	if [ ! -f "$ftppath/$tarch/$repo$DBEXT" ]; then
 		die "No database found at '$ftppath/$tarch', nothing more to do"

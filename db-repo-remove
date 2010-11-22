@@ -1,0 +1,41 @@
+#!/bin/bash
+
+. "$(dirname $0)/db-functions"
+. "$(dirname $0)/config"
+
+if [ $# -ne 3 ]; then
+	msg "usage: $(basename $0) <pkgname> <repo> <arch>"
+	exit 1
+fi
+
+pkgname="$1"
+repo="$2"
+arch="$3"
+
+ftppath="$FTP_BASE/$repo/os"
+
+if ! check_repo_permission $repo; then
+	die "You don't have permission to remove packages from ${repo}"
+fi
+
+if [ "$arch" == "any" ]; then
+	tarches=(${ARCHES[@]})
+else
+	tarches=("$arch")
+fi
+
+for tarch in ${tarches[@]}; do
+	repo_lock $repo $tarch || exit 1
+done
+
+msg "Removing $pkgname from [$repo]..."
+
+for tarch in ${tarches[@]}; do
+	if [ ! -f "$ftppath/$tarch/$repo$DBEXT" ]; then
+		die "No database found at '$ftppath/$tarch', nothing more to do"
+	fi
+
+	/usr/bin/repo-remove -q "$ftppath/$tarch/$repo$DBEXT" ${pkgname} >/dev/null
+	set_repo_permission "${repo}" "${tarch}"
+	repo_unlock $repo $tarch
+done

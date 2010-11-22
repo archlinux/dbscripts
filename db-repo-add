@@ -1,0 +1,40 @@
+#!/bin/bash
+
+. "$(dirname $0)/db-functions"
+. "$(dirname $0)/config"
+
+if [ $# -ne 3 ]; then
+	msg "usage: $(basename $0) <pkgfile> <repo> <arch>"
+	exit 1
+fi
+
+pkgfile="$1"
+repo="$2"
+arch="$3"
+
+ftppath="$FTP_BASE/$repo/os"
+
+if ! check_repo_permission $repo; then
+	die "You don't have permission to add packages to ${repo}"
+fi
+
+if [ "$arch" == "any" ]; then
+	tarches=(${ARCHES[@]})
+else
+	tarches=("$arch")
+fi
+
+for tarch in ${tarches[@]}; do
+	repo_lock $repo $tarch || exit 1
+done
+
+msg "Adding $pkgfile to [$repo]..."
+
+for tarch in ${tarches[@]}; do
+	if [ ! -f "${pkgfile}" ]; then
+		die "Package file ${pkgfile} not found"
+	fi
+	/usr/bin/repo-add -q "$ftppath/$tarch/$repo$DBEXT" ${pkgfile} >/dev/null
+	set_repo_permission "${repo}" "${tarch}"
+	repo_unlock $repo $tarch
+done

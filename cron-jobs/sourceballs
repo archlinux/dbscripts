@@ -68,15 +68,11 @@ for repo in ${PKGREPOS[@]}; do
 
 		# Build the source package if its not already there
 		if ! grep -Fqx "${pkgbase}-${pkgver}${SRCEXT}" "${WORKDIR}/available-src-pkgs"; then
-			# Looks like a previous arch faild; skip it
-			if [ -d "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" ]; then
-				continue
-			fi
 			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}"
 			svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}" \
 				"${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null 2>&1
 			if [ $? -ge 1 ]; then
-				failedpkgs[${#failedpkgs[*]}]="${pkgbase}"
+				failedpkgs[${#failedpkgs[*]}]="${pkgbase}-${pkgver}${SRCEXT}"
 				continue
 			fi
 
@@ -86,12 +82,11 @@ for repo in ${PKGREPOS[@]}; do
 				mv "${pkgbase}-${pkgver}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}"
 				# Avoid creating the same source package for every arch
 				echo "${pkgbase}-${pkgver}${SRCEXT}" >> "${WORKDIR}/available-src-pkgs"
+				newpkgs[${#newpkgs[*]}]="${pkgbase}-${pkgver}${SRCEXT}"
 			else
-				failedpkgs[${#failedpkgs[*]}]="${pkgbase}"
+				failedpkgs[${#failedpkgs[*]}]="${pkgbase}-${pkgver}${SRCEXT}"
 			fi
 			popd >/dev/null
-
-			newpkgs[${#newpkgs[*]}]="${pkgbase}"
 		fi
 	done < "${WORKDIR}/db-${repo}"
 

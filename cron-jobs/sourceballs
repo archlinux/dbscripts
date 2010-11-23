@@ -68,6 +68,12 @@ for repo in ${PKGREPOS[@]}; do
 
 		# Build the source package if its not already there
 		if ! grep -Fqx "${pkgbase}-${pkgver}${SRCEXT}" "${WORKDIR}/available-src-pkgs"; then
+			# Check if we had failed before
+			if in_array "${pkgbase}-${pkgver}${SRCEXT}" ${failedpkgs[@]}; then
+				continue
+			fi
+
+			# Get the sources from svn
 			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}"
 			svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}" \
 				"${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null 2>&1
@@ -76,6 +82,7 @@ for repo in ${PKGREPOS[@]}; do
 				continue
 			fi
 
+			# Build the actual source package
 			pushd "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null
 			makepkg --nocolor --allsource --ignorearch >/dev/null 2>&1
 			if [ $? -eq 0 ] && [ -f "${pkgbase}-${pkgver}${SRCEXT}" ]; then

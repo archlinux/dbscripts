@@ -16,8 +16,8 @@ done
 # <pkgbase|pkgname> <pkgver>-<pkgrel> <arch> <license>[ <license>]
 for repo in ${PKGREPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
+		# Repo does not exist; skip it
 		if [ ! -f "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" ]; then
-			warning "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} not found, skipping"
 			continue
 		fi
 		bsdtar -xOf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" \
@@ -46,7 +46,8 @@ find "${FTP_BASE}/${SRCPOOL}" -xtype f -name "*${SRCEXT}" -printf '%f\n' | sort 
 
 # Check for all packages if we need to build a source package
 for repo in ${PKGREPOS[@]}; do
-	msg "Updating source packages for ${repo}..."
+	newpkgs=()
+	failedpkgs=()
 	while read line; do
 		pkginfo=(${line})
 		pkgbase=${pkginfo[0]}
@@ -67,16 +68,15 @@ for repo in ${PKGREPOS[@]}; do
 
 		# Build the source package if its not already there
 		if ! grep -Fqx "${pkgbase}-${pkgver}${SRCEXT}" "${WORKDIR}/available-src-pkgs"; then
-			msg2 "${pkgbase}"
 			# Looks like a previous arch faild; skip it
 			if [ -d "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" ]; then
 				continue
 			fi
 			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}"
 			svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}" \
-				"${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null
+				"${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null 2>&1
 			if [ $? -ge 1 ]; then
-				error "Could not check out ${pkgbase}/repos/${repo}-${pkgarch}"
+				failedpkgs[${#failedpkgs[*]}]="${pkgbase}"
 				continue
 			fi
 
@@ -87,11 +87,26 @@ for repo in ${PKGREPOS[@]}; do
 				# Avoid creating the same source package for every arch
 				echo "${pkgbase}-${pkgver}${SRCEXT}" >> "${WORKDIR}/available-src-pkgs"
 			else
-				error "Could not create source package for ${pkgbase}/repos/${repo}-${pkgarch}"
+				failedpkgs[${#failedpkgs[*]}]="${pkgbase}"
 			fi
 			popd >/dev/null
+
+			newpkgs[${#newpkgs[*]}]="${pkgbase}"
 		fi
 	done < "${WORKDIR}/db-${repo}"
+
+	if [ ${#newpkgs[@]} -ge 1 ]; then
+		msg "Adding source packages for [${repo}]..."
+		for new_pkg in ${newpkgs[@]}; do
+			msg2 "${new_pkg}"
+		done
+	fi
+	if [ ${#failedpkgs[@]} -ge 1 ]; then
+		msg "Failed to create source packages for [${repo}]..."
+		for failed_pkg in ${failedpkgs[@]}; do
+			msg2 "${failed_pkg}"
+		done
+	fi
 done
 
 # Cleanup old source packages

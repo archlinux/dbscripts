@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pushd "${WORKDIR}" >/dev/null
+
 dirname="$(dirname $0)"
 . "${dirname}/../db-functions"
 . "${dirname}/../config"

@@ -347,42 +347,11 @@ check_pkgrepos() {
 #usage: chk_license ${license[@]}"
 chk_license() {
 	local l
-	local allowed
-	for l in "$@"; do
-		l="$(echo $l | tr '[:upper:]' '[:lower:]')"
-		for allowed in ${ALLOWED_LICENSES[@]}; do
-			allowed="$(echo $allowed | tr '[:upper:]' '[:lower:]')"
-			if [ "$l" = "$allowed" ]; then
-				return 0
-			fi
-		done
+	for l in ${@}; do
+		in_array ${l} ${ALLOWED_LICENSES[@]} && return 0
 	done
 
 	return 1
-}
-
-pkgname_from_src() {
-	local tmp
-	local a
-	tmp=${1##*/}
-	tmp=${tmp%$SRCEXT}
-	for a in ${ARCHES[@]}; do
-		tmp=${tmp%-$a}
-	done
-	tmp=${tmp%-any}
-	echo ${tmp%-*-*}
-}
-
-pkgver_from_src() {
-	local tmp
-	local a
-	tmp=${1##*/}
-	tmp=${tmp%$SRCEXT}
-	for a in ${ARCHES[@]}; do
-		tmp=${tmp%-$a}
-	done
-	tmp=${tmp%-any}
-	echo $tmp | sed 's|.*-\(.*-.*\)$|\1|g'
 }
 
 check_repo_permission() {

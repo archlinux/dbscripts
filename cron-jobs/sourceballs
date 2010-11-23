@@ -1,57 +1,111 @@
 #!/bin/bash
 
-. "$(dirname $0)/../db-functions"
-. "$(dirname $0)/../config"
+dirname="$(dirname $0)"
+. "${dirname}/../db-functions"
+. "${dirname}/../config"
 
 script_lock
 
-set_umask
-
-dirname="$(/bin/readlink -f $(/usr/bin/dirname $0))"
-
 for repo in ${PKGREPOS[@]}; do
-    for arch in ${ARCHES[@]}; do
-        ftppath="${FTP_BASE}/$repo/os/$arch"
-        dbfile="${ftppath}/${repo}${DBEXT}"
-        if [ ! -r "${dbfile}" ]; then
-            warning "${dbfile} not found, skipping"
-            continue
-        fi
-
-        repo_lock ${repo} ${arch} || exit 1
-        # Read packages from db file
-        # Format is: <pkgbase|pkgname>/<pkgver>-<pkgrel>
-        pkgs=($(bsdtar -xOf "${dbfile}" \
-            | awk '/^%NAME%/{getline b};/^%BASE%/{getline b};/^%VERSION%/{getline v};/^%ARCH%/{printf "%s/%s\n", b, v}' \
-            | sort -u))
-        repo_unlock ${repo} ${arch}
-
-        for pkg in ${pkgs[@]}; do
-            pkgbase=${pkg%/*}
-            pkgver=${pkg#*/}
-            srcpkg="${pkgbase}-${pkgver}${SRCEXT}"
-
-            # Don't do anything for package in this 'blacklist'
-            if grep -q "^${pkgbase}\$" "$dirname/sourceballs.skip"; then
-                continue
-            fi
-
-            # Use this file to 'whitelist' or force building some sourceballs,
-            # skipping the license check
-            force=""
-            if grep -q "^$pkgbase\$" "$dirname/sourceballs.force"; then
-                force="-f"
-            fi
-
-            if [ ! -f "${FTP_BASE}/${SRCPOOL}/$srcpkg" ]; then
-                if ! $dirname/../misc-scripts/make-sourceball $force $pkgbase $repo $arch; then
-                    error "Failed to download sources for $pkgbase"
-                fi
-            fi
-        done
-    done
+	for arch in ${ARCHES[@]}; do
+		repo_lock ${repo} ${arch} || exit 1
+	done
 done
 
-$dirname/../misc-scripts/sourceballs-cleanup
+# Create a readable file for each repo with the following format
+# <pkgbase|pkgname> <pkgver>-<pkgrel> <arch> <license>[ <license>]
+for repo in ${PKGREPOS[@]}; do
+	for arch in ${ARCHES[@]}; do
+		if [ ! -f "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" ]; then
+			warning "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} not found, skipping"
+			continue
+		fi
+		bsdtar -xOf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" \
+			| awk '/^%NAME%/ { getline b };
+				/^%BASE%/ { getline b };
+				/^%VERSION%/ { getline v };
+				/^%LICENSE%/,/^$/ {
+					if ( !/^%LICENSE%/ ) { l=l" "$0 }
+					};
+				/^%ARCH%/ {
+					getline a;
+					printf "%s %s %s %s\n", b, v, a, l;
+					l="";
+				}'
+	done | sort -u > "${WORKDIR}/db-${repo}"
+done
+
+for repo in ${PKGREPOS[@]}; do
+	for arch in ${ARCHES[@]}; do
+		repo_unlock ${repo} ${arch}
+	done
+done
+
+# Create a list of all available source package file names
+find "${FTP_BASE}/${SRCPOOL}" -xtype f -name "*${SRCEXT}" -printf '%f\n' | sort -u > "${WORKDIR}/available-src-pkgs"
+
+# Check for all packages if we need to build a source package
+for repo in ${PKGREPOS[@]}; do
+	msg "Updating source packages for ${repo}..."
+	while read line; do
+		pkginfo=(${line})
+		pkgbase=${pkginfo[0]}
+		pkgver=${pkginfo[1]}
+		pkgarch=${pkginfo[2]}
+		pkglicense=(${pkginfo[@]:3})
+
+		# Should this package be skipped?
+		if grep -Fqx "${pkgbase}" "${dirname}/sourceballs.skip"; then
+			continue
+		fi
+		# Check if the license or .force file does not enforce creating a source package
+		if ! (chk_license ${pkglicense[@]} || grep -Fqx "${pkgbase}" "${dirname}/sourceballs.force"); then
+			continue
+		fi
+		# Store the expected file name of the source package
+		echo "${pkgbase}-${pkgver}${SRCEXT}" >> "${WORKDIR}/expected-src-pkgs"
+
+		# Build the source package if its not already there
+		if ! grep -Fqx "${pkgbase}-${pkgver}${SRCEXT}" "${WORKDIR}/available-src-pkgs"; then
+			msg2 "${pkgbase}"
+			# Looks like a previous arch faild; skip it
+			if [ -d "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" ]; then
+				continue
+			fi
+			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}"
+			svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}" \
+				"${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null
+			if [ $? -ge 1 ]; then
+				error "Could not check out ${pkgbase}/repos/${repo}-${pkgarch}"
+				continue
+			fi
+
+			pushd "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null
+			makepkg --nocolor --allsource --ignorearch >/dev/null 2>&1
+			if [ $? -eq 0 ] && [ -f "${pkgbase}-${pkgver}${SRCEXT}" ]; then
+				mv "${pkgbase}-${pkgver}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}"
+				# Avoid creating the same source package for every arch
+				echo "${pkgbase}-${pkgver}${SRCEXT}" >> "${WORKDIR}/available-src-pkgs"
+			else
+				error "Could not create source package for ${pkgbase}/repos/${repo}-${pkgarch}"
+			fi
+			popd >/dev/null
+		fi
+	done < "${WORKDIR}/db-${repo}"
+done
+
+# Cleanup old source packages
+cat "${WORKDIR}/expected-src-pkgs" | sort -u > "${WORKDIR}/expected-src-pkgs.sort"
+cat "${WORKDIR}/available-src-pkgs" | sort -u > "${WORKDIR}/available-src-pkgs.sort"
+old_pkgs=($(comm -23 "${WORKDIR}/available-src-pkgs.sort" "${WORKDIR}/expected-src-pkgs.sort"))
+
+if [ ${#old_pkgs[@]} -ge 1 ]; then
+	msg "Removing old source packages..."
+	${CLEANUP_DRYRUN} && warning 'dry run mode is active'
+	for old_pkg in ${old_pkgs[@]}; do
+		msg2 "${old_pkg}"
+		${CLEANUP_DRYRUN} || mv "$FTP_BASE/${SRCPOOL}/${old_pkg}" "${SOURCE_CLEANUP_DESTDIR}"
+	done
+fi
 
 script_unlock

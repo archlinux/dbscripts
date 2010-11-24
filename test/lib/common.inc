@@ -68,6 +68,7 @@ setUp() {
 	STAGING="${TMP}/staging"
 	TMPDIR="${TMP}/tmp"
 	CLEANUP_DRYRUN=false
+	SOURCE_CLEANUP_DRYRUN=false
 eot
 	. "${curdir}/../config"
 }

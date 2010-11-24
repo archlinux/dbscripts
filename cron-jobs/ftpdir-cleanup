@@ -31,7 +31,6 @@ ${CLEANUP_DRYRUN} && warning 'dry run mode is active'
 for repo in ${PKGREPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
 		if [ ! -f "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" ]; then
-			warning "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} not found, skipping"
 			continue
 		fi
 		# get a list of actual available package files

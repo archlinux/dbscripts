@@ -1,10 +1,9 @@
 #!/bin/bash
 
-pushd "${WORKDIR}" >/dev/null
-
-dirname="$(dirname $0)"
+dirname="$(dirname $(readlink -e $0))"
 . "${dirname}/../db-functions"
 . "${dirname}/../config"
+pushd "${WORKDIR}" >/dev/null
 
 script_lock
 

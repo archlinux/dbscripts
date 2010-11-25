@@ -18,14 +18,12 @@ MYTMPDIR="$(mktemp -d ${WORKDIR}/create-filelists.tmpdir.XXXXXX)" || exit 1
 #adjust the nice level to run at a lower priority
 /usr/bin/renice +10 -p $$ > /dev/null
 
-case "${DBEXT}" in
+case "${FILESEXT}" in
 	*.gz)  TAR_OPT="z" ;;
 	*.bz2) TAR_OPT="j" ;;
 	*.xz)  TAR_OPT="J" ;;
-	*) die "Unknown compression type for DBEXT=${DBEXT}" ;;
+	*) die "Unknown compression type for FILESEXT=${FILESEXT}" ;;
 esac
-
-FILESEXT="${DBEXT//db/files}"
 
 for repo in ${PKGREPOS[@]}; do
     REPO_DB_FILE="${repo}$DBEXT"
@@ -77,7 +75,7 @@ for repo in ${PKGREPOS[@]}; do
             mkdir -p "$pkgdir"
             pushd "${MYTMPDIR}/${repodir}" >/dev/null
             [ -f "${pkgdir}/${FILES_DB_FILE}" ] && rm "${pkgdir}/${FILES_DB_FILE}"
-            bsdtar --exclude=*${DBEXT//\.db/} -c${TAR_OPT}f "${pkgdir}/${FILES_DB_FILE}" *
+            bsdtar --exclude=*${FILESEXT} -c${TAR_OPT}f "${pkgdir}/${FILES_DB_FILE}" *
             popd >/dev/null
         fi
         popd >/dev/null

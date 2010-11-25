@@ -16,6 +16,7 @@ STAGING="$HOME/staging"
 TMPDIR="/srv/tmp"
 ARCHES=(i686 x86_64)
 DBEXT=".db.tar.gz"
+FILESEXT=".files.tar.gz"
 PKGEXT=".pkg.tar.*"
 SRCEXT=".src.tar.gz"
 

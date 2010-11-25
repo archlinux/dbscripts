@@ -75,7 +75,6 @@ testSourceballsCleanup() {
 	for arch in ${arches[@]}; do
 		../db-remove pkg-simple-a extra ${arch}
 	done
-	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	../cron-jobs/sourceballs
 	[ -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-a-*${SRCEXT} ] && fail "source package was not removed!"

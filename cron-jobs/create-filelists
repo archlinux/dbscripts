@@ -25,17 +25,16 @@ for repo in ${PKGREPOS[@]}; do
 		# get a list of package files defined in the repo db
 		mkdir -p "${WORKDIR}/db-dir-${repo}-${arch}"
 		bsdtar -xf "${repodb}" -C "${WORKDIR}/db-dir-${repo}-${arch}"
-		find "${WORKDIR}/db-dir-${repo}-${arch}" -name 'desc' \
-			-exec awk '/^%FILENAME%/{getline;print}' {} \; | sort > "${WORKDIR}/db-${repo}-${arch}"
+		# This should actualy be faster than reading all the just extracted files
+		bsdtar -xOf "${repodb}" | awk '/^%FILENAME%/{getline;print}' | sort > "${WORKDIR}/db-${repo}-${arch}"
 
 		# get a list of package files defined in the files db
 		mkdir -p "${WORKDIR}/files-current-dir-${repo}-${arch}"
 		if [ ! -f "${filedb}" ]; then
-			echo > "${WORKDIR}/files-${repo}-${arch}"
+			touch "${WORKDIR}/files-${repo}-${arch}"
 		else
 			bsdtar -xf "${filedb}" -C "${WORKDIR}/files-current-dir-${repo}-${arch}"
-			find "${WORKDIR}/files-current-dir-${repo}-${arch}" -name 'desc' \
-				-exec awk '/^%FILENAME%/{getline;print}' {} \; | sort > "${WORKDIR}/files-${repo}-${arch}"
+			bsdtar -xOf "${filedb}" | awk '/^%FILENAME%/{getline;print}' | sort > "${WORKDIR}/files-${repo}-${arch}"
 		fi
 	done
 done

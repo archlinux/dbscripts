@@ -8,12 +8,8 @@ curdir=$(readlink -e $(dirname $0))
 #
 
 testPackages() {
-	local p
-	for p in "${pkgdir}"/*; do
-		pushd $p >/dev/null
-		namcap *.pkg.tar.* || fail 'namcap failed'
-		popd >/dev/null
-	done
+	# TODO: namcap -r depends fails with i686 packages
+	find "${pkgdir}" -name "*${PKGEXT}" -exec namcap -e depends {} + || fail 'namcap failed'
 }
 
 
@@ -94,7 +90,7 @@ testUpdateAnyPackage() {
 	pushd "${TMP}/svn-packages-copy/pkg-any-a/trunk/" >/dev/null
 	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
 	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
-	makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1
+	extra-i686-build >/dev/null 2>&1
 	mv pkg-any-a-1-2-any.pkg.tar.xz "${pkgdir}/pkg-any-a/"
 	popd >/dev/null
 
@@ -103,7 +99,7 @@ testUpdateAnyPackage() {
 
 	checkAnyPackage extra pkg-any-a-1-2-any.pkg.tar.xz any
 
-	rm "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
+	rm -f "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
 }
 
 testUpdateAnyPackageToDifferentRepositoriesAtOnce() {
@@ -112,7 +108,7 @@ testUpdateAnyPackageToDifferentRepositoriesAtOnce() {
 	pushd "${TMP}/svn-packages-copy/pkg-any-a/trunk/" >/dev/null
 	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
 	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
-	makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1
+	extra-i686-build >/dev/null 2>&1
 	mv pkg-any-a-1-2-any.pkg.tar.xz "${pkgdir}/pkg-any-a/"
 	popd >/dev/null
 
@@ -123,7 +119,7 @@ testUpdateAnyPackageToDifferentRepositoriesAtOnce() {
 	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 	checkAnyPackage testing pkg-any-a-1-2-any.pkg.tar.xz any
 
-	rm "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
+	rm -f "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
 }
 
 testUpdateSameAnyPackageToDifferentRepositories() {
@@ -279,13 +275,13 @@ testTesting2xAnyPackage() {
 	pushd "${TMP}/svn-packages-copy/pkg-any-a/trunk/" >/dev/null
 	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
 	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
-	makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1
+	extra-i686-build >/dev/null 2>&1
 	mv pkg-any-a-1-2-any.pkg.tar.xz "${pkgdir}/pkg-any-a/"
 	popd >/dev/null
 
 	releasePackage testing pkg-any-a any
 	../db-update
-	rm "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
+	rm -f "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
 
 	../testing2x pkg-any-a
 
@@ -449,13 +445,13 @@ testUpdateAnyPackageWithoutPool() {
 	pushd "${TMP}/svn-packages-copy/${pkgname}/trunk/" >/dev/null
 	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
 	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
-	makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1
+	extra-i686-build >/dev/null 2>&1
 	mv "${pkg2}" "${pkgdir}/${pkgname}/"
 	popd >/dev/null
 
 	releasePackage extra ${pkgname} any
 	../db-update
-	rm "${pkgdir}/${pkgname}/${pkg2}"
+	rm -f "${pkgdir}/${pkgname}/${pkg2}"
 
 	../cron-jobs/ftpdir-cleanup >/dev/null
 

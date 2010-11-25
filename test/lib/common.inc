@@ -5,15 +5,42 @@ set -E
 
 oneTimeSetUp() {
 	local p
+	local d
+	local a
+	local pkgname
+	local pkgarch
+	local pkgversion
+	local build
 	pkgdir="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
 	cp -r ${curdir}/packages/* "${pkgdir}"
 	msg 'Building packages...'
-	for p in "${pkgdir}"/*; do
-		pushd $p >/dev/null
-		linux32 makepkg -cf --config ${curdir}/lib/makepkg-i686.conf >/dev/null 2>&1 || die 'makepkg failed'
-		[ -f *-any.pkg.tar.* ] \
-			|| linux64 makepkg -cf --config ${curdir}/lib/makepkg-x86_64.conf >/dev/null 2>&1 \
-			|| die 'makepkg failed'
+	for d in "${pkgdir}"/*; do
+		pushd $d >/dev/null
+		pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
+		pkgarch=($(. PKGBUILD; echo ${arch[@]}))
+		pkgversion=$(. PKGBUILD; echo ${pkgver}-${pkgrel})
+
+		build=true
+		for a in ${pkgarch[@]}; do
+			for p in ${pkgname[@]}; do
+				[ ! -f ${p}-${pkgversion}-${a}${PKGEXT} ] && build=false
+			done
+		done
+
+		if ! ${build}; then
+			if [ "${pkgarch[0]}" == 'any' ]; then
+				extra-x86_64-build || die 'extra-x86_64-build failed'
+			else
+				for a in ${pkgarch[@]}; do
+					extra-${a}-build || die "extra-${a}-build failed"
+				done
+			fi
+			for a in ${pkgarch[@]}; do
+				for p in ${pkgname[@]}; do
+					cp ${p}-${pkgversion}-${a}${PKGEXT} ${curdir}/packages/$(basename ${d})
+				done
+			done
+		fi
 		popd >/dev/null
 	done
 	echo

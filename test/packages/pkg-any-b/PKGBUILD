@@ -7,5 +7,6 @@ url='http://www.archlinux.org/'
 license=('GPL')
 
 package() {
-	true
+	install -d -m755 ${pkgdir}/usr/share/${pkgname}
+	echo 'test' > ${pkgdir}/usr/share/${pkgname}/test
 }

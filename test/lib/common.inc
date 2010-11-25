@@ -1,7 +1,7 @@
 set -E
 
-. "${curdir}/../config"
-. "${curdir}/../db-functions"
+. "$(dirname ${BASH_SOURCE[0]})/../../config"
+. "$(dirname ${BASH_SOURCE[0]})/../../db-functions"
 
 oneTimeSetUp() {
 	local p
@@ -12,7 +12,7 @@ oneTimeSetUp() {
 	local pkgversion
 	local build
 	pkgdir="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
-	cp -r ${curdir}/packages/* "${pkgdir}"
+	cp -r $(dirname ${BASH_SOURCE[0]})/../packages/* "${pkgdir}"
 	msg 'Building packages...'
 	for d in "${pkgdir}"/*; do
 		pushd $d >/dev/null
@@ -37,13 +37,12 @@ oneTimeSetUp() {
 			fi
 			for a in ${pkgarch[@]}; do
 				for p in ${pkgname[@]}; do
-					cp ${p}-${pkgversion}-${a}${PKGEXT} ${curdir}/packages/$(basename ${d})
+					cp ${p}-${pkgversion}-${a}${PKGEXT} $(dirname ${BASH_SOURCE[0]})/../packages/$(basename ${d})
 				done
 			done
 		fi
 		popd >/dev/null
 	done
-	echo
 }
 
 oneTimeTearDown() {
@@ -56,7 +55,7 @@ setUp() {
 	local r
 	local a
 
-	[ -f "${curdir}/../config.local" ] && die "${curdir}/../config.local exists"
+	[ -f "$(dirname ${BASH_SOURCE[0]})/../../config.local" ] && die "$(dirname ${BASH_SOURCE[0]})/../../config.local exists"
 	TMP="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
 	#msg "Using ${TMP}"
 
@@ -85,7 +84,7 @@ setUp() {
 		svn commit -q -m"initial commit of ${pkg}" "${TMP}/svn-packages-copy"
 	done
 
-	cat <<eot > "${curdir}/../config.local"
+	cat <<eot > "$(dirname ${BASH_SOURCE[0]})/../../config.local"
 	FTP_BASE="${TMP}/ftp"
 	SVNREPO="file://${TMP}/svn-packages-repo"
 	PKGREPOS=(${PKGREPOS[@]})
@@ -97,12 +96,12 @@ setUp() {
 	CLEANUP_DRYRUN=false
 	SOURCE_CLEANUP_DRYRUN=false
 eot
-	. "${curdir}/../config"
+	. "$(dirname ${BASH_SOURCE[0]})/../../config"
 }
 
 tearDown() {
 	rm -rf "${TMP}"
-	rm -f "${curdir}/../config.local"
+	rm -f "$(dirname ${BASH_SOURCE[0]})/../../config.local"
 	echo
 }
 

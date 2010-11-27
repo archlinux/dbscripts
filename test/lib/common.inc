@@ -12,7 +12,7 @@ oneTimeSetUp() {
 	local pkgversion
 	local build
 	pkgdir="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
-	cp -r $(dirname ${BASH_SOURCE[0]})/../packages/* "${pkgdir}"
+	cp -Lr $(dirname ${BASH_SOURCE[0]})/../packages/* "${pkgdir}"
 	msg 'Building packages...'
 	for d in "${pkgdir}"/*; do
 		pushd $d >/dev/null
@@ -79,7 +79,7 @@ setUp() {
 	for p in "${pkgdir}"/*; do
 		pkg=$(basename $p)
 		mkdir -p "${TMP}/svn-packages-copy/${pkg}"/{trunk,repos}
-		cp "${p}/PKGBUILD" "${TMP}/svn-packages-copy"/${pkg}/trunk/
+		cp "${p}"/* "${TMP}/svn-packages-copy"/${pkg}/trunk/
 		svn add -q "${TMP}/svn-packages-copy"/${pkg}
 		svn commit -q -m"initial commit of ${pkg}" "${TMP}/svn-packages-copy"
 	done

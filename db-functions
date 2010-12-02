@@ -198,9 +198,20 @@ getpkgbase() {
 	_base="$(_grep_pkginfo "$1" "pkgbase")"
 	if [ -z "$_base" ]; then
 		getpkgname "$1"
+	else
+		echo "$_base"
 	fi
+}
 
-	echo "$_base"
+issplitpkg() {
+	local _base
+
+	_base="$(_grep_pkginfo "$1" "pkgbase")"
+	if [ -z "$_base" ]; then
+		return 1
+	else
+		return 0
+	fi
 }
 
 # Get the package name
@@ -315,6 +326,51 @@ check_pkgsvn() {
 
 	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))
 	in_array "${_pkgname}" ${svnnames[@]} || return 1
+
+	return 0
+}
+
+check_splitpkgs() {
+	local repo="${1}"
+	shift
+	local pkgfiles=(${@})
+	local pkgfile
+	local pkgdir
+	local svnname
+
+	mkdir -p "${WORKDIR}/check_splitpkgs/"
+	pushd "${WORKDIR}/check_splitpkgs" >/dev/null
+
+	for pkgfile in ${pkgfiles[@]}; do
+		issplitpkg "${pkgfile}" || continue
+		local _pkgbase="$(getpkgbase ${pkgfile})"
+		local _pkgname="$(getpkgname ${pkgfile})"
+		local _pkgarch="$(getpkgarch ${pkgfile})"
+		mkdir -p "${repo}/${_pkgarch}/${_pkgbase}"
+		echo "${_pkgname}" >> "${repo}/${_pkgarch}/${_pkgbase}/staging"
+
+		if [ ! -f "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" ]; then
+			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
+			svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
+				"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null
+			[ $? -ge 1 ] && return 1
+		fi
+
+		local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))
+		for svnname in ${svnnames[@]}; do
+			echo "${svnname}" >> "${repo}/${_pkgarch}/${_pkgbase}/svn"
+		done
+	done
+	popd >/dev/null
+
+	for pkgdir in "${WORKDIR}/check_splitpkgs/${repo}"/*/*; do
+		[ ! -d "${pkgdir}" ] && continue
+		sort -u "${pkgdir}/staging" -o "${pkgdir}/staging"
+		sort -u "${pkgdir}/svn" -o "${pkgdir}/svn"
+		if [ ! -z "$(comm -13 "${pkgdir}/staging" "${pkgdir}/svn")" ]; then
+			return 1
+		fi
+	done
 
 	return 0
 }

@@ -42,6 +42,9 @@ for repo in ${repos[@]}; do
 				die "Package ${repo}/$(basename ${pkg}) already exists in another repository"
 			fi
 		done
+		if ! check_splitpkgs ${repo} ${pkgs[@]}; then
+			die "Missing split packages for ${repo}"
+		fi
 	else
 		die "Could not read ${STAGING}"
 	fi

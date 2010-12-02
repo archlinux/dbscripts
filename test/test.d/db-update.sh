@@ -124,4 +124,27 @@ testUpdateSameAnyPackageToDifferentRepositories() {
 	done
 }
 
+
+testAddIncompleteSplitPackage() {
+	local arches=('i686' 'x86_64')
+	local repo='extra'
+	local pkgbase='pkg-split-a'
+	local arch
+
+	for arch in ${arches[@]}; do
+		releasePackage ${repo} ${pkgbase} ${arch}
+	done
+
+	# remove a split package to make db-update fail
+	rm "${STAGING}"/extra/${pkgbase}1-*
+
+	../db-update >/dev/null 2>&1 && fail "db-update should fail when a split package is missing!"
+
+	for arch in ${arches[@]}; do
+		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
+		&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
+		&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+	done
+}
+
 . "${curdir}/../lib/shunit2"

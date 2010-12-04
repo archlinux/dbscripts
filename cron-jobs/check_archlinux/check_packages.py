@@ -403,8 +403,8 @@ for absroot in absroots:
 	for repo in repos:
 		repopath = absroot + "/" + repo
 		if not os.path.isdir(repopath):
-			print "Error : the repository " + repo + " does not exist in " + absroot
-			sys.exit()
+			print("Warning : the repository " + repo + " does not exist in " + absroot)
+
 if not os.path.isdir(repodir):
 	print "Error: the repository directory %s does not exist" % repodir
 	sys.exit()

@@ -86,7 +86,7 @@ def parse_data(repo,data):
 			pkg.name = line
 			pkg.repo = repo
 			dup = None
-			if packages.has_key(pkg.name):
+			if pkg.name in packages:
 				dup = packages[pkg.name]
 			else:
 				packages[pkg.name] = pkg
@@ -171,11 +171,11 @@ def provcmp(pkg,dep):
 
 def verify_dep(dep):
 	dep = splitdep(dep)
-	if packages.has_key(dep.name):
+	if dep.name in packages:
 		pkg = packages[dep.name]
 		if depcmp(pkg.name,pkg.version,dep):
 			return [pkg]
-	if provisions.has_key(dep.name):
+	if dep.name in provisions:
 		provlist = provisions[dep.name]
 		results = []
 		for prov in provlist:
@@ -212,12 +212,12 @@ def compute_deplist(pkg):
 	stack = [pkg]
 	while stack != []:
 		dep = stack.pop()
-		if pkgdeps.has_key(dep):
+		if dep in pkgdeps:
 			for dep2 in pkgdeps[dep]:
 				if dep2 not in list:
 					list.append(dep2)
 					stack.append(dep2)
-		if makepkgdeps.has_key(dep):
+		if dep in makepkgdeps:
 			for dep2 in makepkgdeps[dep]:
 				if dep2 not in list:
 					list.append(dep2)
@@ -245,7 +245,7 @@ def get_repo_hierarchy(repo):
 	repo_hierarchy = {'core': ['core'], \
 		'extra': ['core', 'extra'], \
 		'community': ['core', 'extra', 'community']}
-	if repo_hierarchy.has_key(repo):
+	if repo in repo_hierarchy:
 		return repo_hierarchy[repo]
 	else:
 		return ['core','extra','community']
@@ -277,10 +277,10 @@ def tarjan(pkg):
 	checked_deps.append(pkg)
 	S.append(pkg)
 	deps = []
-	if pkgdeps.has_key(pkg):
+	if pkg in pkgdeps:
 		deps = pkgdeps[pkg]
 	for dep in deps:
-		if not pkgindex.has_key(dep):
+		if dep not in pkgindex:
 			tarjan(dep)
 			pkglowlink[pkg] = min(pkglowlink[pkg],pkglowlink[dep])
 		elif dep in S:
@@ -430,7 +430,7 @@ parse_pkgbuilds(loadrepos,arch)
 for name,pkg in packages.iteritems():
 	for prov in pkg.provides:
 		provname=prov.split("=")[0]
-		if not provisions.has_key(provname):
+		if provname not in provisions:
 			provisions[provname] = []
 		provisions[provname].append(pkg)
 
@@ -482,7 +482,7 @@ makedep_hierarchy = check_hierarchy(makedeph)
 print "==> checking for circular dependencies"
 # make sure pkgdeps is filled for every package
 for name,pkg in packages.iteritems():
-	if not pkgdeps.has_key(pkg):
+	if pkg not in pkgdeps:
 		(deps,missdeps,_) = verify_deps(name,pkg.repo,pkg.deps)
 		pkgdeps[pkg] = deps
 find_scc(repopkgs.values())
@@ -490,7 +490,7 @@ find_scc(repopkgs.values())
 print "==> checking for differences between db files and pkgbuilds"
 for repo in repos:
 	for pkg in dbpkgs[repo]:
-		if not (pkg in repopkgs.keys() and repopkgs[pkg].repo == repo):
+		if not (pkg in repopkgs and repopkgs[pkg].repo == repo):
 			dbonly.append("%s/%s" % (repo,pkg))
 for name,pkg in repopkgs.iteritems():
 	if not name in dbpkgs[pkg.repo]:

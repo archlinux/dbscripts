@@ -421,9 +421,9 @@ for repo in repos:
 	loadrepos = loadrepos | set(get_repo_hierarchy(repo))
 
 print_heading("Integrity Check " + arch + " of " + ",".join(repos))
-print "\nPerforming integrity checks..."
+print("\nPerforming integrity checks...")
 
-print "==> parsing pkgbuilds"
+print("==> parsing pkgbuilds")
 parse_pkgbuilds(loadrepos,arch)
 
 # fill provisions
@@ -439,16 +439,16 @@ for name,pkg in packages.iteritems():
 	if pkg.repo in repos:
 		repopkgs[name] = pkg
 
-print "==> parsing db files"
+print("==> parsing db files")
 dbpkgs = parse_dbs(repos,arch)
 
-print "==> checking mismatches"
+print("==> checking mismatches")
 for name,pkg in repopkgs.iteritems():
 	pkgdirname = pkg.path.split("/")[-1]
 	if name != pkgdirname and pkg.base != pkgdirname:
 		mismatches.append(name + " vs. " + pkg.path)
 
-print "==> checking archs"
+print("==> checking archs")
 for name,pkg in repopkgs.iteritems():
 	archs = verify_archs(name,pkg.repo,pkg.archs)
 	invalid_archs.extend(archs)
@@ -461,25 +461,25 @@ for name,pkg in packages.iteritems():
 
 deph,makedeph = [],[]
 
-print "==> checking dependencies"
+print("==> checking dependencies")
 for name,pkg in repopkgs.iteritems():
 	(deps,missdeps,hierarchy) = verify_deps(name,pkg.repo,pkg.deps)
 	pkgdeps[pkg] = deps
 	missing_deps.extend(missdeps)
 	deph.extend(hierarchy)
 
-print "==> checking makedepends"
+print("==> checking makedepends")
 for name,pkg in repopkgs.iteritems():
 	(makedeps,missdeps,hierarchy) = verify_deps(name,pkg.repo,pkg.makedeps)
 	makepkgdeps[pkg] = makedeps
 	missing_makedeps.extend(missdeps)
 	makedeph.extend(hierarchy)
 
-print "==> checking hierarchy"
+print("==> checking hierarchy")
 dep_hierarchy = check_hierarchy(deph)
 makedep_hierarchy = check_hierarchy(makedeph)
 
-print "==> checking for circular dependencies"
+print("==> checking for circular dependencies")
 # make sure pkgdeps is filled for every package
 for name,pkg in packages.iteritems():
 	if pkg not in pkgdeps:
@@ -487,7 +487,7 @@ for name,pkg in packages.iteritems():
 		pkgdeps[pkg] = deps
 find_scc(repopkgs.values())
 
-print "==> checking for differences between db files and pkgbuilds"
+print("==> checking for differences between db files and pkgbuilds")
 for repo in repos:
 	for pkg in dbpkgs[repo]:
 		if not (pkg in repopkgs and repopkgs[pkg].repo == repo):

@@ -244,7 +244,8 @@ def check_hierarchy(deph):
 def get_repo_hierarchy(repo):
 	repo_hierarchy = {'core': ['core'], \
 		'extra': ['core', 'extra'], \
-		'community': ['core', 'extra', 'community']}
+		'community': ['core', 'extra', 'community'], \
+                'multilib': ['core', 'extra', 'community', 'multilib'] }
 	if repo in repo_hierarchy:
 		return repo_hierarchy[repo]
 	else:

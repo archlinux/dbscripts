@@ -135,11 +135,18 @@ trap cleanup EXIT
 #repo_lock <repo-name> <arch> [timeout]
 repo_lock () {
 	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
+	local LOCKFILE="${FTP_BASE}/${1}/os/${2}/${1}${DBEXT}.lck"
 	local _count
 	local _trial
 	local _timeout
 	local _lockblock
 	local _owner
+
+	# This is the lock file used by repo-add and repo-remove
+	if [ -f "${LOCKFILE}" ]; then
+		error "Repo [${1}] (${2}) is already locked by repo-{add,remove} process $(cat $LOCKFILE)"
+		return 1
+	fi
 
 	if [ $# -eq 2 ]; then
 		_lockblock=true

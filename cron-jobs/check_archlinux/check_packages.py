@@ -454,12 +454,6 @@ for name,pkg in repopkgs.iteritems():
 	archs = verify_archs(name,pkg.repo,pkg.archs)
 	invalid_archs.extend(archs)
 
-# ugly hack to strip the weird kblic- deps
-for name,pkg in packages.iteritems():
-	p = re.compile('klibc-[\w\-]{27}|klibc-\*')
-	pkg.deps = [dep for dep in pkg.deps if not p.match(dep)]
-	pkg.makedeps = [dep for dep in pkg.makedeps if not p.match(dep)]
-
 deph,makedeph = [],[]
 
 print("==> checking dependencies")

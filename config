@@ -6,8 +6,13 @@ SRCPOOL=''
 
 CLEANUP_DESTDIR="/srv/package-cleanup"
 CLEANUP_DRYRUN=false
+# Time in days to keep moved packages
+CLEANUP_KEEP=60
+
 SOURCE_CLEANUP_DESTDIR="/srv/source-cleanup"
 SOURCE_CLEANUP_DRYRUN=false
+# Time in days to keep moved sourcepackages
+SOURCE_CLEANUP_KEEP=14
 
 LOCK_DELAY=10
 LOCK_TIMEOUT=300

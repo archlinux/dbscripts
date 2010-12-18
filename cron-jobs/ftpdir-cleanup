@@ -13,6 +13,7 @@ clean_pkg() {
 				rm -f "$pkg"
 			else
 				mv -f "$pkg" "$CLEANUP_DESTDIR"
+				touch "${CLEANUP_DESTDIR}/$(basename ${pkg})"
 			fi
 		done
 	fi

@@ -5,6 +5,8 @@
 
 # setup paths
 SPATH="/srv/http/archweb"
+ENVPATH="/srv/http/archweb-env/bin/activate"
+
 # having "more important repos" last should make [core] trickle to the top of
 # the updates list each hour rather than being overwhelmed by big [extra] and
 # [community] updates
@@ -23,6 +25,11 @@ script_lock
 renice +5 -p $$ > /dev/null
 
 echo "$cmd: Updating DB at $(date)" >> "${LOGOUT}"
+
+# source our virtualenv if it exists
+if [ -f "$ENVPATH" ]; then
+	. "$ENVPATH"
+fi
 
 case "$cmd" in
 	update-web-db)

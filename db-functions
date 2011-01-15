@@ -450,3 +450,31 @@ set_repo_permission() {
 		error "You don't have permission to change ${dbfile}"
 	fi
 }
+
+arch_repo_add() {
+	local repo=$1
+	local arch=$2
+	local pkgs=(${@:3})
+
+	# package files might be relative to repo dir
+	pushd "${FTP_BASE}/${repo}/os/${arch}" >/dev/null
+	/usr/bin/repo-add -q "${repo}${DBEXT}" ${pkgs[@]} >/dev/null \
+		|| error "repo-add ${repo}${DBEXT} ${pkgs[@]}"
+	popd >/dev/null
+	set_repo_permission "${repo}" "${arch}"
+}
+
+arch_repo_remove() {
+	local repo=$1
+	local arch=$2
+	local pkgs=(${@:3})
+	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}"
+
+	if [ ! -f "${dbfile}" ]; then
+		error "No database found at '${dbfile}'"
+		return 1
+	fi
+	/usr/bin/repo-remove -q "${dbfile}" ${pkgs[@]} >/dev/null \
+		|| error "repo-remove ${dbfile} ${pkgs[@]}"
+	set_repo_permission "${repo}" "${arch}"
+}

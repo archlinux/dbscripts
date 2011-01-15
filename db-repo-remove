@@ -31,11 +31,6 @@ done
 msg "Removing $pkgname from [$repo]..."
 
 for tarch in ${tarches[@]}; do
-	if [ ! -f "$ftppath/$tarch/$repo$DBEXT" ]; then
-		die "No database found at '$ftppath/$tarch', nothing more to do"
-	fi
-
-	/usr/bin/repo-remove -q "$ftppath/$tarch/$repo$DBEXT" ${pkgname} >/dev/null
-	set_repo_permission "${repo}" "${tarch}"
+	arch_repo_remove "${repo}" "${tarch}" ${pkgname}
 	repo_unlock $repo $tarch
 done

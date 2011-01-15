@@ -34,7 +34,6 @@ for tarch in ${tarches[@]}; do
 	if [ ! -f "${pkgfile}" ]; then
 		die "Package file ${pkgfile} not found"
 	fi
-	/usr/bin/repo-add -q "$ftppath/$tarch/$repo$DBEXT" ${pkgfile} >/dev/null
-	set_repo_permission "${repo}" "${tarch}"
+	arch_repo_add "${repo}" "${tarch}" ${pkgfile}
 	repo_unlock $repo $tarch
 done

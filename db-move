@@ -106,13 +106,8 @@ done
 
 for tarch in ${ARCHES[@]}; do
 	if [ -n "${add_pkgs[${tarch}]}" ]; then
-		/usr/bin/repo-add -q "${ftppath_to}/${tarch}/${repo_to}${DBEXT}" ${add_pkgs[${tarch}]} >/dev/null \
-			|| error "repo-add ${tarch}/${repo_to}${DBEXT} ${add_pkgs[${tarch}]}"
-		set_repo_permission "${repo_to}" "${tarch}"
-
-		/usr/bin/repo-remove -q "${ftppath_from}/${tarch}/${repo_from}${DBEXT}" ${remove_pkgs[${tarch}]} >/dev/null \
-			|| error "repo-remove ${tarch}/${repo_from}${DBEXT} ${remove_pkgs[${tarch}]}"
-		set_repo_permission "${repo_from}" "${tarch}"
+		arch_repo_add "${repo_to}" "${tarch}" ${add_pkgs[${tarch}]}
+		arch_repo_remove "${repo_from}" "${tarch}" ${remove_pkgs[${tarch}]}
 	fi
 done
 

@@ -108,6 +108,15 @@ testUpdateAnyPackageToDifferentRepositoriesAtOnce() {
 	rm -f "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
 }
 
+testUpdateSameAnyPackageToSameRepository() {
+	releasePackage extra pkg-any-a any
+	../db-update
+	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
+
+	releasePackage extra pkg-any-a any
+	../db-update >/dev/null 2>&1 && (fail 'Adding an existing package to the same repository should fail'; return 1)
+}
+
 testUpdateSameAnyPackageToDifferentRepositories() {
 	releasePackage extra pkg-any-a any
 	../db-update
@@ -118,9 +127,9 @@ testUpdateSameAnyPackageToDifferentRepositories() {
 
 	local arch
 	for arch in i686 x86_64; do
-		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
-			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
-			&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+		( [ -r "${FTP_BASE}/testing/os/${arch}/testing${DBEXT%.tar.*}" ] \
+			&& bsdtar -xf "${FTP_BASE}/testing/os/${arch}/testing${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
+			&& fail "${pkgbase} should not be in testing/os/${arch}/testing${DBEXT%.tar.*}"
 	done
 }
 

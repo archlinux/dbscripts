@@ -132,7 +132,7 @@ if [ ${#old_pkgs[@]} -ge 1 ]; then
 	done
 fi
 
-old_pkgs=($(find ${SOURCE_CLEANUP_DESTDIR} -type f -mtime +${SOURCE_CLEANUP_KEEP} -printf '%f\n'))
+old_pkgs=($(find ${SOURCE_CLEANUP_DESTDIR} -type f -name "*${SRCEXT}" -mtime +${SOURCE_CLEANUP_KEEP} -printf '%f\n'))
 if [ ${#old_pkgs[@]} -ge 1 ]; then
 	msg "Removing old source packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do

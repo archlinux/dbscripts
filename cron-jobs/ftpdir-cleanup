@@ -95,7 +95,7 @@ for repo in ${PKGREPOS[@]}; do
 	fi
 done
 
-old_pkgs=($(find ${CLEANUP_DESTDIR} -type f -mtime +${CLEANUP_KEEP} -printf '%f\n'))
+old_pkgs=($(find ${CLEANUP_DESTDIR} -type f -name "*${PKGEXT}" -mtime +${CLEANUP_KEEP} -printf '%f\n'))
 if [ ${#old_pkgs[@]} -ge 1 ]; then
 	msg "Removing old packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do

@@ -1,0 +1,23 @@
+pkgname=pkg-simple-epoch
+pkgver=1
+pkgrel=1
+epoch=1
+pkgdesc="A package called ${pkgname}"
+arch=('i686' 'x86_64')
+url='http://www.archlinux.org/'
+license=('GPL')
+depends=('glibc')
+makedepends=('gcc')
+source=('Makefile' 'test.c')
+md5sums=('c6cb8dcc86253355fed559416d0c8dcf'
+         '3c1e4279feb678fd9cabaccdb28e40d0')
+
+build() {
+	cd ${srcdir}
+	make
+}
+
+package() {
+	cd ${srcdir}
+	make install DESTDIR=${pkgdir} DESTBIN=${pkgname}
+}

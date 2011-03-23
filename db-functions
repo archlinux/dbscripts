@@ -71,6 +71,19 @@ in_array() {
 	return 1 # Not Found
 }
 
+##
+#  usage : get_full_version( $epoch, $pkgver, $pkgrel )
+# return : full version spec, including epoch (if necessary), pkgver, pkgrel
+##
+get_full_version() {
+	if [[ $1 -eq 0 ]]; then
+		# zero epoch case, don't include it in version
+		echo $2-$3
+	else
+		echo $1:$2-$3
+	fi
+}
+
 script_lock() {
 	local LOCKDIR="$TMPDIR/.scriptlock.$(basename $0)"
 	if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
@@ -328,7 +341,7 @@ check_pkgsvn() {
 		[ $? -ge 1 ] && return 1
 	fi
 
-	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo "${pkgver}-${pkgrel}")"
+	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}) )"
 	[ "${svnver}" == "${_pkgver}" ] || return 1
 
 	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))

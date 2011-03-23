@@ -5,7 +5,7 @@ curdir=$(readlink -e $(dirname $0))
 
 testRemovePackages() {
 	local arches=('i686' 'x86_64')
-	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b' 'pkg-simple-epoch')
 	local pkgbase
 	local arch
 

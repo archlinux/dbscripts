@@ -34,6 +34,34 @@ testCleanupSimplePackages() {
 	done
 }
 
+testCleanupEpochPackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-epoch')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update
+
+	for arch in ${arches[@]}; do
+		../db-remove pkg-simple-epoch extra ${arch}
+	done
+
+	../cron-jobs/ftpdir-cleanup >/dev/null
+
+	for arch in ${arches[@]}; do
+		local pkg1="pkg-simple-epoch-1:1-1-${arch}.pkg.tar.xz"
+		checkRemovedPackage extra 'pkg-simple-epoch' ${arch}
+		[ -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ] && fail "${PKGPOOL}/${pkg1} found"
+		[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
+	done
+}
+
 testCleanupAnyPackages() {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase

@@ -27,6 +27,28 @@ testMoveSimplePackages() {
 	done
 }
 
+testMoveEpochPackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-epoch')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage testing ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update
+
+	../db-move testing extra pkg-simple-epoch
+
+	for arch in ${arches[@]}; do
+		checkPackage extra pkg-simple-epoch-1:1-1-${arch}.pkg.tar.xz ${arch}
+		checkRemovedPackage testing pkg-simple-epoch-1:1-1-${arch}.pkg.tar.xz ${arch}
+	done
+}
+
 testMoveAnyPackages() {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase

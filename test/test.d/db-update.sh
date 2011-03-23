@@ -30,6 +30,12 @@ testAddSingleSimplePackage() {
 	checkPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
 }
 
+testAddSingleEpochPackage() {
+	releasePackage extra 'pkg-simple-epoch' 'i686'
+	../db-update
+	checkPackage extra 'pkg-simple-epoch-1:1-1-i686.pkg.tar.xz' 'i686'
+}
+
 testAddAnyPackages() {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase

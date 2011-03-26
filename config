@@ -22,7 +22,7 @@ TMPDIR="/srv/tmp"
 ARCHES=(i686 x86_64)
 DBEXT=".db.tar.gz"
 FILESEXT=".files.tar.gz"
-PKGEXT=".pkg.tar.*"
+PKGEXT=".pkg.tar.?z"
 SRCEXT=".src.tar.gz"
 
 # Allowed licenses: get sourceballs only for licenses in this array

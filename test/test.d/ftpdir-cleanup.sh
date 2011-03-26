@@ -106,13 +106,13 @@ testCleanupSplitPackages() {
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for arch in ${arches[@]}; do
-		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}.pkg.tar.*; do
+		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}${PKGEXT}; do
 			checkRemovedPackage extra ${pkgs[0]} ${arch}
 			[ -f "${FTP_BASE}/${PKGPOOL}/${pkg}" ] && fail "${PKGPOOL}/${pkg} found"
 			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] && fail "${repo}/os/${arch}/${pkg} found"
 		done
 
-		for pkg in "${pkgdir}/${pkgs[1]}"/*-${arch}.pkg.tar.*; do
+		for pkg in "${pkgdir}/${pkgs[1]}"/*-${arch}${PKGEXT}; do
 			checkPackage extra $(basename ${pkg}) ${arch}
 		done
 	done

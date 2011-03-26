@@ -29,10 +29,10 @@ oneTimeSetUp() {
 
 		if ! ${build}; then
 			if [ "${pkgarch[0]}" == 'any' ]; then
-				extra-x86_64-build || die 'extra-x86_64-build failed'
+				sudo extra-x86_64-build || die 'extra-x86_64-build failed'
 			else
 				for a in ${pkgarch[@]}; do
-					extra-${a}-build || die "extra-${a}-build failed"
+					sudo extra-${a}-build || die "extra-${a}-build failed"
 				done
 			fi
 			for a in ${pkgarch[@]}; do
@@ -114,7 +114,7 @@ releasePackage() {
 	archrelease ${repo}-${arch} >/dev/null 2&>1
 	pkgver=$(. PKGBUILD; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}))
 	popd >/dev/null
-	cp "${pkgdir}/${pkgbase}"/*-${pkgver}-${arch}.pkg.tar.* "${STAGING}"/${repo}/
+	cp "${pkgdir}/${pkgbase}"/*-${pkgver}-${arch}${PKGEXT} "${STAGING}"/${repo}/
 }
 
 checkAnyPackage() {

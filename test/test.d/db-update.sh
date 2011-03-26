@@ -68,7 +68,7 @@ testAddSplitPackages() {
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}.pkg.tar.*; do
+			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}${PKGEXT}; do
 				checkPackage extra $(basename ${pkg}) ${arch}
 			done
 		done
@@ -82,7 +82,7 @@ testUpdateAnyPackage() {
 	pushd "${TMP}/svn-packages-copy/pkg-any-a/trunk/" >/dev/null
 	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
 	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
-	extra-i686-build >/dev/null 2>&1
+	sudo extra-i686-build >/dev/null 2>&1
 	mv pkg-any-a-1-2-any.pkg.tar.xz "${pkgdir}/pkg-any-a/"
 	popd >/dev/null
 
@@ -100,7 +100,7 @@ testUpdateAnyPackageToDifferentRepositoriesAtOnce() {
 	pushd "${TMP}/svn-packages-copy/pkg-any-a/trunk/" >/dev/null
 	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
 	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
-	extra-i686-build >/dev/null 2>&1
+	sudo extra-i686-build >/dev/null 2>&1
 	mv pkg-any-a-1-2-any.pkg.tar.xz "${pkgdir}/pkg-any-a/"
 	popd >/dev/null
 

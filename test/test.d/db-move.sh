@@ -82,12 +82,12 @@ testMoveSplitPackages() {
 	../db-move testing extra pkg-split-a
 
 	for arch in ${arches[@]}; do
-		for pkg in "${pkgdir}/pkg-split-a"/*-${arch}.pkg.tar.*; do
+		for pkg in "${pkgdir}/pkg-split-a"/*-${arch}${PKGEXT}; do
 			checkPackage extra $(basename ${pkg}) ${arch}
 		done
 	done
 	for arch in ${arches[@]}; do
-		for pkg in "${pkgdir}/pkg-split-b"/*-${arch}.pkg.tar.*; do
+		for pkg in "${pkgdir}/pkg-split-b"/*-${arch}${PKGEXT}; do
 			checkPackage testing $(basename ${pkg}) ${arch}
 		done
 	done

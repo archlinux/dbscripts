@@ -22,7 +22,7 @@ testMovePackagesWithoutPool() {
 	# transform two packages to old style layout
 	for arch in ${arches[@]}; do
 		for old in 0 2; do
-			for pkg in "${pkgdir}/${pkgs[${old}]}"/*-${arch}.pkg.tar.*; do
+			for pkg in "${pkgdir}/${pkgs[${old}]}"/*-${arch}${PKGEXT}; do
 				pkg=$(basename $pkg)
 				mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
 			done
@@ -37,7 +37,7 @@ testMovePackagesWithoutPool() {
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}.pkg.tar.*; do
+			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}${PKGEXT}; do
 				checkPackage extra $(basename ${pkg}) ${arch}
 			done
 			checkRemovedPackage testing ${pkgbase} ${arch}
@@ -63,7 +63,7 @@ testUpdateAnyPackageWithoutPool() {
 	pushd "${TMP}/svn-packages-copy/${pkgname}/trunk/" >/dev/null
 	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
 	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
-	extra-i686-build >/dev/null 2>&1
+	sudo extra-i686-build >/dev/null 2>&1
 	mv "${pkg2}" "${pkgdir}/${pkgname}/"
 	popd >/dev/null
 
@@ -94,7 +94,7 @@ testMoveAnyPackagesWithoutPool() {
 	../db-update
 
 	# transform a package to old style layout
-	for pkg in "${pkgdir}/${pkgs[0]}"/*-any.pkg.tar.*; do
+	for pkg in "${pkgdir}/${pkgs[0]}"/*-any${PKGEXT}; do
 		pkg=$(basename $pkg)
 		mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/testing/os/any/${pkg}"
 		for arch in i686 x86_64; do
@@ -109,13 +109,13 @@ testMoveAnyPackagesWithoutPool() {
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	for pkgbase in ${pkgs[@]}; do
-		for pkg in "${pkgdir}/${pkgbase}"/*-any.pkg.tar.*; do
+		for pkg in "${pkgdir}/${pkgbase}"/*-any${PKGEXT}; do
 			checkAnyPackage extra $(basename ${pkg})
 		done
 		checkRemovedAnyPackage testing ${pkgbase}
 	done
 
-	for pkg in "${pkgdir}/${pkgs[0]}"/*-any.pkg.tar.*; do
+	for pkg in "${pkgdir}/${pkgs[0]}"/*-any${PKGEXT}; do
 		pkg=$(basename $pkg)
 		for arch in any i686 x86_64; do
 			[ -f "${FTP_BASE}/testing/os/${arch}/${pkg}" ] && fail "testing/os/${arch}/${pkg} found"
@@ -131,7 +131,7 @@ testUpdateSameAnyPackageToDifferentRepositoriesWithoutPool() {
 	../db-update
 
 	# transform a package to old style layout
-	for pkg in "${pkgdir}/pkg-any-a"/*-any.pkg.tar.*; do
+	for pkg in "${pkgdir}/pkg-any-a"/*-any${PKGEXT}; do
 		pkg=$(basename $pkg)
 		mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/extra/os/any/${pkg}"
 		for arch in i686 x86_64; do

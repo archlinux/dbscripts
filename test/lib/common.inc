@@ -121,6 +121,7 @@ checkAnyPackage() {
 	local repo=$1
 	local pkg=$2
 	local arch
+	local db
 
 	[ -r "${FTP_BASE}/${PKGPOOL}/${pkg}" ] || fail "${PKGPOOL}/${pkg} not found"
 
@@ -131,9 +132,11 @@ checkAnyPackage() {
 	done
 	[ -r "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
 
-	( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
-		&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg}) \
-		|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+	for db in ${DBEXT} ${FILESEXT}; do
+		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" ] \
+			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" -O | grep -q ${pkg}) \
+			|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${db%.tar.*}"
+	done
 
 	[ -r "${FTP_BASE}/${repo}/os/any/${pkg}" ] && fail "${repo}/os/any/${pkg} should not exist"
 }
@@ -142,6 +145,7 @@ checkPackage() {
 	local repo=$1
 	local pkg=$2
 	local arch=$3
+	local db
 
 	[ -r "${FTP_BASE}/${PKGPOOL}/${pkg}" ] || fail "${PKGPOOL}/${pkg} not found"
 	[ -L "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] || fail "${repo}/os/${arch}/${pkg} not a symlink"
@@ -150,9 +154,11 @@ checkPackage() {
 	[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}")" == "${FTP_BASE}/${PKGPOOL}/${pkg}" ] \
 		|| fail "${repo}/os/${arch}/${pkg} does not link to ${PKGPOOL}/${pkg}"
 
-	( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
-		&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkg}) \
-		|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+	for db in ${DBEXT} ${FILESEXT}; do
+		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" ] \
+			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" -O | grep -q ${pkg}) \
+			|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${db%.tar.*}"
+	done
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${pkg}")
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
@@ -164,10 +170,13 @@ checkRemovedPackage() {
 	local repo=$1
 	local pkgbase=$2
 	local arch=$3
+	local db
 
-	( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
-		&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
-		&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+	for db in ${DBEXT} ${FILESEXT}; do
+		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" ] \
+			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" -O | grep -q ${pkgbase}) \
+			&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${db%.tar.*}"
+	done
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] \
@@ -178,11 +187,14 @@ checkRemovedAnyPackage() {
 	local repo=$1
 	local pkgbase=$2
 	local arch
+	local db
 
-	for arch in i686 x86_64; do
-		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
-			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
-			&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+	for db in ${DBEXT} ${FILESEXT}; do
+		for arch in i686 x86_64; do
+			( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" ] \
+				&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" -O | grep -q ${pkgbase}) \
+				&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${db%.tar.*}"
+		done
 	done
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"

@@ -16,11 +16,10 @@ testCreateSimpleFileLists() {
 	done
 	../db-update
 
-	../cron-jobs/create-filelists
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			if ! bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra.files.tar.gz" | grep -q "usr/bin/${pkgbase}"; then
-				fail "usr/bin/${pkgbase} not found in ${arch}/extra.files.tar.gz"
+			if ! bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra${FILESEXT}" | grep -q "usr/bin/${pkgbase}"; then
+				fail "usr/bin/${pkgbase} not found in ${arch}/extra${FILESEXT}"
 			fi
 		done
 	done
@@ -37,11 +36,10 @@ testCreateAnyFileLists() {
 	done
 	../db-update
 
-	../cron-jobs/create-filelists
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			if ! bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra.files.tar.gz" | grep -q "usr/share/${pkgbase}/test"; then
-				fail "usr/share/${pkgbase}/test not found in ${arch}/extra.files.tar.gz"
+			if ! bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra${FILESEXT}" | grep -q "usr/share/${pkgbase}/test"; then
+				fail "usr/share/${pkgbase}/test not found in ${arch}/extra${FILESEXT}"
 			fi
 		done
 	done
@@ -63,13 +61,12 @@ testCreateSplitFileLists() {
 	done
 	../db-update
 
-	../cron-jobs/create-filelists
 	for pkgbase in ${pkgs[@]}; do
 		pkgnames=($(source "${TMP}/svn-packages-copy/${pkgbase}/trunk/PKGBUILD"; echo ${pkgname[@]}))
 		for pkgname in ${pkgnames[@]}; do
 			for arch in ${arches[@]}; do
-				if ! bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra.files.tar.gz" | grep -q "usr/bin/${pkgname}"; then
-					fail "usr/bin/${pkgname} not found in ${arch}/extra.files.tar.gz"
+				if ! bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra${FILESEXT}" | grep -q "usr/bin/${pkgname}"; then
+					fail "usr/bin/${pkgname} not found in ${arch}/extra${FILESEXT}"
 				fi
 			done
 		done
@@ -89,19 +86,17 @@ testCleanupFileLists() {
 		done
 	done
 	../db-update
-	../cron-jobs/create-filelists
 
 	for arch in ${arches[@]}; do
 		../db-remove pkg-simple-a extra ${arch}
 	done
-	../cron-jobs/create-filelists
 
 	for arch in ${arches[@]}; do
-		if ! bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra.files.tar.gz" | grep -q "usr/bin/pkg-simple-b"; then
-			fail "usr/bin/pkg-simple-b not found in ${arch}/extra.files.tar.gz"
+		if ! bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra${FILESEXT}" | grep -q "usr/bin/pkg-simple-b"; then
+			fail "usr/bin/pkg-simple-b not found in ${arch}/extra${FILESEXT}"
 		fi
-		if bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra.files.tar.gz" | grep -q "usr/bin/pkg-simple-a"; then
-			fail "usr/bin/pkg-simple-a still found in ${arch}/extra.files.tar.gz"
+		if bsdtar -xOf "${FTP_BASE}/extra/os/${arch}/extra${FILESEXT}" | grep -q "usr/bin/pkg-simple-a"; then
+			fail "usr/bin/pkg-simple-a still found in ${arch}/extra${FILESEXT}"
 		fi
 	done
 

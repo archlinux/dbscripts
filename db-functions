@@ -148,7 +148,8 @@ trap cleanup EXIT
 #repo_lock <repo-name> <arch> [timeout]
 repo_lock () {
 	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
-	local LOCKFILE="${FTP_BASE}/${1}/os/${2}/${1}${DBEXT}.lck"
+	local DBLOCKFILE="${FTP_BASE}/${1}/os/${2}/${1}${DBEXT}.lck"
+	local FILESLOCKFILE="${FTP_BASE}/${1}/os/${2}/${1}${FILESEXT}.lck"
 	local _count
 	local _trial
 	local _timeout
@@ -156,8 +157,12 @@ repo_lock () {
 	local _owner
 
 	# This is the lock file used by repo-add and repo-remove
-	if [ -f "${LOCKFILE}" ]; then
-		error "Repo [${1}] (${2}) is already locked by repo-{add,remove} process $(cat $LOCKFILE)"
+	if [ -f "${DBLOCKFILE}" ]; then
+		error "Repo [${1}] (${2}) is already locked by repo-{add,remove} process $(cat $DBLOCKFILE)"
+		return 1
+	fi
+	if [ -f "${FILESLOCKFILE}" ]; then
+		error "Repo [${1}] (${2}) is already locked by repo-{add,remove} process $(cat ${FILESLOCKFILE})"
 		return 1
 	fi
 
@@ -445,6 +450,7 @@ check_repo_permission() {
 		local dir="${FTP_BASE}/${repo}/os/${arch}/"
 		[ -w "${dir}" ] || return 1
 		[ -f "${dir}"${repo}${DBEXT} -a ! -w "${dir}"${repo}${DBEXT} ] && return 1
+		[ -f "${dir}"${repo}${FILESEXT} -a ! -w "${dir}"${repo}${FILESEXT} ] && return 1
 	done
 
 	return 0
@@ -454,11 +460,14 @@ set_repo_permission() {
 	local repo=$1
 	local arch=$2
 	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}"
+	local filesfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${FILESEXT}"
 
 	if [ -w "${dbfile}" ]; then
 		local group=$(/usr/bin/stat --printf='%G' "$(dirname "${dbfile}")")
 		chgrp $group "${dbfile}" || error "Could not change group of ${dbfile} to $group"
+		chgrp $group "${filesfile}" || error "Could not change group of ${filesfile} to $group"
 		chmod g+w "${dbfile}" || error "Could not set write permission for group $group to ${dbfile}"
+		chmod g+w "${filesfile}" || error "Could not set write permission for group $group to ${filesfile}"
 	else
 		error "You don't have permission to change ${dbfile}"
 	fi
@@ -471,8 +480,10 @@ arch_repo_add() {
 
 	# package files might be relative to repo dir
 	pushd "${FTP_BASE}/${repo}/os/${arch}" >/dev/null
-	/usr/bin/repo-add -q "${repo}${DBEXT}" ${pkgs[@]} >/dev/null \
+	/usr/bin/repo-add -q "${repo}${DBEXT}" ${pkgs[@]} \
 		|| error "repo-add ${repo}${DBEXT} ${pkgs[@]}"
+	/usr/bin/repo-add -f -q "${repo}${FILESEXT}" ${pkgs[@]} \
+		|| error "repo-add -f ${repo}${FILESEXT} ${pkgs[@]}"
 	popd >/dev/null
 	set_repo_permission "${repo}" "${arch}"
 }
@@ -482,12 +493,15 @@ arch_repo_remove() {
 	local arch=$2
 	local pkgs=(${@:3})
 	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}"
+	local filesfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${FILESEXT}"
 
 	if [ ! -f "${dbfile}" ]; then
 		error "No database found at '${dbfile}'"
 		return 1
 	fi
-	/usr/bin/repo-remove -q "${dbfile}" ${pkgs[@]} >/dev/null \
+	/usr/bin/repo-remove -q "${dbfile}" ${pkgs[@]} \
 		|| error "repo-remove ${dbfile} ${pkgs[@]}"
+	/usr/bin/repo-remove -q "${filesfile}" ${pkgs[@]} \
+		|| error "repo-remove ${filesfile} ${pkgs[@]}"
 	set_repo_permission "${repo}" "${arch}"
 }

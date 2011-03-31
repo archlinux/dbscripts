@@ -10,9 +10,12 @@ clean_pkg() {
 	if ! ${CLEANUP_DRYRUN}; then
 		for pkg in "$@"; do
 			if [ -h "$pkg" ]; then
-				rm -f "$pkg"
+				rm -f "$pkg" "$pkg.sig"
 			else
 				mv -f "$pkg" "$CLEANUP_DESTDIR"
+				if [ -e "$pkg.sig" ]; then
+					mv -f "$pkg.sig" "$CLEANUP_DESTDIR"
+				fi
 				touch "${CLEANUP_DESTDIR}/$(basename ${pkg})"
 			fi
 		done
@@ -100,7 +103,10 @@ if [ ${#old_pkgs[@]} -ge 1 ]; then
 	msg "Removing old packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 "${old_pkg}"
-		${CLEANUP_DRYRUN} || rm -f "${CLEANUP_DESTDIR}/${old_pkg}"
+		if ! ${CLEANUP_DRYRUN}; then
+			rm -f "${CLEANUP_DESTDIR}/${old_pkg}"
+			rm -f "${CLEANUP_DESTDIR}/${old_pkg}.sig"
+		fi
 	done
 fi
 

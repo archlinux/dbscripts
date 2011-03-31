@@ -96,6 +96,9 @@ for pkgbase in ${args[@]:2}; do
 						cp ${pkgpath} ${FTP_BASE}/${PKGPOOL}
 					fi
 					ln -s "../../../${PKGPOOL}/${pkgfile}" ${ftppath_to}/${tarch}/
+					if [ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]; then
+						ln -s "../../../${PKGPOOL}/${pkgfile}.sig" ${ftppath_to}/${tarch}/
+					fi
 					add_pkgs[${tarch}]+="${FTP_BASE}/${PKGPOOL}/${pkgfile} "
 					remove_pkgs[${tarch}]+="${pkgname} "
 				done

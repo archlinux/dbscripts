@@ -64,6 +64,13 @@ for repo in ${repos[@]}; do
 				mv "${pkg}" "$FTP_BASE/${PKGPOOL}"
 			fi
 			ln -s "../../../${PKGPOOL}/${pkgfile}" "$FTP_BASE/$repo/os/${pkgarch}"
+			# also move signatures
+			if [ -f "${pkg}.sig" ]; then
+				mv "${pkg}.sig" "$FTP_BASE/${PKGPOOL}"
+			fi
+			if [ -f "$FTP_BASE/${PKGPOOL}/${pkgfile}.sig" ]; then
+				ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "$FTP_BASE/$repo/os/${pkgarch}"
+			fi
 			add_pkgs[${#add_pkgs[*]}]=${pkgfile}
 		done
 		if [ ${#add_pkgs[@]} -ge 1 ]; then

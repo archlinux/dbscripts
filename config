@@ -14,6 +14,8 @@ SOURCE_CLEANUP_DRYRUN=false
 # Time in days to keep moved sourcepackages
 SOURCE_CLEANUP_KEEP=14
 
+REQUIRE_SIGNATURE=false
+
 LOCK_DELAY=10
 LOCK_TIMEOUT=300
 

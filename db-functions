@@ -284,6 +284,9 @@ getpkgfile() {
 	elif [ ! -f "${1}" ]; then
 		error "Package ${1} not found!"
 		exit 1
+	elif ${REQUIRE_SIGNATURE} && [ ! -f "${1}.sig" ]; then
+		error "Package signature ${1}.sig not found!"
+		exit 1
 	fi
 
 	echo ${1}
@@ -299,6 +302,9 @@ getpkgfiles() {
 	for f in ${@}; do
 		if  [ ! -f "${f}" ]; then
 			error "Package ${f} not found!"
+			exit 1
+		elif ${REQUIRE_SIGNATURE} && [ ! -f "${f}.sig" ]; then
+			error "Package signature ${f}.sig not found!"
 			exit 1
 		fi
 	done
@@ -411,14 +417,18 @@ check_pkgrepos() {
 	[ $? -ge 1 ] && return 1
 
 	[ -f "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXT} ] && return 1
+	[ -f "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXT}.sig ] && return 1
 	[ -f "${FTP_BASE}/${PKGPOOL}/$(basename ${pkgfile})" ] && return 1
+	[ -f "${FTP_BASE}/${PKGPOOL}/$(basename ${pkgfile}).sig" ] && return 1
 
 	local repo
 	local arch
 	for repo in ${PKGREPOS[@]}; do
 		for arch in ${ARCHES[@]}; do
 			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXT} ] && return 1
+			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXT}.sig ] && return 1
 			[ -f "${FTP_BASE}/${repo}/os/${arch}/$(basename ${pkgfile})" ] && return 1
+			[ -f "${FTP_BASE}/${repo}/os/${arch}/$(basename ${pkgfile}).sig" ] && return 1
 		done
 	done
 

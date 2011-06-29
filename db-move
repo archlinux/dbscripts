@@ -78,11 +78,18 @@ for pkgbase in ${args[@]:2}; do
 			pkgver=$(. "${svnrepo_from}/PKGBUILD"; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}))
 
 			if [ -d "${svnrepo_to}" ]; then
-				/usr/bin/svn rm --force -q "${svnrepo_to}"
-				/usr/bin/svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "$(basename $0): ${pkgbase} removed by $(id -un) for move to [${repo_to}] (${pkgarch})"
+				for file in $(svn ls "${svnrepo_to}"); do
+					svn rm -q "$file"
+				done
+			else
+				mkdir "${svnrepo_to}"
+				svn add "${svnrepo_to}"
 			fi
 
-			/usr/bin/svn mv -q -r HEAD "${svnrepo_from}" "${svnrepo_to}"
+			for file in $(svn ls "${svnrepo_from}"); do
+				svn mv -q -r HEAD "${svnrepo_from}/$file" "${svnrepo_to}/"
+			done
+			/usr/bin/svn rm --force -q "${svnrepo_from}"
 			/usr/bin/svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "$(basename $0): moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${pkgarch})"
 
 			for pkgname in ${pkgnames[@]}; do

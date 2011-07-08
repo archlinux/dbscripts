@@ -6,7 +6,7 @@
 exit() { return; }
 
 splitpkg_overrides=('depends' 'optdepends' 'provides' 'conflicts')
-variables=('pkgname' 'pkgbase' 'pkgver' 'pkgrel' 'makedepends' 'arch' ${splitpkg_overrides[@]})
+variables=('pkgname' 'pkgbase' 'epoch' 'pkgver' 'pkgrel' 'makedepends' 'arch' ${splitpkg_overrides[@]})
 readonly -a variables splitpkg_overrides
 
 backup_package_variables() {
@@ -29,7 +29,11 @@ restore_package_variables() {
 
 print_info() {
 	echo -e "%NAME%\n$pkgname\n"
-	echo -e "%VERSION%\n$pkgver-$pkgrel\n"
+	if [ -n "$epoch" ]; then
+		echo -e "%VERSION%\n$epoch:$pkgver-$pkgrel\n"
+	else
+		echo -e "%VERSION%\n$pkgver-$pkgrel\n"
+	fi
 	echo -e "%PATH%\n$dir\n"
 
 	if [ -n "$pkgbase" ]; then

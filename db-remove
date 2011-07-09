@@ -38,6 +38,9 @@ if [ -d "${WORKDIR}/svn/$pkgbase/repos/$svnrepo" ]; then
 	/usr/bin/svn commit -q "${WORKDIR}/svn/$pkgbase" -m "$(basename $0): $pkgbase removed by $(id -un)"
 else
 	warning "$pkgbase not found in $svnrepo"
+	warning "Removing only $pkgbase from the repo"
+	warning "If it was a split package you have to remove the others yourself!"
+	pkgnames=($pkgbase)
 fi
 
 for tarch in ${tarches[@]}; do

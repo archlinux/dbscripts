@@ -11,7 +11,7 @@ oneTimeSetUp() {
 	local pkgarch
 	local pkgversion
 	local build
-	pkgdir="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
+	pkgdir="$(mktemp -d /tmp/$(basename $0).XXXXXXXXXX)"
 	cp -Lr $(dirname ${BASH_SOURCE[0]})/../packages/* "${pkgdir}"
 	msg 'Building packages...'
 	for d in "${pkgdir}"/*; do

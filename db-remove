@@ -4,13 +4,13 @@
 . "$(dirname $0)/config"
 
 if [ $# -ne 3 ]; then
-	msg "usage: $(basename $0) <pkgname|pkgbase> <repo> <arch>"
+	msg "usage: $(basename $0) <repo> <arch> <pkgname|pkgbase>"
 	exit 1
 fi
 
-pkgbase="$1"
-repo="$2"
-arch="$3"
+repo="$1"
+arch="$2"
+pkgbase="$3"
 
 ftppath="$FTP_BASE/$repo/os"
 svnrepo="$repo-$arch"

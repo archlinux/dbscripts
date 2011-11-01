@@ -3,14 +3,14 @@
 . "$(dirname $0)/db-functions"
 . "$(dirname $0)/config"
 
-if [ $# -ne 3 ]; then
-	msg "usage: $(basename $0) <repo> <arch> <pkgfile>"
+if [ $# -lt 3 ]; then
+	msg "usage: $(basename $0) <repo> <arch> <pkgfile> ..."
 	exit 1
 fi
 
 repo="$1"
 arch="$2"
-pkgfile="$3"
+pkgfiles=(${@:3})
 
 ftppath="$FTP_BASE/$repo/os"
 
@@ -28,12 +28,14 @@ for tarch in ${tarches[@]}; do
 	repo_lock $repo $tarch || exit 1
 done
 
-msg "Adding $pkgfile to [$repo]..."
-
 for tarch in ${tarches[@]}; do
-	if [ ! -f "${pkgfile}" ]; then
-		die "Package file ${pkgfile} not found"
-	fi
-	arch_repo_add "${repo}" "${tarch}" ${pkgfile}
+	for pkgfile in ${pkgfiles[@]}; do
+		if [[ ! -f $pkgfile ]]; then
+			die "Package file $pkgfile not found"
+		else
+			msg "Adding $pkgfile to [$repo]..."
+		fi
+	done
+	arch_repo_add "${repo}" "${tarch}" ${pkgfiles[@]}
 	repo_unlock $repo $tarch
 done

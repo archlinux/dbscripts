@@ -3,14 +3,14 @@
 . "$(dirname $0)/db-functions"
 . "$(dirname $0)/config"
 
-if [ $# -ne 3 ]; then
-	msg "usage: $(basename $0) <repo> <arch> <pkgname>"
+if [ $# -lt 3 ]; then
+	msg "usage: $(basename $0) <repo> <arch> <pkgname> ..."
 	exit 1
 fi
 
 repo="$1"
 arch="$2"
-pkgname="$3"
+pkgnames=(${@:3})
 
 ftppath="$FTP_BASE/$repo/os"
 
@@ -28,9 +28,10 @@ for tarch in ${tarches[@]}; do
 	repo_lock $repo $tarch || exit 1
 done
 
-msg "Removing $pkgname from [$repo]..."
-
 for tarch in ${tarches[@]}; do
-	arch_repo_remove "${repo}" "${tarch}" ${pkgname}
+	for pkgname in ${pkgnames[@]}; do
+		msg "Removing $pkgname from [$repo]..."
+	done
+	arch_repo_remove "${repo}" "${tarch}" ${pkgnames[@]}
 	repo_unlock $repo $tarch
 done

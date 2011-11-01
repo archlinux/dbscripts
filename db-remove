@@ -3,8 +3,8 @@
 . "$(dirname $0)/db-functions"
 . "$(dirname $0)/config"
 
-if [ $# -ne 3 ]; then
-	msg "usage: $(basename $0) <repo> <arch> <pkgname|pkgbase>"
+if [ $# -lt 3 ]; then
+	msg "usage: $(basename $0) <repo> <arch> <pkgname|pkgbase> ..."
 	exit 1
 fi
 

@@ -377,131 +377,132 @@ def print_usage():
 	print "    ./check_packages.py --abs-tree=/var/abs --repos=community --arch=i686"
 	print ""
 
-## Default path to the abs root directory
-absroots = ["/var/abs"]
-## Default list of repos to check
-repos = ['core', 'extra']
-## Default arch
-arch = "i686"
-## Default repodir
-repodir = "/srv/ftp"
+if __name__ == "__main__":
+	## Default path to the abs root directory
+	absroots = ["/var/abs"]
+	## Default list of repos to check
+	repos = ['core', 'extra']
+	## Default arch
+	arch = "i686"
+	## Default repodir
+	repodir = "/srv/ftp"
 
-try:
-	opts, args = getopt.getopt(sys.argv[1:], "", ["abs-tree=", "repos=",
-	"arch=", "repo-dir="])
-except getopt.GetoptError:
-	print_usage()
-	sys.exit()
-if opts != []:
-	for o, a in opts:
-		if o in ("--abs-tree"):
-			absroots = a.split(',')
-		elif o in ("--repos"):
-			repos = a.split(",")
-		elif o in ("--arch"):
-			arch = a
-		elif o in ("--repo-dir"):
-			repodir = a
-		else:
-			print_usage()
-			sys.exit()
-		if args != []:
-			print_usage()
-			sys.exit()
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "", ["abs-tree=", "repos=",
+		"arch=", "repo-dir="])
+	except getopt.GetoptError:
+		print_usage()
+		sys.exit()
+	if opts != []:
+		for o, a in opts:
+			if o in ("--abs-tree"):
+				absroots = a.split(',')
+			elif o in ("--repos"):
+				repos = a.split(",")
+			elif o in ("--arch"):
+				arch = a
+			elif o in ("--repo-dir"):
+				repodir = a
+			else:
+				print_usage()
+				sys.exit()
+			if args != []:
+				print_usage()
+				sys.exit()
 
-for absroot in absroots:
-	if not os.path.isdir(absroot):
-		print "Error : the abs tree " + absroot + " does not exist"
+	for absroot in absroots:
+		if not os.path.isdir(absroot):
+			print "Error : the abs tree " + absroot + " does not exist"
+			sys.exit()
+		for repo in repos:
+			repopath = absroot + "/" + repo
+			if not os.path.isdir(repopath):
+				print("Warning : the repository " + repo + " does not exist in " + absroot)
+
+	if not os.path.isdir(repodir):
+		print "Error: the repository directory %s does not exist" % repodir
 		sys.exit()
 	for repo in repos:
-		repopath = absroot + "/" + repo
-		if not os.path.isdir(repopath):
-			print("Warning : the repository " + repo + " does not exist in " + absroot)
+		path = os.path.join(repodir,repo,'os',arch,repo + DBEXT)
+		if not os.path.isfile(path):
+			print "Error : repo DB %s : File not found" % path
+			sys.exit()
+		if not tarfile.is_tarfile(path):
+			print "Error : Cant open repo DB %s, not a valid tar file" % path
+			sys.exit()
+	# repos which need to be loaded
+	loadrepos = set([])
+	for repo in repos:
+		loadrepos = loadrepos | set(get_repo_hierarchy(repo))
 
-if not os.path.isdir(repodir):
-	print "Error: the repository directory %s does not exist" % repodir
-	sys.exit()
-for repo in repos:
-	path = os.path.join(repodir,repo,'os',arch,repo + DBEXT)
-	if not os.path.isfile(path):
-		print "Error : repo DB %s : File not found" % path
-		sys.exit()
-	if not tarfile.is_tarfile(path):
-		print "Error : Cant open repo DB %s, not a valid tar file" % path
-		sys.exit()
-# repos which need to be loaded
-loadrepos = set([])
-for repo in repos:
-	loadrepos = loadrepos | set(get_repo_hierarchy(repo))
+	print_heading("Integrity Check " + arch + " of " + ",".join(repos))
+	print("\nPerforming integrity checks...")
 
-print_heading("Integrity Check " + arch + " of " + ",".join(repos))
-print("\nPerforming integrity checks...")
+	print("==> parsing pkgbuilds")
+	parse_pkgbuilds(loadrepos,arch)
 
-print("==> parsing pkgbuilds")
-parse_pkgbuilds(loadrepos,arch)
+	# fill provisions
+	for name,pkg in packages.iteritems():
+		for prov in pkg.provides:
+			provname=prov.split("=")[0]
+			if provname not in provisions:
+				provisions[provname] = []
+			provisions[provname].append(pkg)
 
-# fill provisions
-for name,pkg in packages.iteritems():
-	for prov in pkg.provides:
-		provname=prov.split("=")[0]
-		if provname not in provisions:
-			provisions[provname] = []
-		provisions[provname].append(pkg)
+	# fill repopkgs
+	for name,pkg in packages.iteritems():
+		if pkg.repo in repos:
+			repopkgs[name] = pkg
 
-# fill repopkgs
-for name,pkg in packages.iteritems():
-	if pkg.repo in repos:
-		repopkgs[name] = pkg
+	print("==> parsing db files")
+	dbpkgs = parse_dbs(repos,arch)
 
-print("==> parsing db files")
-dbpkgs = parse_dbs(repos,arch)
+	print("==> checking mismatches")
+	for name,pkg in repopkgs.iteritems():
+		pkgdirname = pkg.path.split("/")[-1]
+		if name != pkgdirname and pkg.base != pkgdirname:
+			mismatches.append(name + " vs. " + pkg.path)
 
-print("==> checking mismatches")
-for name,pkg in repopkgs.iteritems():
-	pkgdirname = pkg.path.split("/")[-1]
-	if name != pkgdirname and pkg.base != pkgdirname:
-		mismatches.append(name + " vs. " + pkg.path)
+	print("==> checking archs")
+	for name,pkg in repopkgs.iteritems():
+		archs = verify_archs(name,pkg.repo,pkg.archs)
+		invalid_archs.extend(archs)
 
-print("==> checking archs")
-for name,pkg in repopkgs.iteritems():
-	archs = verify_archs(name,pkg.repo,pkg.archs)
-	invalid_archs.extend(archs)
+	deph,makedeph = [],[]
 
-deph,makedeph = [],[]
-
-print("==> checking dependencies")
-for name,pkg in repopkgs.iteritems():
-	(deps,missdeps,hierarchy) = verify_deps(name,pkg.repo,pkg.deps)
-	pkgdeps[pkg] = deps
-	missing_deps.extend(missdeps)
-	deph.extend(hierarchy)
-
-print("==> checking makedepends")
-for name,pkg in repopkgs.iteritems():
-	(makedeps,missdeps,hierarchy) = verify_deps(name,pkg.repo,pkg.makedeps)
-	makepkgdeps[pkg] = makedeps
-	missing_makedeps.extend(missdeps)
-	makedeph.extend(hierarchy)
-
-print("==> checking hierarchy")
-dep_hierarchy = check_hierarchy(deph)
-makedep_hierarchy = check_hierarchy(makedeph)
-
-print("==> checking for circular dependencies")
-# make sure pkgdeps is filled for every package
-for name,pkg in packages.iteritems():
-	if pkg not in pkgdeps:
-		(deps,missdeps,_) = verify_deps(name,pkg.repo,pkg.deps)
+	print("==> checking dependencies")
+	for name,pkg in repopkgs.iteritems():
+		(deps,missdeps,hierarchy) = verify_deps(name,pkg.repo,pkg.deps)
 		pkgdeps[pkg] = deps
-find_scc(repopkgs.values())
+		missing_deps.extend(missdeps)
+		deph.extend(hierarchy)
 
-print("==> checking for differences between db files and pkgbuilds")
-for repo in repos:
-	for pkg in dbpkgs[repo]:
-		if not (pkg in repopkgs and repopkgs[pkg].repo == repo):
-			dbonly.append("%s/%s" % (repo,pkg))
-for name,pkg in repopkgs.iteritems():
-	if not name in dbpkgs[pkg.repo]:
-		absonly.append("%s/%s" % (pkg.repo,name))
+	print("==> checking makedepends")
+	for name,pkg in repopkgs.iteritems():
+		(makedeps,missdeps,hierarchy) = verify_deps(name,pkg.repo,pkg.makedeps)
+		makepkgdeps[pkg] = makedeps
+		missing_makedeps.extend(missdeps)
+		makedeph.extend(hierarchy)
 
-print_results()
+	print("==> checking hierarchy")
+	dep_hierarchy = check_hierarchy(deph)
+	makedep_hierarchy = check_hierarchy(makedeph)
+
+	print("==> checking for circular dependencies")
+	# make sure pkgdeps is filled for every package
+	for name,pkg in packages.iteritems():
+		if pkg not in pkgdeps:
+			(deps,missdeps,_) = verify_deps(name,pkg.repo,pkg.deps)
+			pkgdeps[pkg] = deps
+	find_scc(repopkgs.values())
+
+	print("==> checking for differences between db files and pkgbuilds")
+	for repo in repos:
+		for pkg in dbpkgs[repo]:
+			if not (pkg in repopkgs and repopkgs[pkg].repo == repo):
+				dbonly.append("%s/%s" % (repo,pkg))
+	for name,pkg in repopkgs.iteritems():
+		if not name in dbpkgs[pkg.repo]:
+			absonly.append("%s/%s" % (pkg.repo,name))
+
+	print_results()

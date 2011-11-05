@@ -158,6 +158,11 @@ checkAnyPackage() {
 
 	[ -r "${FTP_BASE}/${repo}/os/any/${pkg}" ] && fail "${repo}/os/any/${pkg} should not exist"
 	[ -r "${FTP_BASE}/${repo}/os/any/${pkg}.sig" ] && fail "${repo}/os/any/${pkg}.sig should not exist"
+
+	local pkgbase=$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${pkg}")
+	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] \
+		|| fail "svn-packages-copy/${pkgbase}/repos/${repo}-any does not exist"
 }
 
 checkPackage() {

@@ -16,8 +16,11 @@
 #      a non-core package)
 #   8. Circular dependencies
 
-import os,re,commands,getopt,sys,tarfile,alpm
+import os,re,commands,getopt,sys,tarfile
 import pdb
+
+import ctypes
+_alpm = ctypes.cdll.LoadLibrary("libalpm.so")
 
 DBEXT='.db.tar.gz'
 
@@ -143,7 +146,17 @@ def splitprov(prov):
 	return (name,version)
 
 def vercmp(v1,mod,v2):
-	res = alpm.vercmp(v1,v2)
+	"""
+	>>> vercmp("1.0", "<=", "2.0")
+	True
+	>>> vercmp("1:1.0", ">", "2.0")
+	True
+	>>> vercmp("1.0.2", ">=", "2.1.0")
+	False
+	"""
+	s1 = ctypes.c_char_p(v1)
+	s2 = ctypes.c_char_p(v2)
+	res = _alpm.alpm_pkg_vercmp(s1,s2)
 	if res == 0:
 		return (mod.find("=") > -1)
 	elif res < 0:

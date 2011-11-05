@@ -125,7 +125,7 @@ releasePackage() {
 	fi
 }
 
-checkAnyPackage() {
+checkAnyPackageDB() {
 	local repo=$1
 	local pkg=$2
 	local arch
@@ -158,6 +158,13 @@ checkAnyPackage() {
 
 	[ -r "${FTP_BASE}/${repo}/os/any/${pkg}" ] && fail "${repo}/os/any/${pkg} should not exist"
 	[ -r "${FTP_BASE}/${repo}/os/any/${pkg}.sig" ] && fail "${repo}/os/any/${pkg}.sig should not exist"
+}
+
+checkAnyPackage() {
+	local repo=$1
+	local pkg=$2
+
+	checkAnyPackageDB $repo $pkg
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${pkg}")
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
@@ -165,7 +172,7 @@ checkAnyPackage() {
 		|| fail "svn-packages-copy/${pkgbase}/repos/${repo}-any does not exist"
 }
 
-checkPackage() {
+checkPackageDB() {
 	local repo=$1
 	local pkg=$2
 	local arch=$3
@@ -192,6 +199,14 @@ checkPackage() {
 			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" -O | grep -q ${pkg}) \
 			|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${db%.tar.*}"
 	done
+}
+
+checkPackage() {
+	local repo=$1
+	local pkg=$2
+	local arch=$3
+
+	checkPackageDB $repo $pkg $arch
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${pkg}")
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
@@ -199,7 +214,7 @@ checkPackage() {
 		|| fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} does not exist"
 }
 
-checkRemovedPackage() {
+checkRemovedPackageDB() {
 	local repo=$1
 	local pkgbase=$2
 	local arch=$3
@@ -210,13 +225,21 @@ checkRemovedPackage() {
 			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" -O | grep -q ${pkgbase}) \
 			&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${db%.tar.*}"
 	done
+}
+
+checkRemovedPackage() {
+	local repo=$1
+	local pkgbase=$2
+	local arch=$3
+
+	checkRemovedPackageDB $repo $pkgbase $arch
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] \
 		&& fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} should not exist"
 }
 
-checkRemovedAnyPackage() {
+checkRemovedAnyPackageDB() {
 	local repo=$1
 	local pkgbase=$2
 	local arch
@@ -229,6 +252,13 @@ checkRemovedAnyPackage() {
 				&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${db%.tar.*}"
 		done
 	done
+}
+
+checkRemovedAnyPackage() {
+	local repo=$1
+	local pkgbase=$2
+
+	checkRemovedAnyPackageDB $repo $pkgbase
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] \

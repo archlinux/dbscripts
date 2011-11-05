@@ -19,7 +19,7 @@ testRemovePackages() {
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			../db-remove ${pkgbase} extra ${arch}
+			../db-remove extra ${arch} ${pkgbase}
 		done
 	done
 
@@ -41,7 +41,7 @@ testRemoveAnyPackages() {
 	../db-update
 
 	for pkgbase in ${pkgs[@]}; do
-		../db-remove ${pkgbase} extra any
+		../db-remove extra any ${pkgbase}
 	done
 
 	for pkgbase in ${pkgs[@]}; do

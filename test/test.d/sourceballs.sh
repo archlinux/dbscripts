@@ -73,7 +73,7 @@ testSourceballsCleanup() {
 	../cron-jobs/sourceballs
 
 	for arch in ${arches[@]}; do
-		../db-remove pkg-simple-a extra ${arch}
+		../db-remove extra ${arch} pkg-simple-a
 	done
 
 	../cron-jobs/sourceballs

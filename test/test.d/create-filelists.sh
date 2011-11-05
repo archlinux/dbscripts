@@ -88,7 +88,7 @@ testCleanupFileLists() {
 	../db-update
 
 	for arch in ${arches[@]}; do
-		../db-remove pkg-simple-a extra ${arch}
+		../db-remove extra ${arch} pkg-simple-a
 	done
 
 	for arch in ${arches[@]}; do

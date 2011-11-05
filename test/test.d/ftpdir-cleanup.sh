@@ -18,7 +18,7 @@ testCleanupSimplePackages() {
 	../db-update
 
 	for arch in ${arches[@]}; do
-		../db-remove pkg-simple-a extra ${arch}
+		../db-remove extra ${arch} pkg-simple-a
 	done
 
 	../cron-jobs/ftpdir-cleanup >/dev/null
@@ -49,7 +49,7 @@ testCleanupEpochPackages() {
 	../db-update
 
 	for arch in ${arches[@]}; do
-		../db-remove pkg-simple-epoch extra ${arch}
+		../db-remove extra ${arch} pkg-simple-epoch
 	done
 
 	../cron-jobs/ftpdir-cleanup >/dev/null
@@ -72,7 +72,7 @@ testCleanupAnyPackages() {
 	done
 
 	../db-update
-	../db-remove pkg-any-a extra any
+	../db-remove extra any pkg-any-a
 	../cron-jobs/ftpdir-cleanup >/dev/null
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
@@ -100,7 +100,7 @@ testCleanupSplitPackages() {
 	../db-update
 
 	for arch in ${arches[@]}; do
-		../db-remove ${pkgs[0]} extra ${arch}
+		../db-remove extra ${arch} ${pkgs[0]}
 	done
 
 	../cron-jobs/ftpdir-cleanup >/dev/null

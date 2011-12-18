@@ -3,6 +3,21 @@ set -E
 . "$(dirname ${BASH_SOURCE[0]})/../../config"
 . "$(dirname ${BASH_SOURCE[0]})/../../db-functions"
 
+signpkg() {
+	if [[ -r '/etc/makepkg.conf' ]]; then
+		source '/etc/makepkg.conf'
+	else
+		die '/etc/makepkg.conf not found!'
+	fi
+	if [[ -r ~/.makepkg.conf ]]; then
+		. ~/.makepkg.conf
+	fi
+	if [[ -n $GPGKEY ]]; then
+		SIGNWITHKEY="-u ${GPGKEY}"
+	fi
+	gpg --detach-sign --use-agent ${SIGNWITHKEY} ${@} || die
+}
+
 oneTimeSetUp() {
 	local p
 	local d
@@ -110,18 +125,24 @@ releasePackage() {
 	local repo=$1
 	local pkgbase=$2
 	local arch=$3
+	local a
+	local p
+	local pkgver
+	local pkgname
 
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/ >/dev/null
 	archrelease ${repo}-${arch} >/dev/null 2&>1
 	pkgver=$(. PKGBUILD; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}))
+	pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
 	popd >/dev/null
 	cp "${pkgdir}/${pkgbase}"/*-${pkgver}-${arch}${PKGEXT} "${STAGING}"/${repo}/
 
 	if ${REQUIRE_SIGNATURE}; then
-		# TODO: really sign the packages with a valid key
-		find "${STAGING}"/${repo}/ -type f \
-			-name "*-${pkgver}-${arch}${PKGEXT}" \
-			-exec touch {}.sig \;
+		for a in ${arch[@]}; do
+			for p in ${pkgname[@]}; do
+				signpkg "${STAGING}"/${repo}/${p}-${pkgver}-${a}${PKGEXT}
+			done
+		done
 	fi
 }
 

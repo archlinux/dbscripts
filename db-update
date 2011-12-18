@@ -35,6 +35,9 @@ for repo in ${repos[@]}; do
 			if ! check_pkgfile "${pkg}"; then
 				die "Package ${repo}/$(basename ${pkg}) is not consistent with its meta data"
 			fi
+			if ${REQUIRE_SIGNATURE} && ! check_pkgsig "${pkg}.sig"; then
+				die "Package ${repo}/$(basename ${pkg}) does not have a valid signature"
+			fi
 			if ! check_pkgsvn "${pkg}" "${repo}"; then
 				die "Package ${repo}/$(basename ${pkg}) is not consistent with svn repository"
 			fi

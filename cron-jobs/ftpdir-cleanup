@@ -16,7 +16,7 @@ clean_pkg() {
 				if [ -e "$pkg.sig" ]; then
 					mv -f "$pkg.sig" "$CLEANUP_DESTDIR"
 				fi
-				touch "${CLEANUP_DESTDIR}/$(basename ${pkg})"
+				touch "${CLEANUP_DESTDIR}/${pkg##*/}"
 			fi
 		done
 	fi

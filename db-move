@@ -4,7 +4,7 @@
 . "$(dirname $0)/config"
 
 if [ $# -lt 3 ]; then
-	msg "usage: $(basename $0) <repo-from> <repo-to> <pkgname|pkgbase> ..."
+	msg "usage: ${0##*/} <repo-from> <repo-to> <pkgname|pkgbase> ..."
 	exit 1
 fi
 
@@ -90,12 +90,12 @@ for pkgbase in ${args[@]:2}; do
 				/usr/bin/svn mv -q -r HEAD "${svnrepo_from}/$file" "${svnrepo_to}/"
 			done
 			/usr/bin/svn rm --force -q "${svnrepo_from}"
-			/usr/bin/svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "$(basename $0): moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${pkgarch})"
+			/usr/bin/svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${pkgarch})"
 
 			for pkgname in ${pkgnames[@]}; do
 				for tarch in ${tarches[@]}; do
 					pkgpath=$(getpkgfile "${ftppath_from}/${tarch}/"${pkgname}-${pkgver}-${pkgarch}${PKGEXT})
-					pkgfile=$(basename "${pkgpath}")
+					pkgfile="${pkgpath##*/}"
 
 					# copy package to pool if needed
 					# TODO: can be removed once every package has been moved to the package pool

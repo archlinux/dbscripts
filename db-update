@@ -4,7 +4,7 @@
 . "$(dirname $0)/config"
 
 if [ $# -ge 1 ]; then
-	warning "Calling $(basename $0) with a specific repository is no longer supported"
+	warning "Calling ${0##*/} with a specific repository is no longer supported"
 	exit 1
 fi
 
@@ -30,19 +30,19 @@ for repo in ${repos[@]}; do
 	if [ $? -eq 0 ]; then
 		for pkg in ${pkgs[@]}; do
 			if [ -h "${pkg}" ]; then
-				die "Package ${repo}/$(basename ${pkg}) is a symbolic link"
+				die "Package ${repo}/${pkg##*/} is a symbolic link"
 			fi
 			if ! check_pkgfile "${pkg}"; then
-				die "Package ${repo}/$(basename ${pkg}) is not consistent with its meta data"
+				die "Package ${repo}/${pkg##*/} is not consistent with its meta data"
 			fi
 			if ${REQUIRE_SIGNATURE} && ! check_pkgsig "${pkg}.sig"; then
-				die "Package ${repo}/$(basename ${pkg}) does not have a valid signature"
+				die "Package ${repo}/${pkg##*/} does not have a valid signature"
 			fi
 			if ! check_pkgsvn "${pkg}" "${repo}"; then
-				die "Package ${repo}/$(basename ${pkg}) is not consistent with svn repository"
+				die "Package ${repo}/${pkg##*/} is not consistent with svn repository"
 			fi
 			if ! check_pkgrepos "${pkg}"; then
-				die "Package ${repo}/$(basename ${pkg}) already exists in another repository"
+				die "Package ${repo}/${pkg##*/} already exists in another repository"
 			fi
 		done
 		if ! check_splitpkgs ${repo} ${pkgs[@]}; then
@@ -60,7 +60,7 @@ for repo in ${repos[@]}; do
 		add_pkgs=()
 		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-${pkgarch}${PKGEXT} 2>/dev/null))
 		for pkg in ${arch_pkgs[@]} ${any_pkgs[@]}; do
-			pkgfile="$(basename ${pkg})"
+			pkgfile="${pkg##*/}"
 			msg2 "${pkgfile} (${pkgarch})"
 			# any packages might have been moved by the previous run
 			if [ -f "${pkg}" ]; then

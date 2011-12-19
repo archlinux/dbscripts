@@ -26,7 +26,7 @@ oneTimeSetUp() {
 	local pkgarch
 	local pkgversion
 	local build
-	pkgdir="$(mktemp -d /tmp/$(basename $0).XXXXXXXXXX)"
+	pkgdir="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
 	cp -Lr $(dirname ${BASH_SOURCE[0]})/../packages/* "${pkgdir}"
 	msg 'Building packages...'
 	for d in "${pkgdir}"/*; do
@@ -52,7 +52,7 @@ oneTimeSetUp() {
 			fi
 			for a in ${pkgarch[@]}; do
 				for p in ${pkgname[@]}; do
-					cp ${p}-${pkgversion}-${a}${PKGEXT} $(dirname ${BASH_SOURCE[0]})/../packages/$(basename ${d})
+					cp ${p}-${pkgversion}-${a}${PKGEXT} $(dirname ${BASH_SOURCE[0]})/../packages/${d##*/}
 				done
 			done
 		fi
@@ -71,7 +71,7 @@ setUp() {
 	local a
 
 	[ -f "$(dirname ${BASH_SOURCE[0]})/../../config.local" ] && die "$(dirname ${BASH_SOURCE[0]})/../../config.local exists"
-	TMP="$(mktemp -d /dev/shm/$(basename $0).XXXXXXXXXX)"
+	TMP="$(mktemp -d /dev/shm/${0##*/}.XXXXXXXXXX)"
 	#msg "Using ${TMP}"
 
 	PKGREPOS=('core' 'extra' 'testing')
@@ -92,7 +92,7 @@ setUp() {
 	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
 
 	for p in "${pkgdir}"/*; do
-		pkg=$(basename $p)
+		pkg=${p##*/}
 		mkdir -p "${TMP}/svn-packages-copy/${pkg}"/{trunk,repos}
 		cp "${p}"/* "${TMP}/svn-packages-copy"/${pkg}/trunk/
 		svn add -q "${TMP}/svn-packages-copy"/${pkg}

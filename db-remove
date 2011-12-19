@@ -4,7 +4,7 @@
 . "$(dirname $0)/config"
 
 if [ $# -lt 3 ]; then
-	msg "usage: $(basename $0) <repo> <arch> <pkgname|pkgbase> ..."
+	msg "usage: ${0##*/} <repo> <arch> <pkgname|pkgbase> ..."
 	exit 1
 fi
 
@@ -37,7 +37,7 @@ for pkgbase in ${pkgbases[@]}; do
 	if [ -d "${WORKDIR}/svn/$pkgbase/repos/$svnrepo" ]; then
 		remove_pkgs=(${remove_pkgs[@]} $(. "${WORKDIR}/svn/$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgname[@]}))
 		/usr/bin/svn rm --force -q "${WORKDIR}/svn/$pkgbase/repos/$svnrepo"
-		/usr/bin/svn commit -q "${WORKDIR}/svn/$pkgbase" -m "$(basename $0): $pkgbase removed by $(id -un)"
+		/usr/bin/svn commit -q "${WORKDIR}/svn/$pkgbase" -m "${0##*/}: $pkgbase removed by $(id -un)"
 	else
 		warning "$pkgbase not found in $svnrepo"
 		warning "Removing only $pkgbase from the repo"

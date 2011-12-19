@@ -113,7 +113,7 @@ testCleanupSplitPackages() {
 		done
 
 		for pkg in "${pkgdir}/${pkgs[1]}"/*-${arch}${PKGEXT}; do
-			checkPackage extra $(basename ${pkg}) ${arch}
+			checkPackage extra ${pkg##*/} ${arch}
 		done
 	done
 }

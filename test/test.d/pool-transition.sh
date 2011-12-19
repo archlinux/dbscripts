@@ -23,7 +23,7 @@ testMovePackagesWithoutPool() {
 	for arch in ${arches[@]}; do
 		for old in 0 2; do
 			for pkg in "${pkgdir}/${pkgs[${old}]}"/*-${arch}${PKGEXT}; do
-				pkg=$(basename $pkg)
+				pkg=${pkg##*/}
 				mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
 			done
 		done
@@ -38,7 +38,7 @@ testMovePackagesWithoutPool() {
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
 			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}${PKGEXT}; do
-				checkPackage extra $(basename ${pkg}) ${arch}
+				checkPackage extra ${pkg##*/} ${arch}
 			done
 			checkRemovedPackage testing ${pkgbase} ${arch}
 		done
@@ -95,7 +95,7 @@ testMoveAnyPackagesWithoutPool() {
 
 	# transform a package to old style layout
 	for pkg in "${pkgdir}/${pkgs[0]}"/*-any${PKGEXT}; do
-		pkg=$(basename $pkg)
+		pkg=${pkg##*/}
 		mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/testing/os/any/${pkg}"
 		for arch in i686 x86_64; do
 			ln -sf "../any/${pkg}" "${FTP_BASE}/testing/os/${arch}/${pkg}"
@@ -110,13 +110,13 @@ testMoveAnyPackagesWithoutPool() {
 
 	for pkgbase in ${pkgs[@]}; do
 		for pkg in "${pkgdir}/${pkgbase}"/*-any${PKGEXT}; do
-			checkAnyPackage extra $(basename ${pkg})
+			checkAnyPackage extra ${pkg##*/}
 		done
 		checkRemovedAnyPackage testing ${pkgbase}
 	done
 
 	for pkg in "${pkgdir}/${pkgs[0]}"/*-any${PKGEXT}; do
-		pkg=$(basename $pkg)
+		pkg=${pkg##*/}
 		for arch in any i686 x86_64; do
 			[ -f "${FTP_BASE}/testing/os/${arch}/${pkg}" ] && fail "testing/os/${arch}/${pkg} found"
 		done
@@ -132,7 +132,7 @@ testUpdateSameAnyPackageToDifferentRepositoriesWithoutPool() {
 
 	# transform a package to old style layout
 	for pkg in "${pkgdir}/pkg-any-a"/*-any${PKGEXT}; do
-		pkg=$(basename $pkg)
+		pkg=${pkg##*/}
 		mv -f "${FTP_BASE}/${PKGPOOL}/${pkg}" "${FTP_BASE}/extra/os/any/${pkg}"
 		for arch in i686 x86_64; do
 			ln -sf "../any/${pkg}" "${FTP_BASE}/extra/os/${arch}/${pkg}"

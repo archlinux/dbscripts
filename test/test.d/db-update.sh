@@ -69,7 +69,7 @@ testAddSplitPackages() {
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
 			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}${PKGEXT}; do
-				checkPackage extra $(basename ${pkg}) ${arch}
+				checkPackage extra ${pkg##*/} ${arch}
 			done
 		done
 	done

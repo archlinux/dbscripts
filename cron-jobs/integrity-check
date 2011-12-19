@@ -8,7 +8,7 @@ dirname="$(dirname $0)"
 script_lock
 
 if [ $# -ne 1 ]; then
-	die "usage: $(basename $0) <mailto>"
+	die "usage: ${0##*/} <mailto>"
 fi
 mailto=$1
 

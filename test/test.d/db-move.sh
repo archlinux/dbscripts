@@ -107,12 +107,12 @@ testMoveSplitPackages() {
 
 	for arch in ${arches[@]}; do
 		for pkg in "${pkgdir}/pkg-split-a"/*-${arch}${PKGEXT}; do
-			checkPackage extra $(basename ${pkg}) ${arch}
+			checkPackage extra ${pkg##*/} ${arch}
 		done
 	done
 	for arch in ${arches[@]}; do
 		for pkg in "${pkgdir}/pkg-split-b"/*-${arch}${PKGEXT}; do
-			checkPackage testing $(basename ${pkg}) ${arch}
+			checkPackage testing ${pkg##*/} ${arch}
 		done
 	done
 

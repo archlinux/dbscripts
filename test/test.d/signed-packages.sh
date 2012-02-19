@@ -3,6 +3,11 @@
 curdir=$(readlink -e $(dirname $0))
 . "${curdir}/../lib/common.inc"
 
+testAddSignedPackage() {
+	releasePackage extra 'pkg-simple-a' 'i686'
+	../db-update || fail "db-update failed!"
+}
+
 testAddUnsignedPackage() {
 	releasePackage extra 'pkg-simple-a' 'i686'
 	rm "${STAGING}"/extra/*.sig

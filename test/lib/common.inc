@@ -71,7 +71,7 @@ setUp() {
 	local a
 
 	[ -f "$(dirname ${BASH_SOURCE[0]})/../../config.local" ] && die "$(dirname ${BASH_SOURCE[0]})/../../config.local exists"
-	TMP="$(mktemp -d /dev/shm/${0##*/}.XXXXXXXXXX)"
+	TMP="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
 	#msg "Using ${TMP}"
 
 	PKGREPOS=('core' 'extra' 'testing')
@@ -131,7 +131,7 @@ releasePackage() {
 	local pkgname
 
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/ >/dev/null
-	archrelease ${repo}-${arch} >/dev/null 2&>1
+	archrelease ${repo}-${arch} >/dev/null 2>&1
 	pkgver=$(. PKGBUILD; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}))
 	pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
 	popd >/dev/null

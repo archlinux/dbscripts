@@ -64,7 +64,7 @@ for repo in ${PKGREPOS[@]}; do
 			continue
 		fi
 		# Check if the license or .force file does not enforce creating a source package
-		if ! (chk_license ${pkglicense[@]} || grep -Fqx "${pkgbase}" "${dirname}/sourceballs.force"); then
+		if ! ([[ -z ${ALLOWED_LICENSES[@]} ]] || chk_license ${pkglicense[@]} || grep -Fqx "${pkgbase}" "${dirname}/sourceballs.force"); then
 			continue
 		fi
 		# Store the expected file name of the source package

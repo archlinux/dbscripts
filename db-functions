@@ -471,9 +471,7 @@ check_pkgsig() {
 	local ret=1
 	local fd="$(mktemp --tmpdir="${WORKDIR}")"
 
-	exec 4>"${fd}"
-	gpg --homedir /etc/pacman.d/gnupg/ --status-fd 4 --verify "${signature}" >/dev/null 2>&1
-	exec 4>&-
+	gpg --homedir /etc/pacman.d/gnupg/ --status-file "${fd}" --verify "${signature}" >/dev/null 2>&1
 	if grep -q TRUST_FULLY "${fd}"; then
 		ret=0
 	fi

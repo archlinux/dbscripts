@@ -63,6 +63,7 @@ msg "Moving packages from [${repo_from}] to [${repo_to}]..."
 declare -A add_pkgs
 declare -A remove_pkgs
 for pkgbase in ${args[@]:2}; do
+	tag_list=""
 	for pkgarch in ${ARCHES[@]} 'any'; do
 		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
 		svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
@@ -90,7 +91,7 @@ for pkgbase in ${args[@]:2}; do
 				/usr/bin/svn mv -q -r HEAD "${svnrepo_from}/$file" "${svnrepo_to}/"
 			done
 			/usr/bin/svn rm --force -q "${svnrepo_from}"
-			/usr/bin/svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${pkgarch})"
+			tag_list="$tag_list,  $pkgarch"
 
 			for pkgname in ${pkgnames[@]}; do
 				for tarch in ${tarches[@]}; do
@@ -112,6 +113,8 @@ for pkgbase in ${args[@]:2}; do
 			done
 		fi
 	done
+	tag_list="${tag_list#, }"
+	/usr/bin/svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"
 done
 
 for tarch in ${ARCHES[@]}; do

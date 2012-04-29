@@ -16,7 +16,7 @@ restore_umask () {
 }
 
 # set up general environment
-WORKDIR=$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)
+WORKDIR=$(mktemp -d "${TMPDIR}/${0##*/}.XXXXXXXXXX")
 LOCKS=()
 
 # check if messages are to be printed using color

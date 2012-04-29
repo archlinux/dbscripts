@@ -2,7 +2,7 @@ set -E
 
 . "$(dirname ${BASH_SOURCE[0]})/../../config"
 # override the default TMPDIR
-export TMPDIR="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
+TMPDIR="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
 . "$(dirname ${BASH_SOURCE[0]})/../../db-functions"
 
 signpkg() {

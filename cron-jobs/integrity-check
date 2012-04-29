@@ -2,8 +2,8 @@
 
 dirname="$(dirname $0)"
 
-. "${dirname}/../db-functions"
 . "${dirname}/../config"
+. "${dirname}/../db-functions"
 
 script_lock
 

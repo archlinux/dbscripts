@@ -106,6 +106,8 @@ setUp() {
 	SVNREPO="file://${TMP}/svn-packages-repo"
 	PKGREPOS=(${PKGREPOS[@]})
 	PKGPOOL="${PKGPOOL}"
+	TESTING_REPO='testing'
+	STABLE_REPOS=('core' 'extra')
 	CLEANUP_DESTDIR="${TMP}/package-cleanup"
 	SOURCE_CLEANUP_DESTDIR="${TMP}/source-cleanup"
 	STAGING="${TMP}/staging"

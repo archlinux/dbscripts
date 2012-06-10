@@ -88,7 +88,7 @@ for repo in ${PKGREPOS[@]}; do
 
 			# Build the actual source package
 			pushd "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null
-			makepkg --nocolor --allsource --ignorearch --skippgpcheck >"${WORKDIR}/${pkgbase}.log" 2>&1
+			makepkg --nocolor --allsource --ignorearch --skippgpcheck --config "${dirname}/makepkg.conf" >"${WORKDIR}/${pkgbase}.log" 2>&1
 			if [ $? -eq 0 ] && [ -f "${pkgbase}-${pkgver}${SRCEXT}" ]; then
 				mv "${pkgbase}-${pkgver}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}"
 				# Avoid creating the same source package for every arch

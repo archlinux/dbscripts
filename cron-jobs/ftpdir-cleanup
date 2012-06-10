@@ -75,29 +75,6 @@ if [ ${#old_pkgs[@]} -ge 1 ]; then
 	done
 fi
 
-# cleanup of legacy $repo/os/any directories
-for repo in ${PKGREPOS[@]}; do
-	if [ ! -d "${FTP_BASE}/${repo}/os/any" ]; then
-		continue
-	fi
-	if [ -n "$(find "${FTP_BASE}/${repo}/os/any" -type d -empty)" ]; then
-		msg "Removing empty legacy directory ${repo}/os/any"
-		${CLEANUP_DRYRUN} || rmdir "${FTP_BASE}/${repo}/os/any"
-		continue
-	fi
-	find "${FTP_BASE}/${repo}/os/any" -name "*${PKGEXT}" -printf '%f\n' | sort > "${WORKDIR}/any-${repo}"
-	cat "${WORKDIR}/db-${repo}-"* | sort -u > "${WORKDIR}/all-${repo}"
-
-	old_pkgs=($(comm -23 "${WORKDIR}/any-${repo}" "${WORKDIR}/all-${repo}"))
-	if [ ${#old_pkgs[@]} -ge 1 ]; then
-		msg "Removing old packages from [${repo}] (any)..."
-		for old_pkg in ${old_pkgs[@]}; do
-			msg2 "${old_pkg}"
-			clean_pkg "${FTP_BASE}/${repo}/os/any/${old_pkg}"
-		done
-	fi
-done
-
 old_pkgs=($(find ${CLEANUP_DESTDIR} -type f -name "*${PKGEXT}" -mtime +${CLEANUP_KEEP} -printf '%f\n'))
 if [ ${#old_pkgs[@]} -ge 1 ]; then
 	msg "Removing old packages from the cleanup directory..."

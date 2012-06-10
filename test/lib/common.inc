@@ -82,7 +82,7 @@ setUp() {
 
 	for r in ${PKGREPOS[@]}; do
 		mkdir -p "${TMP}/staging/${r}"
-		for a in ${ARCHES[@]} any; do
+		for a in ${ARCHES[@]}; do
 			mkdir -p "${TMP}/ftp/${r}/os/${a}"
 		done
 	done
@@ -169,18 +169,15 @@ checkAnyPackageDB() {
 			[ "$(readlink -e "${FTP_BASE}/${repo}/os/${arch}/${pkg}.sig")" == "${FTP_BASE}/${PKGPOOL}/${pkg}.sig" ] \
 				|| fail "${repo}/os/${arch}/${pkg}.sig does not link to ${PKGPOOL}/${pkg}.sig"
 		fi
+
+		for db in ${DBEXT} ${FILESEXT}; do
+			( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" ] \
+				&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" -O | grep -q ${pkg}) \
+				|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${db%.tar.*}"
+		done
 	done
 	[ -r "${STAGING}"/${repo}/${pkg} ] && fail "${repo}/${pkg} found in staging dir"
 	[ -r "${STAGING}"/${repo}/${pkg}.sig ] && fail "${repo}/${pkg}.sig found in staging dir"
-
-	for db in ${DBEXT} ${FILESEXT}; do
-		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" ] \
-			&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${db%.tar.*}" -O | grep -q ${pkg}) \
-			|| fail "${pkg} not in ${repo}/os/${arch}/${repo}${db%.tar.*}"
-	done
-
-	[ -r "${FTP_BASE}/${repo}/os/any/${pkg}" ] && fail "${repo}/os/any/${pkg} should not exist"
-	[ -r "${FTP_BASE}/${repo}/os/any/${pkg}.sig" ] && fail "${repo}/os/any/${pkg}.sig should not exist"
 }
 
 checkAnyPackage() {

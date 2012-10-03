@@ -455,19 +455,6 @@ check_repo_permission() {
 	return 0
 }
 
-check_pkgsig() {
-	local signature=$1
-	local ret=1
-	local fd="$(mktemp --tmpdir="${WORKDIR}")"
-
-	gpg --homedir /etc/pacman.d/gnupg/ --status-file "${fd}" --verify "${signature}" >/dev/null 2>&1
-	if grep -q TRUST_FULLY "${fd}"; then
-		ret=0
-	fi
-
-	return $ret
-}
-
 set_repo_permission() {
 	local repo=$1
 	local arch=$2

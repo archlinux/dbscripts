@@ -347,7 +347,7 @@ check_pkgsvn() {
 
 	if [ ! -f "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" ]; then
 		mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
-		svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
+		arch_svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
 			"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null
 		[ $? -ge 1 ] && return 1
 	fi
@@ -382,7 +382,7 @@ check_splitpkgs() {
 
 		if [ ! -f "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" ]; then
 			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
-			svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
+			arch_svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
 				"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null
 			[ $? -ge 1 ] && return 1
 		fi
@@ -503,4 +503,12 @@ arch_repo_remove() {
 	/usr/bin/repo-remove -q "${filesfile}" ${pkgs[@]} \
 		|| error "repo-remove ${filesfile} ${pkgs[@]}"
 	set_repo_permission "${repo}" "${arch}"
+}
+
+arch_svn() {
+	if [ -z "${SVNUSER}" ]; then
+		/usr/bin/svn "${@}"
+	else
+		sudo -u "${SVNUSER}" -- /usr/bin/svn "${@}"
+	fi
 }

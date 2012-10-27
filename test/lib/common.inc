@@ -91,14 +91,14 @@ setUp() {
 
 	msg 'Creating svn repository...'
 	svnadmin create "${TMP}/svn-packages-repo"
-	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
+	arch_svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
 
 	for p in "${pkgdir}"/*; do
 		pkg=${p##*/}
 		mkdir -p "${TMP}/svn-packages-copy/${pkg}"/{trunk,repos}
 		cp "${p}"/* "${TMP}/svn-packages-copy"/${pkg}/trunk/
-		svn add -q "${TMP}/svn-packages-copy"/${pkg}
-		svn commit -q -m"initial commit of ${pkg}" "${TMP}/svn-packages-copy"
+		arch_svn add -q "${TMP}/svn-packages-copy"/${pkg}
+		arch_svn commit -q -m"initial commit of ${pkg}" "${TMP}/svn-packages-copy"
 	done
 
 	cat <<eot > "$(dirname ${BASH_SOURCE[0]})/../../config.local"
@@ -189,7 +189,7 @@ checkAnyPackage() {
 	checkAnyPackageDB $repo $pkg
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${pkg}")
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	arch_svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] \
 		|| fail "svn-packages-copy/${pkgbase}/repos/${repo}-any does not exist"
 }
@@ -231,7 +231,7 @@ checkPackage() {
 	checkPackageDB $repo $pkg $arch
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${pkg}")
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	arch_svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] \
 		|| fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} does not exist"
 }
@@ -256,7 +256,7 @@ checkRemovedPackage() {
 
 	checkRemovedPackageDB $repo $pkgbase $arch
 
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	arch_svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] \
 		&& fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} should not exist"
 }
@@ -282,7 +282,7 @@ checkRemovedAnyPackage() {
 
 	checkRemovedAnyPackageDB $repo $pkgbase
 
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	arch_svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] \
 		&& fail "svn-packages-copy/${pkgbase}/repos/${repo}-any should not exist"
 }

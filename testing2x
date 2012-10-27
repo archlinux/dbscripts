@@ -20,7 +20,7 @@ declare -A pkgs
 
 for pkgbase in $*; do
 	if [ ! -d "${WORKDIR}/${pkgbase}" ]; then
-		/usr/bin/svn export -q "${SVNREPO}/${pkgbase}/repos" "${WORKDIR}/${pkgbase}" >/dev/null
+		arch_svn export -q "${SVNREPO}/${pkgbase}/repos" "${WORKDIR}/${pkgbase}" >/dev/null
 
 		found_source=false
 		for pkgarch in ${ARCHES[@]} 'any'; do

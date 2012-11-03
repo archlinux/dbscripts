@@ -7,12 +7,12 @@ SRCPOOL=''
 TESTING_REPO=''
 STABLE_REPOS=()
 
-CLEANUP_DESTDIR="/srv/package-cleanup"
+CLEANUP_DESTDIR="/var/tmp"
 CLEANUP_DRYRUN=false
 # Time in days to keep moved packages
 CLEANUP_KEEP=30
 
-SOURCE_CLEANUP_DESTDIR="/srv/source-cleanup"
+SOURCE_CLEANUP_DESTDIR="/var/tmp"
 SOURCE_CLEANUP_DRYRUN=false
 # Time in days to keep moved sourcepackages
 SOURCE_CLEANUP_KEEP=14
@@ -23,7 +23,7 @@ LOCK_DELAY=10
 LOCK_TIMEOUT=300
 
 STAGING="$HOME/staging"
-TMPDIR="/srv/tmp"
+TMPDIR="/var/tmp"
 ARCHES=(i686 x86_64)
 DBEXT=".db.tar.gz"
 FILESEXT=".files.tar.gz"

@@ -3,6 +3,15 @@
 . "$(dirname $0)/../config"
 . "$(dirname $0)/../db-functions"
 
+# just like mv -f, but we touch the file and then copy the content so
+# default ACLs in the target dir will be applied
+mv_acl() {
+	rm -f "$2"
+	touch "$2"
+	cat "$1" >"$2" || return 1
+	rm -f "$1"
+}
+
 clean_pkg() {
 	local pkg
 	local target
@@ -12,9 +21,9 @@ clean_pkg() {
 			if [ -h "$pkg" ]; then
 				rm -f "$pkg" "$pkg.sig"
 			else
-				mv -f "$pkg" "$CLEANUP_DESTDIR"
+				mv_acl "$pkg" "$CLEANUP_DESTDIR/${pkg##*/}"
 				if [ -e "$pkg.sig" ]; then
-					mv -f "$pkg.sig" "$CLEANUP_DESTDIR"
+					mv_acl "$pkg.sig" "$CLEANUP_DESTDIR/${pkg##*/}.sig"
 				fi
 				touch "${CLEANUP_DESTDIR}/${pkg##*/}"
 			fi

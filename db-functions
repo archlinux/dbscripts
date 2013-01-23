@@ -32,6 +32,7 @@ if [ -n "${SVNUSER}" ]; then
 	setfacl -m d:u:"${SVNUSER}":rwx "${WORKDIR}"
 fi
 LOCKS=()
+REPO_MODIFIED=0
 
 # check if messages are to be printed using color
 unset ALL_OFF BOLD BLUE GREEN RED YELLOW
@@ -142,6 +143,11 @@ cleanup() {
 		script_unlock
 	fi
 	rm -rf "$WORKDIR"
+
+	if (( REPO_MODIFIED )); then
+		date +%s > "${FTP_BASE}/lastupdate"
+	fi
+
 	[ "$1" ] && exit $1
 }
 
@@ -499,6 +505,8 @@ arch_repo_add() {
 		|| error "repo-add -f ${repo}${FILESEXT} ${pkgs[@]}"
 	popd >/dev/null
 	set_repo_permission "${repo}" "${arch}"
+
+	REPO_MODIFIED=1
 }
 
 arch_repo_remove() {
@@ -517,6 +525,8 @@ arch_repo_remove() {
 	/usr/bin/repo-remove -q "${filesfile}" ${pkgs[@]} \
 		|| error "repo-remove ${filesfile} ${pkgs[@]}"
 	set_repo_permission "${repo}" "${arch}"
+
+	REPO_MODIFIED=1
 }
 
 arch_svn() {

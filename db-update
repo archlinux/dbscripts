@@ -9,10 +9,17 @@ if [ $# -ge 1 ]; then
 fi
 
 # Find repos with packages to release
-repos=($(find  "${STAGING}" -mindepth 1 -type d ! -empty -printf '%f ' 2>/dev/null))
+staging_repos=($(find  "${STAGING}" -mindepth 1 -type f -name "*${PKGEXT}" -printf '%h\n' | sort -u))
 if [ $? -ge 1 ]; then
 	die "Could not read ${STAGING}"
 fi
+
+repos=()
+for staging_repo in ${staging_repos[@]##*/}; do
+	if in_array ${staging_repo} ${PKGREPOS[@]}; then
+		repos+=(${staging_repo})
+	fi
+done
 
 # TODO: this might lock too much (architectures)
 for repo in ${repos[@]}; do

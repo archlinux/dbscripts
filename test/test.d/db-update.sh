@@ -162,4 +162,14 @@ testAddIncompleteSplitPackage() {
 	done
 }
 
+testUnknownRepo() {
+	mkdir "${STAGING}/unknown/"
+	releasePackage extra 'pkg-simple-a' 'i686'
+	releasePackage unknown 'pkg-simple-b' 'i686'
+	../db-update
+	checkPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+	[ -e "${FTP_BASE}/unknown" ] && fail "db-update pushed a package into an unknown repository"
+	rm -rf "${STAGING}/unknown/"
+}
+
 . "${curdir}/../lib/shunit2"

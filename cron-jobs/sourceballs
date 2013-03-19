@@ -90,7 +90,7 @@ for repo in ${PKGREPOS[@]}; do
 			pushd "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null
 			makepkg --nocolor --allsource --ignorearch --skippgpcheck --config "${dirname}/makepkg.conf" >"${WORKDIR}/${pkgbase}.log" 2>&1
 			if [ $? -eq 0 ] && [ -f "${pkgbase}-${pkgver}${SRCEXT}" ]; then
-				mv "${pkgbase}-${pkgver}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}"
+				mv_acl "${pkgbase}-${pkgver}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}/${pkgbase}-${pkgver}${SRCEXT}"
 				# Avoid creating the same source package for every arch
 				echo "${pkgbase}-${pkgver}${SRCEXT}" >> "${WORKDIR}/available-src-pkgs"
 				newpkgs[${#newpkgs[*]}]="${pkgbase}-${pkgver}${SRCEXT}"
@@ -127,7 +127,7 @@ if [ ${#old_pkgs[@]} -ge 1 ]; then
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 "${old_pkg}"
 		if ! ${SOURCE_CLEANUP_DRYRUN}; then
-			mv "$FTP_BASE/${SRCPOOL}/${old_pkg}" "${SOURCE_CLEANUP_DESTDIR}"
+			mv_acl "$FTP_BASE/${SRCPOOL}/${old_pkg}" "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
 			touch "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
 		fi
 	done

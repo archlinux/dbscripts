@@ -15,6 +15,15 @@ restore_umask () {
 	umask $UMASK >/dev/null
 }
 
+# just like mv -f, but we touch the file and then copy the content so
+# default ACLs in the target dir will be applied
+mv_acl() {
+	rm -f "$2"
+	touch "$2"
+	cat "$1" >"$2" || return 1
+	rm -f "$1"
+}
+
 # set up general environment
 WORKDIR=$(mktemp -d "${TMPDIR}/${0##*/}.XXXXXXXXXX")
 if [ -n "${SVNUSER}" ]; then

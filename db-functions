@@ -38,7 +38,7 @@ mv_acl() {
 }
 
 # set up general environment
-WORKDIR=$(mktemp -d "${TMPDIR}/${0##*/}.XXXXXXXXXX")
+WORKDIR=$(mktemp -dt "${0##*/}.XXXXXXXXXX")
 if [[ -n ${SVNUSER} ]]; then
 	setfacl -m u:"${SVNUSER}":rwx "${WORKDIR}"
 	setfacl -m d:u:"${USER}":rwx "${WORKDIR}"

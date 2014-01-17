@@ -21,7 +21,7 @@ LOCK_DELAY=10
 LOCK_TIMEOUT=300
 
 STAGING="$HOME/staging"
-TMPDIR="/var/tmp"
+export TMPDIR="/var/tmp"
 ARCHES=(x86_64)
 DBEXT=".db.tar.gz"
 FILESEXT=".files.tar.gz"

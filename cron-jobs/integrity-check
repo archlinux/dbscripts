@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dirname="$(dirname "$0")"
+dirname="$(dirname "$(readlink -e "$0")")"
 
 . "${dirname}/../config"
 . "${dirname}/../db-functions"

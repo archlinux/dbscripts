@@ -1,7 +1,7 @@
 #!/bin/bash
 
-. "$(dirname "$0")/config"
-. "$(dirname "$0")/db-functions"
+. "$(dirname "$(readlink -e "$0")")/config"
+. "$(dirname "$(readlink -e "$0")")/db-functions"
 
 if (( $# < 1 )); then
 	msg "usage: %s <pkgname|pkgbase> ..." "${0##*/}"
@@ -54,7 +54,7 @@ for repo in "${STABLE_REPOS[@]}"; do
 		repo_unlock "${repo}" "${pkgarch}"
 	done
 	if [[ -n ${pkgs[${repo}]} ]]; then
-		"$(dirname "$0")/db-move" "${TESTING_REPO}" "${repo}" ${pkgs[${repo}]}
+		"$(dirname "$(readlink -e "$0")")/db-move" "${TESTING_REPO}" "${repo}" ${pkgs[${repo}]}
 	fi
 done
 

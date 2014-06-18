@@ -10,20 +10,8 @@ variables=('pkgname' 'pkgbase' 'epoch' 'pkgver' 'pkgrel' 'makedepends' 'arch' ${
 readonly -a variables splitpkg_overrides
 
 backup_package_variables() {
-	for var in ${splitpkg_overrides[@]}; do
-		indirect="${var}_backup"
-		eval "${indirect}=(\${$var[@]})"
-	done
-}
-
-restore_package_variables() {
-	for var in ${splitpkg_overrides[@]}; do
-		indirect="${var}_backup"
-		if [ -n "${!indirect}" ]; then
-			eval "${var}=(\${$indirect[@]})"
-		else
-			unset ${var}
-		fi
+	for var in "${splitpkg_overrides[@]}"; do
+		declare -p "$var" 2>/dev/null || printf 'unset %q\n' "$var"
 	done
 }
 
@@ -72,6 +60,7 @@ print_info() {
 }
 
 source_pkgbuild() {
+	local restore_package_variables
 	ret=0
 	dir=$1
 	pkgbuild=$dir/PKGBUILD
@@ -93,7 +82,7 @@ source_pkgbuild() {
 				echo -e "%INVALID%\n$pkgbuild\n"
 				return 1
 			else
-				backup_package_variables
+				restore_package_variables=$(backup_package_variables)
 				pkgname=$pkg
 				while IFS= read -r line; do
 					var=${line%%=*}
@@ -106,7 +95,7 @@ source_pkgbuild() {
 					done
 				done < <(type package_${pkg})
 				print_info
-				restore_package_variables
+				eval "$restore_package_variables"
 			fi
 		done
 	else

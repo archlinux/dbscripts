@@ -56,19 +56,15 @@ done | sort -u > "${WORKDIR}/available-src-pkgs"
 for repo in ${PKGREPOS[@]}; do
 	newpkgs=()
 	failedpkgs=()
-	while read line; do
-		pkginfo=(${line})
-		pkgbase=${pkginfo[0]}
-		pkgver=${pkginfo[1]}
-		pkgarch=${pkginfo[2]}
-		pkglicense=(${pkginfo[@]:3})
+	while read -r pkgbase pkgver pkgarch pkglicense; do
+		read -ra pkglicense <<<"$pkglicense"
 
 		# Should this package be skipped?
 		if grep -Fqx "${pkgbase}" "${dirname}/sourceballs.skip"; then
 			continue
 		fi
 		# Check if the license or .force file does not enforce creating a source package
-		if ! ([[ -z ${ALLOWED_LICENSES[@]} ]] || chk_license ${pkglicense[@]} || grep -Fqx "${pkgbase}" "${dirname}/sourceballs.force"); then
+		if ! ((( ${#ALLOWED_LICENSES[@]} == 0 )) || chk_license "${pkglicense[@]}" || grep -Fqx "${pkgbase}" "${dirname}/sourceballs.force"); then
 			continue
 		fi
 		# Store the expected file name of the source package

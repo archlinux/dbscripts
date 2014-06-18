@@ -4,7 +4,7 @@ pkgrel=1
 pkgdesc="A package called ${pkgname}"
 arch=('i686' 'x86_64')
 url='http://www.archlinux.org/'
-license=('GPL')
+license=('GPL' 'LGPL')
 depends=('glibc')
 options=(!strip)
 

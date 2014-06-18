@@ -282,7 +282,7 @@ getpkgfile() {
 
 getpkgfiles() {
 	local f files
-	if [[ ! -z "$(echo ${@%\.*} | sed "s/ /\n/g" | sort | uniq -D)" ]]; then
+	if ! printf '%s\n' "${@%\.*}" | awk 'a[$0]++{exit 1}'; then
 		error 'Duplicate packages found!'
 		exit 1
 	fi
@@ -357,9 +357,7 @@ check_splitpkgs() {
 		fi
 
 		local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))
-		for svnname in ${svnnames[@]}; do
-			echo "${svnname}" >> "${repo}/${_pkgarch}/${_pkgbase}/svn"
-		done
+		printf '%s\n' "${svnnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/svn"
 	done
 	popd >/dev/null
 
@@ -429,9 +427,9 @@ set_repo_permission() {
 
 	if [[ -w ${dbfile} ]]; then
 		local group=$(/usr/bin/stat --printf='%G' "$(dirname "${dbfile}")")
-		chgrp $group "${dbfile}" || error "Could not change group of %s to %s" "$dbfile" "$group"
-		chgrp $group "${filesfile}" || error "Could not change group of %s to %s" "$filesfile" "$group"
-		chmod g+w "${dbfile}" || error "Could not set write permission for group %s to %s" "$group" "$dbfile"
+		chgrp "$group" "${dbfile}"    || error "Could not change group of %s to %s" "$dbfile" "$group"
+		chgrp "$group" "${filesfile}" || error "Could not change group of %s to %s" "$filesfile" "$group"
+		chmod g+w "${dbfile}"    || error "Could not set write permission for group %s to %s" "$group" "$dbfile"
 		chmod g+w "${filesfile}" || error "Could not set write permission for group %s to %s" "$group" "$filesfile"
 	else
 		error "You don't have permission to change %s" "$dbfile"

@@ -10,7 +10,7 @@ fi
 
 # Lock everything to reduce  possibility of interfering task between the different repo-updates
 script_lock
-for repo in  ${TESTING_REPO} ${STABLE_REPOS[@]}; do
+for repo in "${TESTING_REPO}" "${STABLE_REPOS[@]}"; do
 	for pkgarch in ${ARCHES[@]}; do
 		repo_lock ${repo} ${pkgarch} || exit 1
 	done
@@ -18,7 +18,7 @@ done
 
 declare -A pkgs
 
-for pkgbase in $*; do
+for pkgbase in "$@"; do
 	if [[ ! -d ${WORKDIR}/${pkgbase} ]]; then
 		arch_svn export -q "${SVNREPO}/${pkgbase}/repos" "${WORKDIR}/${pkgbase}" >/dev/null
 

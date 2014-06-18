@@ -97,6 +97,13 @@ load ../lib/common
 	[ "$status" -ne 0 ]
 }
 
+@test "update duplicate package fails" {
+	PKGEXT=.pkg.tar.xz releasePackage extra pkg-any-a
+	PKGEXT=.pkg.tar.gz releasePackage extra pkg-any-a
+	run db-update
+	[ "$status" -ne 0 ]
+}
+
 @test "update same any package to different repositories fails" {
 	local arch
 

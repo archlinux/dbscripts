@@ -273,7 +273,7 @@ getpkgfile() {
 		error "Package %s not found!" "$1"
 		exit 1
 	elif [[ ! -f ${1}.sig ]]; then
-		error "Package signature %s.sig not found!" "$1"
+		error "Package signature %s not found!" "$1.sig"
 		exit 1
 	fi
 
@@ -450,8 +450,8 @@ arch_repo_modify() {
 
 	# package files for repo-add might be relative to repo dir
 	pushd "${dbfile%/*}" >/dev/null
-	/usr/bin/repo-${action} -q "${dbfile}" ${pkgs[@]} \
-		|| error "repo-${action} %s %s " "${dbfile@Q}" "${pkgs[*]@Q}"
+	/usr/bin/repo-${action} -q "${dbfile}" "${pkgs[@]}" \
+		|| error '%s' "repo-${action} ${dbfile@Q} ${pkgs[*]@Q}"
 	set_repo_permission "${repo}" "${arch}"
 	popd >/dev/null
 

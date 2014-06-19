@@ -118,11 +118,11 @@ source_pkgbuild() {
 }
 
 find_pkgbuilds() {
-    #Skip over some dirs
-    local d="${1##*/}"
-    if [ "$d" = "CVS" -o "$d" = ".svn" ]; then
-        return
-    fi
+	#Skip over some dirs
+	local d="${1##*/}"
+	if [ "$d" = "CVS" -o "$d" = ".svn" ]; then
+		return
+	fi
 
 	if [ -f $1/PKGBUILD ]; then
 		source_pkgbuild $1

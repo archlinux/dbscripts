@@ -51,6 +51,9 @@ for repo in ${repos[@]}; do
 			if ! check_pkgrepos "${pkg}"; then
 				die "Package ${repo}/${pkg##*/} already exists in another repository"
 			fi
+			if ! check_packager "${pkg}"; then
+				die "Package ${repo}/${pkg##*/} does not have a valid packager"
+			fi
 		done
 		if ! check_splitpkgs ${repo} ${pkgs[@]}; then
 			die "Missing split packages for ${repo}"

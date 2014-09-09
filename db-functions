@@ -297,6 +297,13 @@ getpkgarch() {
 	echo "$_ver"
 }
 
+check_packager() {
+	local _packager
+
+	_packager=$(_grep_pkginfo "$1" "packager")
+	[[ $_packager && $_packager != 'Unknown Packager' ]]
+}
+
 getpkgfile() {
 	if [[ ${#} -ne 1 ]]; then
 		error 'No canonical package found!'

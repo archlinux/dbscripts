@@ -117,8 +117,8 @@ for repo in ${PKGREPOS[@]}; do
 done
 
 # Cleanup old source packages
-cat "${WORKDIR}/expected-src-pkgs" | sort -u > "${WORKDIR}/expected-src-pkgs.sort"
-cat "${WORKDIR}/available-src-pkgs" | sort -u > "${WORKDIR}/available-src-pkgs.sort"
+find "${WORKDIR}" -maxdepth 1 -type f -name 'expected-src-pkgs' -exec cat {} \; | sort -u > "${WORKDIR}/expected-src-pkgs.sort"
+find "${WORKDIR}" -maxdepth 1 -type f -name 'available-src-pkgs' -exec cat {} \; | sort -u > "${WORKDIR}/available-src-pkgs.sort"
 old_pkgs=($(comm -23 "${WORKDIR}/available-src-pkgs.sort" "${WORKDIR}/expected-src-pkgs.sort"))
 
 if [ ${#old_pkgs[@]} -ge 1 ]; then

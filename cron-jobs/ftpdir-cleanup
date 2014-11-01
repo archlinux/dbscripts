@@ -64,7 +64,7 @@ done
 # get a list of all available packages in the pacakge pool
 find "$FTP_BASE/${PKGPOOL}" -name "*${PKGEXT}" -printf '%f\n' | sort > "${WORKDIR}/pool"
 # create a list of packages in our db
-cat "${WORKDIR}/db-"* | sort -u > "${WORKDIR}/db"
+find "${WORKDIR}" -maxdepth 1 -type f -name 'db-*' -exec cat {} \; | sort -u > "${WORKDIR}/db"
 
 old_pkgs=($(comm -23 "${WORKDIR}/pool" "${WORKDIR}/db"))
 if [ ${#old_pkgs[@]} -ge 1 ]; then

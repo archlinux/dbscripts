@@ -2,9 +2,8 @@
 #Dummy helper to send email to arch-dev
 # It does nothing if no output
 
-LIST="arch-dev-public@archlinux.org"
-#LIST="aaronmgriffin@gmail.com"
-FROM="repomaint@archlinux.org"
+# Load $LIST and $FROM from the config file
+. "$(dirname "$(readlink -e "$0")")/../config"
 
 SUBJECT="Repository Maintenance $(date +"%d-%m-%Y")"
 if (( $# >= 1 )); then

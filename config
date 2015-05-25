@@ -35,6 +35,11 @@ PKGEXTS=".pkg.tar.@(gz|bz2|xz|lzo|lrz|Z)"
 # Allowed licenses: get sourceballs only for licenses in this array
 ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'GPL3' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1' 'LGPL3')
 
+# Where to send error emails, and who they are from
+LIST="arch-dev-public@archlinux.org"
+#LIST="aaronmgriffin@gmail.com"
+FROM="repomaint@archlinux.org"
+
 # Override default config with config.local
 LOCAL_CONFIG=${DBSCRIPTS_CONFIG:-"$(dirname "${BASH_SOURCE[0]}")/config.local"}
 [[ -f "${LOCAL_CONFIG}" ]] && . "${LOCAL_CONFIG}"

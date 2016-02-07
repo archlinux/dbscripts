@@ -169,7 +169,6 @@ trap cleanup EXIT
 repo_lock () {
 	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	local DBLOCKFILE="${FTP_BASE}/${1}/os/${2}/${1}${DBEXT}.lck"
-	local FILESLOCKFILE="${FTP_BASE}/${1}/os/${2}/${1}${FILESEXT}.lck"
 	local _count
 	local _trial
 	local _timeout
@@ -179,10 +178,6 @@ repo_lock () {
 	# This is the lock file used by repo-add and repo-remove
 	if [ -f "${DBLOCKFILE}" ]; then
 		error "Repo [${1}] (${2}) is already locked by repo-{add,remove} process $(cat $DBLOCKFILE)"
-		return 1
-	fi
-	if [ -f "${FILESLOCKFILE}" ]; then
-		error "Repo [${1}] (${2}) is already locked by repo-{add,remove} process $(cat ${FILESLOCKFILE})"
 		return 1
 	fi
 
@@ -508,8 +503,6 @@ arch_repo_add() {
 	pushd "${FTP_BASE}/${repo}/os/${arch}" >/dev/null
 	/usr/bin/repo-add -q "${repo}${DBEXT}" ${pkgs[@]} \
 		|| error "repo-add ${repo}${DBEXT} ${pkgs[@]}"
-	/usr/bin/repo-add -f -q "${repo}${FILESEXT}" ${pkgs[@]} \
-		|| error "repo-add -f ${repo}${FILESEXT} ${pkgs[@]}"
 	popd >/dev/null
 	set_repo_permission "${repo}" "${arch}"
 
@@ -521,7 +514,6 @@ arch_repo_remove() {
 	local arch=$2
 	local pkgs=(${@:3})
 	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}"
-	local filesfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${FILESEXT}"
 
 	if [ ! -f "${dbfile}" ]; then
 		error "No database found at '${dbfile}'"
@@ -529,8 +521,6 @@ arch_repo_remove() {
 	fi
 	/usr/bin/repo-remove -q "${dbfile}" ${pkgs[@]} \
 		|| error "repo-remove ${dbfile} ${pkgs[@]}"
-	/usr/bin/repo-remove -q "${filesfile}" ${pkgs[@]} \
-		|| error "repo-remove ${filesfile} ${pkgs[@]}"
 	set_repo_permission "${repo}" "${arch}"
 
 	REPO_MODIFIED=1

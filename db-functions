@@ -230,6 +230,13 @@ _grep_pkginfo() {
 	echo "${_ret#${2} = }"
 }
 
+# usage: _grep_buildinfo pkgfile pattern
+_grep_buildinfo() {
+	local _ret
+
+	_ret="$(/usr/bin/bsdtar -xOqf "$1" .BUILDINFO | grep -m 1 "^${2} = ")"
+	echo "${_ret#${2} = }"
+}
 
 # Get the package base or name as fallback
 getpkgbase() {
@@ -297,6 +304,17 @@ check_packager() {
 
 	_packager=$(_grep_pkginfo "$1" "packager")
 	[[ $_packager && $_packager != 'Unknown Packager' ]]
+}
+
+check_buildinfo() {
+	/usr/bin/bsdtar -tf "$1" .BUILDINFO >/dev/null 2>&1
+}
+
+check_builddir() {
+	local _builddir
+
+	_builddir=$(_grep_buildinfo "$1" "builddir")
+	[[ $_builddir && $_builddir = '/build' ]]
 }
 
 getpkgfile() {

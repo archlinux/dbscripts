@@ -54,6 +54,12 @@ for repo in ${repos[@]}; do
 			if ! check_packager "${pkg}"; then
 				die "Package ${repo}/${pkg##*/} does not have a valid packager"
 			fi
+			if ! check_buildinfo "${pkg}"; then
+				die "Package ${repo}/${pkg##*/} does not have a .BUILDINFO file"
+			fi
+			if ! check_builddir "${pkg}"; then
+				die "Package ${repo}/${pkg##*/} was not built in a chroot"
+			fi
 		done
 		if ! check_splitpkgs ${repo} ${pkgs[@]}; then
 			die "Missing split packages for ${repo}"

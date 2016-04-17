@@ -303,11 +303,7 @@ check_pkgfile() {
 
 	in_array "${pkgarch}" ${ARCHES[@]} 'any' || return 1
 
-	if echo "${pkgfile##*/}" | grep -q "^${pkgname}-${pkgver}-${pkgarch}"; then
-		return 0
-	else
-		return 1
-	fi
+	[[ ${pkgfile##*/} = ${pkgname}-${pkgver}-${pkgarch}* ]]
 }
 
 check_pkgsvn() {

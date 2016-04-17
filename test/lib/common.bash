@@ -226,7 +226,7 @@ checkPackageDB() {
 
 				for db in ${DBEXT} ${FILESEXT}; do
 					[ -r "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" ]
-					bsdtar -xf "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" -O | grep -q "${pkgfile%${PKGEXT}}"
+					bsdtar -xf "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" -O | grep "${pkgfile%${PKGEXT}}" &>/dev/null
 				done
 			done
 		done
@@ -280,7 +280,9 @@ checkRemovedPackageDB() {
 		for tarch in ${tarches[@]}; do
 			if [ -r "${FTP_BASE}/${repo}/os/${tarch}/${repo}${db%.tar.*}" ]; then
 				for pkgname in ${pkgnames[@]}; do
-					echo "$(bsdtar -xf "${FTP_BASE}/${repo}/os/${tarch}/${repo}${db%.tar.*}" -O)" | grep -qv ${pkgname}
+					if bsdtar -xf "${FTP_BASE}/${repo}/os/${tarch}/${repo}${db%.tar.*}" -O | grep ${pkgname} &>/dev/null; then
+						return 1
+					fi
 				done
 			fi
 		done

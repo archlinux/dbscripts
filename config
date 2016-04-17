@@ -1,3 +1,5 @@
+#!/hint/bash
+
 FTP_BASE="/srv/ftp"
 SVNREPO=''
 SVNUSER=''

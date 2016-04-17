@@ -1,3 +1,5 @@
+#!/hint/bash
+
 PKGREPOS=('community' 'community-testing' 'community-staging' 'multilib' 'multilib-testing' 'multilib-staging')
 PKGPOOL='pool/community'
 SRCPOOL='sources/community'

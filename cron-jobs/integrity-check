@@ -21,10 +21,6 @@ check() {
 	2>&1 | ${dirname}/devlist-mailer "Integrity Check ${arch}: ${repos}" "${mailto}"
 }
 
-repos='core,extra,community'
-arch='i686'
-check
-
 repos='core,extra,community,multilib'
 arch='x86_64'
 check

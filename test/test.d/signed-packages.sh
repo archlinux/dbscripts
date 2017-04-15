@@ -1,8 +1,3 @@
-#!/bin/bash
-
-curdir=$(readlink -e $(dirname $0))
-. "${curdir}/../lib/common.inc"
-
 testAddSignedPackage() {
 	releasePackage extra 'pkg-simple-a' 'i686'
 	../db-update || fail "db-update failed!"
@@ -32,5 +27,3 @@ testAddBrokenSignature() {
 	done
 	../db-update >/dev/null 2>&1 && fail "db-update should fail when a signature is broken!"
 }
-
-. "${curdir}/../lib/shunit2"

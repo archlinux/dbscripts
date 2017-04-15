@@ -1,15 +1,12 @@
 #!/bin/bash
 
-. "$(dirname ${BASH_SOURCE[0]})/lib/common.inc"
+curdir=$(readlink -e $(dirname $0))
 
-for t in "$(dirname ${BASH_SOURCE[0]})/test.d/"*.sh; do
-	l=$(basename ${t} .sh)
-	if [ -x ${t} ]; then
-		msg "Running test '${l}'"
-		${t}
-		[ $? -ne 0 ] && die "Test '${l}' failed"
-		echo -e "\n\n\n"
-	else
-		warning "Skipping test ${l}"
-	fi
-done
+testSuite=$(mktemp)
+trap "rm -rf '${testSuite}'" EXIT
+
+echo ". ${curdir}/lib/common.inc" > ${testSuite}
+cat "${curdir}/test.d"/*.sh >> ${testSuite}
+echo ". ${curdir}/lib/shunit2" >> ${testSuite}
+
+bash ${testSuite}

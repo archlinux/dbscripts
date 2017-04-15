@@ -1,8 +1,3 @@
-#!/bin/bash
-
-curdir=$(readlink -e $(dirname $0))
-. "${curdir}/../lib/common.inc"
-
 testTesting2xAnyPackage() {
 	releasePackage core pkg-any-a any
 	../db-update
@@ -23,5 +18,3 @@ testTesting2xAnyPackage() {
 	checkAnyPackage core pkg-any-a-1-2-any.pkg.tar.xz any
 	checkRemovedAnyPackage testing pkg-any-a
 }
-
-. "${curdir}/../lib/shunit2"

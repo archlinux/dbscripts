@@ -1,8 +1,3 @@
-#!/bin/bash
-
-curdir=$(readlink -e $(dirname $0))
-. "${curdir}/../lib/common.inc"
-
 testAddSimplePackages() {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
@@ -171,5 +166,3 @@ testUnknownRepo() {
 	[ -e "${FTP_BASE}/unknown" ] && fail "db-update pushed a package into an unknown repository"
 	rm -rf "${STAGING}/unknown/"
 }
-
-. "${curdir}/../lib/shunit2"

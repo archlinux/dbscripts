@@ -1,8 +1,3 @@
-#!/bin/bash
-
-curdir=$(readlink -e $(dirname $0))
-. "${curdir}/../lib/common.inc"
-
 testSourceballs() {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-simple-epoch')
@@ -80,5 +75,3 @@ testSourceballsCleanup() {
 	[ -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-a-*${SRCEXT} ] && fail "source package was not removed!"
 	[ ! -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-b-*${SRCEXT} ] && fail "source package not found!"
 }
-
-. "${curdir}/../lib/shunit2"

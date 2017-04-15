@@ -1,8 +1,3 @@
-#!/bin/bash
-
-curdir=$(readlink -e $(dirname $0))
-. "${curdir}/../lib/common.inc"
-
 testRemovePackages() {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-simple-epoch')
@@ -54,5 +49,3 @@ testRemoveMultiplePackages() {
 		done
 	done
 }
-
-. "${curdir}/../lib/shunit2"

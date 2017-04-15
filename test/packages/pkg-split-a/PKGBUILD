@@ -6,6 +6,7 @@ pkgdesc="A split package called ${pkgbase}"
 arch=('i686' 'x86_64')
 url='http://www.archlinux.org/'
 license=('GPL')
+depends=('glibc')
 
 package_pkg-split-a1() {
 	install -D -m755 /bin/true ${pkgdir}/usr/bin/${pkgname}

@@ -46,17 +46,12 @@ oneTimeSetUp() {
 
 		if ! ${build}; then
 			if [ "${pkgarch[0]}" == 'any' ]; then
-				sudo extra-x86_64-build || die 'extra-x86_64-build failed'
+					makepkg -cCf || die 'makepkg failed'
 			else
 				for a in ${pkgarch[@]}; do
-					sudo extra-${a}-build || die "extra-${a}-build failed"
+					CARCH=${a} makepkg -cCf || die "makepkg failed"
 				done
 			fi
-			for a in ${pkgarch[@]}; do
-				for p in ${pkgname[@]}; do
-					cp ${p}-${pkgversion}-${a}${PKGEXT} $(dirname ${BASH_SOURCE[0]})/../packages/${d##*/}
-				done
-			done
 		fi
 		popd >/dev/null
 	done
@@ -72,9 +67,7 @@ setUp() {
 	local r
 	local a
 
-	[ -f "$(dirname ${BASH_SOURCE[0]})/../../config.local" ] && die "$(dirname ${BASH_SOURCE[0]})/../../config.local exists"
 	TMP="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
-	#msg "Using ${TMP}"
 
 	PKGREPOS=('core' 'extra' 'testing')
 	PKGPOOL='pool/packages'
@@ -101,7 +94,8 @@ setUp() {
 		arch_svn commit -q -m"initial commit of ${pkg}" "${TMP}/svn-packages-copy"
 	done
 
-	cat <<eot > "$(dirname ${BASH_SOURCE[0]})/../../config.local"
+	export DBSCRIPTS_CONFIG=${TMP}/config.local
+	cat <<eot > "${DBSCRIPTS_CONFIG}"
 	FTP_BASE="${TMP}/ftp"
 	SVNREPO="file://${TMP}/svn-packages-repo"
 	PKGREPOS=(${PKGREPOS[@]})
@@ -121,7 +115,6 @@ eot
 
 tearDown() {
 	rm -rf "${TMP}"
-	rm -f "$(dirname ${BASH_SOURCE[0]})/../../config.local"
 	echo
 }
 

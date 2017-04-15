@@ -34,4 +34,5 @@ SRCEXT=".src.tar.gz"
 ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1')
 
 # Override default config with config.local
-[ -f "$(dirname ${BASH_SOURCE[0]})/config.local" ] && . "$(dirname ${BASH_SOURCE[0]})/config.local"
+LOCAL_CONFIG=${DBSCRIPTS_CONFIG:-"$(dirname ${BASH_SOURCE[0]})/config.local"}
+[ -f "${LOCAL_CONFIG}" ] && . "${LOCAL_CONFIG}"

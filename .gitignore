@@ -1,3 +1,4 @@
 *~
 /config.local
-test/packages/*/*.pkg.tar.?z
+/test/packages/*/*.pkg.tar.?z
+/.idea

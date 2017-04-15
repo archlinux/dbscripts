@@ -7,23 +7,10 @@ arch=('i686' 'x86_64')
 url='http://www.archlinux.org/'
 license=('GPL')
 
-depends=('glibc')
-makedepends=('gcc')
-source=('Makefile' 'test.c')
-md5sums=('c6cb8dcc86253355fed559416d0c8dcf'
-         '3c1e4279feb678fd9cabaccdb28e40d0')
-
-build() {
-	cd ${srcdir}
-	make
-}
-
 package_pkg-split-b1() {
-	cd ${srcdir}
-	make install DESTDIR=${pkgdir} DESTBIN=${pkgname[0]}
+	install -D -m755 /bin/true ${pkgdir}/usr/bin/${pkgname}
 }
 
 package_pkg-split-b2() {
-	cd ${srcdir}
-	make install DESTDIR=${pkgdir} DESTBIN=${pkgname[1]}
+	install -D -m755 /bin/true ${pkgdir}/usr/bin/${pkgname}
 }

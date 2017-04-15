@@ -5,7 +5,7 @@ curdir=$(readlink -e $(dirname $0))
 testSuite=$(mktemp)
 trap "rm -rf '${testSuite}'" EXIT
 
-echo ". ${curdir}/lib/common.inc" > ${testSuite}
+echo ". ${curdir}/lib/common.sh" > ${testSuite}
 cat "${curdir}/test.d"/*.sh >> ${testSuite}
 echo ". ${curdir}/lib/shunit2" >> ${testSuite}
 

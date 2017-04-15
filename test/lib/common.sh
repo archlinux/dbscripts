@@ -6,18 +6,7 @@ TMPDIR="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
 . "$(dirname ${BASH_SOURCE[0]})/../../db-functions"
 
 signpkg() {
-	if [[ -r '/etc/makepkg.conf' ]]; then
-		source '/etc/makepkg.conf'
-	else
-		die '/etc/makepkg.conf not found!'
-	fi
-	if [[ -r ~/.makepkg.conf ]]; then
-		. ~/.makepkg.conf
-	fi
-	if [[ -n $GPGKEY ]]; then
-		SIGNWITHKEY="-u ${GPGKEY}"
-	fi
-	gpg --detach-sign --use-agent ${SIGNWITHKEY} ${@} || die
+	gpg --detach-sign --no-armor --use-agent ${@} || die
 }
 
 oneTimeSetUp() {
@@ -33,25 +22,14 @@ oneTimeSetUp() {
 	msg 'Building packages...'
 	for d in "${pkgdir}"/*; do
 		pushd $d >/dev/null
-		pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
 		pkgarch=($(. PKGBUILD; echo ${arch[@]}))
-		pkgversion=$(. PKGBUILD; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}))
 
-		build=true
-		for a in ${pkgarch[@]}; do
-			for p in ${pkgname[@]}; do
-				[ ! -f ${p}-${pkgversion}-${a}${PKGEXT} ] && build=false
+		if [ "${pkgarch[0]}" == 'any' ]; then
+			makepkg -cCf || die 'makepkg failed'
+		else
+			for a in ${pkgarch[@]}; do
+				CARCH=${a} makepkg -cCf || die "makepkg failed"
 			done
-		done
-
-		if ! ${build}; then
-			if [ "${pkgarch[0]}" == 'any' ]; then
-					makepkg -cCf || die 'makepkg failed'
-			else
-				for a in ${pkgarch[@]}; do
-					CARCH=${a} makepkg -cCf || die "makepkg failed"
-				done
-			fi
 		fi
 		popd >/dev/null
 	done

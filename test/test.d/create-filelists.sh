@@ -68,7 +68,6 @@ testCreateSplitFileLists() {
 	done
 }
 
-
 testCleanupFileLists() {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')

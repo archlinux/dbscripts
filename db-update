@@ -42,7 +42,7 @@ for repo in ${repos[@]}; do
 			if ! check_pkgfile "${pkg}"; then
 				die "Package ${repo}/${pkg##*/} is not consistent with its meta data"
 			fi
-			if ${REQUIRE_SIGNATURE} && ! pacman-key -v "${pkg}.sig" >/dev/null 2>&1; then
+			if ! pacman-key -v "${pkg}.sig" >/dev/null 2>&1; then
 				die "Package ${repo}/${pkg##*/} does not have a valid signature"
 			fi
 			if ! check_pkgsvn "${pkg}" "${repo}"; then

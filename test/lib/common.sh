@@ -109,7 +109,7 @@ releasePackage() {
 
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/ >/dev/null
 	archrelease ${repo}-${arch} >/dev/null 2>&1
-	pkgver=$(. PKGBUILD; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}))
+	pkgver=$(. PKGBUILD; get_full_version)
 	pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
 	popd >/dev/null
 	cp "${pkgdir}/${pkgbase}"/*-${pkgver}-${arch}${PKGEXT} "${STAGING}"/${repo}/

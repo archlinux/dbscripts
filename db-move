@@ -36,7 +36,7 @@ for pkgbase in ${args[@]:2}; do
 				die "Could not read pkgname"
 			fi
 
-			pkgver=$(. "${svnrepo_from}/PKGBUILD"; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}))
+			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
 			if [ -z "${pkgver}" ]; then
 				die "Could not read pkgver"
 			fi
@@ -76,7 +76,7 @@ for pkgbase in ${args[@]:2}; do
 			fi
 			msg2 "${pkgbase} ($(echo ${tarches[@]}))"
 			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
-			pkgver=$(. "${svnrepo_from}/PKGBUILD"; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}))
+			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
 
 			if [ -d "${svnrepo_to}" ]; then
 				for file in $(arch_svn ls "${svnrepo_to}"); do

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+. /usr/share/makepkg/util/message.sh
+. /usr/share/makepkg/util/util.sh
+. /usr/share/makepkg/util/pkgbuild.sh
+
 # Some PKGBUILDs need CARCH to be set
 CARCH="x86_64"
 
@@ -33,71 +37,6 @@ if [ -n "${SVNUSER}" ]; then
 fi
 LOCKS=()
 REPO_MODIFIED=0
-
-# check if messages are to be printed using color
-unset ALL_OFF BOLD BLUE GREEN RED YELLOW
-if [[ -t 2 ]]; then
-	ALL_OFF="$(tput sgr0)"
-	BOLD="$(tput bold)"
-	BLUE="${BOLD}$(tput setaf 4)"
-	GREEN="${BOLD}$(tput setaf 2)"
-	RED="${BOLD}$(tput setaf 1)"
-	YELLOW="${BOLD}$(tput setaf 3)"
-fi
-readonly ALL_OFF BOLD BLUE GREEN RED YELLOW
-
-plain() {
-	local mesg=$1; shift
-	printf "${BOLD}    ${mesg}${ALL_OFF}\n" "$@"
-}
-
-msg() {
-	local mesg=$1; shift
-	printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@"
-}
-
-msg2() {
-	local mesg=$1; shift
-	printf "${BLUE}  ->${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@"
-}
-
-warning() {
-	local mesg=$1; shift
-	printf "${YELLOW}==> WARNING:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
-}
-
-error() {
-	local mesg=$1; shift
-	printf "${RED}==> ERROR${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
-}
-
-##
-#  usage : in_array( $needle, $haystack )
-# return : 0 - found
-#          1 - not found
-##
-in_array() {
-	local needle=$1; shift
-	[[ -z $1 ]] && return 1 # Not Found
-	local item
-	for item in "$@"; do
-		[[ $item = $needle ]] && return 0 # Found
-	done
-	return 1 # Not Found
-}
-
-##
-#  usage : get_full_version( $epoch, $pkgver, $pkgrel )
-# return : full version spec, including epoch (if necessary), pkgver, pkgrel
-##
-get_full_version() {
-	if [[ $1 -eq 0 ]]; then
-		# zero epoch case, don't include it in version
-		echo $2-$3
-	else
-		echo $1:$2-$3
-	fi
-}
 
 script_lock() {
 	local LOCKDIR="$TMPDIR/.scriptlock.${0##*/}"
@@ -392,7 +331,7 @@ check_pkgsvn() {
 		[ $? -ge 1 ] && return 1
 	fi
 
-	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo $(get_full_version ${epoch:-0} ${pkgver} ${pkgrel}) )"
+	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; get_full_version)"
 	[ "${svnver}" == "${_pkgver}" ] || return 1
 
 	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))

@@ -9,7 +9,7 @@ test: test-image
 
 test-coverage: test-image
 	rm -rf ${PWD}/coverage
-	mkdir ${PWD}/coverage
+	mkdir -m 777 ${PWD}/coverage
 	docker run  $(RUN_OPTIONS) -v ${PWD}/coverage:/coverage -e COVERAGE_DIR=/coverage $(IMAGE) make test-coverage
 
 .PHONY: test-image test test-coverage

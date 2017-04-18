@@ -112,3 +112,37 @@ testCleanupSplitPackages() {
 		done
 	done
 }
+
+testCleanupOldPackages() {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			releasePackage extra ${pkgbase} ${arch}
+		done
+	done
+
+	../db-update
+
+	for pkgbase in ${pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			../db-remove extra ${arch} ${pkgbase}
+		done
+	done
+
+	../cron-jobs/ftpdir-cleanup >/dev/null
+
+	local pkgfilea="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
+	local pkgfileb="pkg-simple-b-1-1-${arch}.pkg.tar.xz"
+	for arch in ${arches[@]}; do
+		touch -d "-$(expr ${CLEANUP_KEEP} + 1)days" ${CLEANUP_DESTDIR}/${pkgfilea}{,.sig}
+	done
+
+	../cron-jobs/ftpdir-cleanup >/dev/null
+
+	[ -f ${CLEANUP_DESTDIR}/${pkgfilea} ] && fail "${pkgfilea} was not removed"
+	[ -f ${CLEANUP_DESTDIR}/${pkgfileb} ] || fail "${pkgfileb} was removed"
+}

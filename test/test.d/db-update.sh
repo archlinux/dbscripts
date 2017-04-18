@@ -220,3 +220,15 @@ testAddPackageWithInconsistentNameFails() {
 	../db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"
 	checkRemovedPackage extra 'foo-pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
 }
+
+testAddPackageWithInconsistentSVNFails() {
+	releasePackage extra 'pkg-simple-a' 'i686'
+
+	pushd "${TMP}/svn-packages-copy/pkg-simple-a/repos/extra-i686" >/dev/null
+	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
+	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
+	popd >/dev/null
+
+	../db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"
+	checkRemovedPackage extra 'foo-pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+}

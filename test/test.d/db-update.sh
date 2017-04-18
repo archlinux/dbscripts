@@ -230,5 +230,39 @@ testAddPackageWithInconsistentSVNFails() {
 	popd >/dev/null
 
 	../db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"
-	checkRemovedPackage extra 'foo-pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+	checkRemovedPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+}
+
+testAddPackageWithInsufficientPermissionsFails()
+{
+	releasePackage core 'pkg-simple-a' 'i686'
+	releasePackage extra 'pkg-simple-b' 'i686'
+
+	chmod -xwr ${FTP_BASE}/core/os/i686
+	../db-update >/dev/null 2>&1 && fail "db-update should fail when permissions are insufficient!"
+	chmod +xwr ${FTP_BASE}/core/os/i686
+
+	checkRemovedPackage core 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+	checkRemovedPackage extra 'pkg-simple-b-1-1-i686.pkg.tar.xz' 'i686'
+}
+
+testPackageHasToBeARegularFile()
+{
+	local p
+	local target=$(mktemp -d)
+	local arches=('i686' 'x86_64')
+
+	for arch in ${arches[@]}; do
+		releasePackage extra 'pkg-simple-a' $arch
+	done
+
+	for p in "${STAGING}"/extra/*i686*; do
+		mv "${p}" "${target}"
+		ln -s "${target}/${p##*/}" "${p}"
+	done
+
+	../db-update >/dev/null 2>&1 && fail "db-update should fail when a package is a symlink!"
+	for arch in ${arches[@]}; do
+		checkRemovedPackage extra "pkg-simple-a-1-1-${arch}.pkg.tar.xz" $arch
+	done
 }

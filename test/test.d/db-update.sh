@@ -134,7 +134,6 @@ testUpdateSameAnyPackageToDifferentRepositories() {
 	done
 }
 
-
 testAddIncompleteSplitPackage() {
 	local arches=('i686' 'x86_64')
 	local repo='extra'
@@ -196,4 +195,28 @@ testAddBrokenSignatureFails() {
 	../db-update >/dev/null 2>&1 && fail "db-update should fail when a signature is broken!"
 
 	checkRemovedPackage extra pkg-simple-a-1-1-i686.pkg.tar.xz i686
+}
+
+testAddPackageWithInconsistentVersionFails() {
+	local p
+	releasePackage extra 'pkg-simple-a' 'i686'
+
+	for p in "${STAGING}"/extra/*; do
+		mv "${p}" "${p/1/2}"
+	done
+
+	../db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"
+	checkRemovedPackage extra 'pkg-simple-a-2-1-i686.pkg.tar.xz' 'i686'
+}
+
+testAddPackageWithInconsistentNameFails() {
+	local p
+	releasePackage extra 'pkg-simple-a' 'i686'
+
+	for p in "${STAGING}"/extra/*; do
+		mv "${p}" "${p/pkg-/foo-pkg-}"
+	done
+
+	../db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"
+	checkRemovedPackage extra 'foo-pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
 }

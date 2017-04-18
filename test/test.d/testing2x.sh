@@ -4,7 +4,7 @@ testTesting2xAnyPackage() {
 
 	pushd "${TMP}/svn-packages-copy/pkg-any-a/trunk/" >/dev/null
 	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
-	arch_svn commit -q -m"update pkg to pkgrel=2" >/dev/null
+	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
 	makepkg -cCf
 	mv pkg-any-a-1-2-any.pkg.tar.xz "${pkgdir}/pkg-any-a/"
 	popd >/dev/null

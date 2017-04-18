@@ -2,6 +2,7 @@ TESTSUITE_FILE:=$(shell mktemp)
 
 test-suite:
 	echo "#!/usr/bin/bash" > $(TESTSUITE_FILE)
+	echo ". /usr/share/makepkg/util/pkgbuild.sh" >> $(TESTSUITE_FILE)
 	echo ". $(CURDIR)/lib/common.sh" >> $(TESTSUITE_FILE)
 	cat "$(CURDIR)/test.d"/*.sh >> $(TESTSUITE_FILE)
 	echo ". $(CURDIR)/lib/shunit2" >> $(TESTSUITE_FILE)
@@ -12,8 +13,8 @@ test: test-suite
 
 test-coverage: test-suite
 	kcov \
-		--include-path=$(PWD) \
-		--exclude-path=$(PWD)/test,$(PWD)/cron-jobs/makepkg.conf,$(PWD)/config \
+		--include-path=$(CURDIR)/../ \
+		--exclude-path=$(CURDIR)/../test,$(CURDIR)/../cron-jobs/makepkg.conf,$(CURDIR)/../config \
 		$(COVERAGE_DIR) \
 	$(TESTSUITE_FILE)
 

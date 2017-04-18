@@ -1,34 +1,19 @@
-set -E
-
-. "$(dirname ${BASH_SOURCE[0]})/../../config"
-# override the default TMPDIR
-TMPDIR="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
-. "$(dirname ${BASH_SOURCE[0]})/../../db-functions"
-
-signpkg() {
-	gpg --detach-sign --no-armor --use-agent ${@} || die
-}
-
 oneTimeSetUp() {
-	local p
 	local d
 	local a
-	local pkgname
 	local pkgarch
-	local pkgversion
-	local build
-	pkgdir="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
+
+	pkgdir="$(mktemp -d)"
 	cp -Lr $(dirname ${BASH_SOURCE[0]})/../packages/* "${pkgdir}"
-	msg 'Building packages...'
 	for d in "${pkgdir}"/*; do
 		pushd $d >/dev/null
 		pkgarch=($(. PKGBUILD; echo ${arch[@]}))
 
 		if [ "${pkgarch[0]}" == 'any' ]; then
-			makepkg -cCf || die 'makepkg failed'
+			makepkg -cCf || fail 'makepkg failed'
 		else
 			for a in ${pkgarch[@]}; do
-				CARCH=${a} makepkg -cCf || die "makepkg failed"
+				CARCH=${a} makepkg -cCf || fail "makepkg failed"
 			done
 		fi
 		popd >/dev/null
@@ -45,39 +30,15 @@ setUp() {
 	local r
 	local a
 
-	TMP="$(mktemp -d /tmp/${0##*/}.XXXXXXXXXX)"
-
-	PKGREPOS=('core' 'extra' 'testing')
-	PKGPOOL='pool/packages'
-	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-packages-{copy,repo}}
-
-	for r in ${PKGREPOS[@]}; do
-		mkdir -p "${TMP}/staging/${r}"
-		for a in ${ARCHES[@]}; do
-			mkdir -p "${TMP}/ftp/${r}/os/${a}"
-		done
-	done
-	mkdir -p "${TMP}/ftp/${PKGPOOL}"
-	mkdir -p "${TMP}/ftp/${SRCPOOL}"
-
-	msg 'Creating svn repository...'
-	svnadmin create "${TMP}/svn-packages-repo"
-	arch_svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
-
-	for p in "${pkgdir}"/*; do
-		pkg=${p##*/}
-		mkdir -p "${TMP}/svn-packages-copy/${pkg}"/{trunk,repos}
-		cp "${p}"/* "${TMP}/svn-packages-copy"/${pkg}/trunk/
-		arch_svn add -q "${TMP}/svn-packages-copy"/${pkg}
-		arch_svn commit -q -m"initial commit of ${pkg}" "${TMP}/svn-packages-copy"
-	done
+	TMP="$(mktemp -d)"
 
 	export DBSCRIPTS_CONFIG=${TMP}/config.local
 	cat <<eot > "${DBSCRIPTS_CONFIG}"
 	FTP_BASE="${TMP}/ftp"
 	SVNREPO="file://${TMP}/svn-packages-repo"
-	PKGREPOS=(${PKGREPOS[@]})
-	PKGPOOL="${PKGPOOL}"
+	PKGREPOS=('core' 'extra' 'testing')
+	PKGPOOL='pool/packages'
+	SRCPOOL='sources/packages'
 	TESTING_REPO='testing'
 	STABLE_REPOS=('core' 'extra')
 	CLEANUP_DESTDIR="${TMP}/package-cleanup"
@@ -89,11 +50,49 @@ setUp() {
 	REQUIRE_SIGNATURE=true
 eot
 	. "$(dirname ${BASH_SOURCE[0]})/../../config"
+
+	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-packages-{copy,repo}}
+
+	for r in ${PKGREPOS[@]}; do
+		mkdir -p "${TMP}/staging/${r}"
+		for a in ${ARCHES[@]}; do
+			mkdir -p "${TMP}/ftp/${r}/os/${a}"
+		done
+	done
+	mkdir -p "${TMP}/ftp/${PKGPOOL}"
+	mkdir -p "${TMP}/ftp/${SRCPOOL}"
+
+	svnadmin create "${TMP}/svn-packages-repo"
+	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
+
+	for p in "${pkgdir}"/*; do
+		pkg=${p##*/}
+		mkdir -p "${TMP}/svn-packages-copy/${pkg}"/{trunk,repos}
+		cp "${p}"/* "${TMP}/svn-packages-copy"/${pkg}/trunk/
+		svn add -q "${TMP}/svn-packages-copy"/${pkg}
+		svn commit -q -m"initial commit of ${pkg}" "${TMP}/svn-packages-copy"
+	done
 }
 
 tearDown() {
 	rm -rf "${TMP}"
-	echo
+}
+
+getpkgbase() {
+	local _base
+	_grep_pkginfo() {
+		local _ret
+
+		_ret="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | grep -m 1 "^${2} = ")"
+		echo "${_ret#${2} = }"
+	}
+
+	_base="$(_grep_pkginfo "$1" "pkgbase")"
+	if [ -z "$_base" ]; then
+		_grep_pkginfo "$1" "pkgname"
+	else
+		echo "$_base"
+	fi
 }
 
 releasePackage() {
@@ -104,6 +103,10 @@ releasePackage() {
 	local p
 	local pkgver
 	local pkgname
+
+	signpkg() {
+		gpg --detach-sign --no-armor --use-agent ${@} || fail 'gpg failed'
+	}
 
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/ >/dev/null
 	archrelease ${repo}-${arch} >/dev/null 2>&1
@@ -160,7 +163,7 @@ checkAnyPackage() {
 	checkAnyPackageDB $repo $pkg
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${pkg}")
-	arch_svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] \
 		|| fail "svn-packages-copy/${pkgbase}/repos/${repo}-any does not exist"
 }
@@ -202,7 +205,7 @@ checkPackage() {
 	checkPackageDB $repo $pkg $arch
 
 	local pkgbase=$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${pkg}")
-	arch_svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] \
 		|| fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} does not exist"
 }
@@ -227,7 +230,7 @@ checkRemovedPackage() {
 
 	checkRemovedPackageDB $repo $pkgbase $arch
 
-	arch_svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ] \
 		&& fail "svn-packages-copy/${pkgbase}/repos/${repo}-${arch} should not exist"
 }
@@ -253,7 +256,7 @@ checkRemovedAnyPackage() {
 
 	checkRemovedAnyPackageDB $repo $pkgbase
 
-	arch_svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-any" ] \
 		&& fail "svn-packages-copy/${pkgbase}/repos/${repo}-any should not exist"
 }

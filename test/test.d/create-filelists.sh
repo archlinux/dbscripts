@@ -94,5 +94,4 @@ testCleanupFileLists() {
 			fail "usr/bin/pkg-simple-a still found in ${arch}/extra${FILESEXT}"
 		fi
 	done
-
 }

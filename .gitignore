@@ -2,3 +2,4 @@
 /config.local
 /test/packages/*/*.pkg.tar.?z
 /.idea
+/coverage

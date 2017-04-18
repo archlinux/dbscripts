@@ -1,5 +1,5 @@
 FROM pierres/archlinux
-RUN pacman -Syu --noconfirm --needed base-devel devtools
+RUN pacman -Syu --noconfirm --needed base-devel devtools kcov
 RUN pacman-key --init
 RUN echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel
 RUN useradd -N -g users -G wheel -m tester

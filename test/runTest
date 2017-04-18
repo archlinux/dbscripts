@@ -1,6 +1,7 @@
 #!/bin/bash
 
 curdir=$(readlink -e $(dirname $0))
+projectdir=$(readlink -e ${curdir}/../)
 
 testSuite=$(mktemp)
 trap "rm -f '${testSuite}'" EXIT
@@ -9,4 +10,12 @@ echo ". ${curdir}/lib/common.sh" > ${testSuite}
 cat "${curdir}/test.d"/*.sh >> ${testSuite}
 echo ". ${curdir}/lib/shunit2" >> ${testSuite}
 
-bash ${testSuite}
+if [[ -n "${COVERAGE_DIR}" ]]; then
+kcov \
+	--include-path=${projectdir} \
+	--exclude-path=${projectdir}/test,${projectdir}/cron-jobs/makepkg.conf,${projectdir}/config \
+	"${COVERAGE_DIR}" \
+	${testSuite}
+else
+	bash ${testSuite}
+fi

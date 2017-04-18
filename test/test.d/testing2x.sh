@@ -2,16 +2,10 @@ testTesting2xAnyPackage() {
 	releasePackage core pkg-any-a any
 	../db-update
 
-	pushd "${TMP}/svn-packages-copy/pkg-any-a/trunk/" >/dev/null
-	sed 's/pkgrel=1/pkgrel=2/g' -i PKGBUILD
-	svn commit -q -m"update pkg to pkgrel=2" >/dev/null
-	makepkg -cCf
-	mv pkg-any-a-1-2-any.pkg.tar.xz "${pkgdir}/pkg-any-a/"
-	popd >/dev/null
+	updatePackage pkg-any-a
 
 	releasePackage testing pkg-any-a any
 	../db-update
-	rm -f "${pkgdir}/pkg-any-a/pkg-any-a-1-2-any.pkg.tar.xz"
 
 	../testing2x pkg-any-a
 

@@ -1,21 +1,11 @@
 oneTimeSetUp() {
 	local d
-	local a
-	local pkgarch
 
 	pkgdir="$(mktemp -d)"
 	cp -Lr $(dirname ${BASH_SOURCE[0]})/../packages/* "${pkgdir}"
 	for d in "${pkgdir}"/*; do
 		pushd $d >/dev/null
-		pkgarch=($(. PKGBUILD; echo ${arch[@]}))
-
-		if [ "${pkgarch[0]}" == 'any' ]; then
-			makepkg -cCf || fail 'makepkg failed'
-		else
-			for a in ${pkgarch[@]}; do
-				CARCH=${a} makepkg -cCf || fail "makepkg failed"
-			done
-		fi
+		buildPackage
 		popd >/dev/null
 	done
 }
@@ -103,22 +93,71 @@ releasePackage() {
 	local pkgver
 	local pkgname
 
-	signpkg() {
-		gpg --detach-sign --no-armor --use-agent ${@} || fail 'gpg failed'
-	}
-
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/ >/dev/null
 	archrelease ${repo}-${arch} >/dev/null 2>&1
 	pkgver=$(. PKGBUILD; get_full_version)
 	pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
-	popd >/dev/null
-	cp "${pkgdir}/${pkgbase}"/*-${pkgver}-${arch}${PKGEXT} "${STAGING}"/${repo}/
 
 	for a in ${arch[@]}; do
 		for p in ${pkgname[@]}; do
-			signpkg "${STAGING}"/${repo}/${p}-${pkgver}-${a}${PKGEXT}
+			cp ${p}-${pkgver}-${a}${PKGEXT}{,.sig} "${STAGING}"/${repo}/
 		done
 	done
+
+	popd >/dev/null
+}
+
+buildPackage() {
+	local pkgarch
+	local pkgver
+	local pkgname
+	local a
+	local p
+
+	pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
+	pkgver=$(. PKGBUILD; get_full_version)
+	pkgarch=($(. PKGBUILD; echo ${arch[@]}))
+
+	if [ "${pkgarch[0]}" == 'any' ]; then
+		makepkg -cCf || fail 'makepkg failed'
+	else
+		for a in ${pkgarch[@]}; do
+			CARCH=${a} makepkg -cCf || fail "makepkg failed"
+		done
+	fi
+
+	for a in ${pkgarch[@]}; do
+		for p in ${pkgname[@]}; do
+			gpg --detach-sign --no-armor --use-agent ${p}-${pkgver}-${a}* || fail 'gpg failed'
+		done
+	done
+}
+
+__updatePKGBUILD() {
+	local pkgrel
+
+	pkgrel=$(. PKGBUILD; expr ${pkgrel} + 1)
+	sed "s/pkgrel=.*/pkgrel=${pkgrel}/" -i PKGBUILD
+	svn commit -q -m"update pkg to pkgrel=${pkgrel}" >/dev/null
+}
+
+updatePackage() {
+	local pkgbase=$1
+
+	pushd "${TMP}/svn-packages-copy/${pkgbase}/trunk/" >/dev/null
+	__updatePKGBUILD
+	buildPackage
+	popd >/dev/null
+}
+
+updateRepoPKGBUILD() {
+	local pkgbase=$1
+	local repo=$2
+	local arch=$3
+
+	pushd "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}/" >/dev/null
+	__updatePKGBUILD
+	popd >/dev/null
 }
 
 checkAnyPackageDB() {

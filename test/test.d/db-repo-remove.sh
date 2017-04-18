@@ -10,11 +10,11 @@ testRepoRemovePackages() {
 		done
 	done
 
-	../db-update
+	db-update
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			../db-repo-remove extra ${arch} ${pkgbase}
+			db-repo-remove extra ${arch} ${pkgbase}
 		done
 	done
 
@@ -37,10 +37,10 @@ testRepoRemoveMultiplePackages() {
 		done
 	done
 
-	../db-update
+	db-update
 
 	for arch in ${arches[@]}; do
-		../db-repo-remove extra ${arch} ${pkgs[@]}
+		db-repo-remove extra ${arch} ${pkgs[@]}
 	done
 
 	for pkgbase in ${pkgs[@]}; do
@@ -58,10 +58,10 @@ testRepoRemoveAnyPackages() {
 		releasePackage extra ${pkgbase} any
 	done
 
-	../db-update
+	db-update
 
 	for pkgbase in ${pkgs[@]}; do
-		../db-repo-remove extra any ${pkgbase}
+		db-repo-remove extra any ${pkgbase}
 	done
 
 	for pkgbase in ${pkgs[@]}; do

@@ -4,6 +4,7 @@ test-suite:
 	echo "#!/usr/bin/bash" > $(TESTSUITE_FILE)
 	echo ". /usr/share/makepkg/util/pkgbuild.sh" >> $(TESTSUITE_FILE)
 	echo ". $(CURDIR)/lib/common.sh" >> $(TESTSUITE_FILE)
+	echo "PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH)" >> $(TESTSUITE_FILE)
 	cat "$(CURDIR)/test.d"/*.sh >> $(TESTSUITE_FILE)
 	echo ". $(CURDIR)/lib/shunit2" >> $(TESTSUITE_FILE)
 	chmod +x $(TESTSUITE_FILE)

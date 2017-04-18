@@ -10,7 +10,7 @@ testRepoAddSimplePackages() {
 			touch "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz.sig"
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz" "${FTP_BASE}/extra/os/${arch}/"
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz.sig" "${FTP_BASE}/extra/os/${arch}/"
-			../db-repo-add extra ${arch} ${pkgbase}-1-1-${arch}.pkg.tar.xz
+			db-repo-add extra ${arch} ${pkgbase}-1-1-${arch}.pkg.tar.xz
 		done
 	done
 
@@ -36,7 +36,7 @@ testRepoAddMultiplePackages() {
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz.sig" "${FTP_BASE}/extra/os/${arch}/"
 			add_pkgs[${#add_pkgs[*]}]=${pkgbase}-1-1-${arch}.pkg.tar.xz
 		done
-		../db-repo-add extra ${arch} ${add_pkgs[@]}
+		db-repo-add extra ${arch} ${add_pkgs[@]}
 	done
 
 	for pkgbase in ${pkgs[@]}; do
@@ -59,7 +59,7 @@ testRepoAddAnyPackages() {
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-any.pkg.tar.xz" "${FTP_BASE}/extra/os/${arch}/"
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-any.pkg.tar.xz.sig" "${FTP_BASE}/extra/os/${arch}/"
 		done
-		../db-repo-add extra any ${pkgbase}-1-1-any.pkg.tar.xz
+		db-repo-add extra any ${pkgbase}-1-1-any.pkg.tar.xz
 	done
 
 	for pkgbase in ${pkgs[@]}; do

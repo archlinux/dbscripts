@@ -10,11 +10,11 @@ testRemovePackages() {
 		done
 	done
 
-	../db-update
+	db-update
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			../db-remove extra ${arch} ${pkgbase}
+			db-remove extra ${arch} ${pkgbase}
 		done
 	done
 
@@ -37,10 +37,10 @@ testRemoveMultiplePackages() {
 		done
 	done
 
-	../db-update
+	db-update
 
 	for arch in ${arches[@]}; do
-		../db-remove extra ${arch} ${pkgs[@]}
+		db-remove extra ${arch} ${pkgs[@]}
 	done
 
 	for pkgbase in ${pkgs[@]}; do
@@ -58,10 +58,10 @@ testRemoveAnyPackages() {
 		releasePackage extra ${pkgbase} any
 	done
 
-	../db-update
+	db-update
 
 	for pkgbase in ${pkgs[@]}; do
-		../db-remove extra any ${pkgbase}
+		db-remove extra any ${pkgbase}
 	done
 
 	for pkgbase in ${pkgs[@]}; do

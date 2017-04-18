@@ -27,7 +27,7 @@ oneTimeSetUp() {
 	local d
 
 	pkgdir="$(mktemp -d)"
-	cp -Lr $(dirname ${BASH_SOURCE[0]})/../packages/* "${pkgdir}"
+	cp -Lr packages/* "${pkgdir}"
 	for d in "${pkgdir}"/*; do
 		pushd $d >/dev/null
 		buildPackage
@@ -63,7 +63,7 @@ setUp() {
 	CLEANUP_DRYRUN=false
 	SOURCE_CLEANUP_DRYRUN=false
 eot
-	. "$(dirname ${BASH_SOURCE[0]})/../../config"
+	. config
 
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-packages-{copy,repo}}
 

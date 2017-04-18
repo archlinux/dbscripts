@@ -10,13 +10,13 @@ testCleanupSimplePackages() {
 		done
 	done
 
-	../db-update
+	db-update
 
 	for arch in ${arches[@]}; do
-		../db-remove extra ${arch} pkg-simple-a
+		db-remove extra ${arch} pkg-simple-a
 	done
 
-	../cron-jobs/ftpdir-cleanup >/dev/null
+	ftpdir-cleanup >/dev/null
 
 	for arch in ${arches[@]}; do
 		local pkg1="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
@@ -41,13 +41,13 @@ testCleanupEpochPackages() {
 		done
 	done
 
-	../db-update
+	db-update
 
 	for arch in ${arches[@]}; do
-		../db-remove extra ${arch} pkg-simple-epoch
+		db-remove extra ${arch} pkg-simple-epoch
 	done
 
-	../cron-jobs/ftpdir-cleanup >/dev/null
+	ftpdir-cleanup >/dev/null
 
 	for arch in ${arches[@]}; do
 		local pkg1="pkg-simple-epoch-1:1-1-${arch}.pkg.tar.xz"
@@ -66,9 +66,9 @@ testCleanupAnyPackages() {
 		releasePackage extra ${pkgbase} any
 	done
 
-	../db-update
-	../db-remove extra any pkg-any-a
-	../cron-jobs/ftpdir-cleanup >/dev/null
+	db-update
+	db-remove extra any pkg-any-a
+	ftpdir-cleanup >/dev/null
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
 	checkRemovedAnyPackage extra 'pkg-any-a'
@@ -92,13 +92,13 @@ testCleanupSplitPackages() {
 		done
 	done
 
-	../db-update
+	db-update
 
 	for arch in ${arches[@]}; do
-		../db-remove extra ${arch} ${pkgs[0]}
+		db-remove extra ${arch} ${pkgs[0]}
 	done
 
-	../cron-jobs/ftpdir-cleanup >/dev/null
+	ftpdir-cleanup >/dev/null
 
 	for arch in ${arches[@]}; do
 		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}${PKGEXT}; do
@@ -125,15 +125,15 @@ testCleanupOldPackages() {
 		done
 	done
 
-	../db-update
+	db-update
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			../db-remove extra ${arch} ${pkgbase}
+			db-remove extra ${arch} ${pkgbase}
 		done
 	done
 
-	../cron-jobs/ftpdir-cleanup >/dev/null
+	ftpdir-cleanup >/dev/null
 
 	local pkgfilea="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
 	local pkgfileb="pkg-simple-b-1-1-${arch}.pkg.tar.xz"
@@ -141,7 +141,7 @@ testCleanupOldPackages() {
 		touch -d "-$(expr ${CLEANUP_KEEP} + 1)days" ${CLEANUP_DESTDIR}/${pkgfilea}{,.sig}
 	done
 
-	../cron-jobs/ftpdir-cleanup >/dev/null
+	ftpdir-cleanup >/dev/null
 
 	[ -f ${CLEANUP_DESTDIR}/${pkgfilea} ] && fail "${pkgfilea} was not removed"
 	[ -f ${CLEANUP_DESTDIR}/${pkgfileb} ] || fail "${pkgfileb} was removed"

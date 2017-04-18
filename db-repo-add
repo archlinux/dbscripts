@@ -30,8 +30,8 @@ done
 
 for tarch in ${tarches[@]}; do
 	for pkgfile in ${pkgfiles[@]}; do
-		if [[ ! -f "${FTP_BASE}/${repo}/os/${arch}/${pkgfile##*/}" ]]; then
-			die "Package file ${pkgfile##*/} not found in ${FTP_BASE}/${repo}/os/${arch}/"
+		if [[ ! -f "${FTP_BASE}/${repo}/os/${tarch}/${pkgfile##*/}" ]]; then
+			die "Package file ${pkgfile##*/} not found in ${FTP_BASE}/${repo}/os/${tarch}/"
 		else
 			msg "Adding $pkgfile to [$repo]..."
 		fi

@@ -202,7 +202,7 @@ testAddPackageWithInconsistentVersionFails() {
 	releasePackage extra 'pkg-simple-a' 'i686'
 
 	for p in "${STAGING}"/extra/*; do
-		mv "${p}" "${p/1/2}"
+		mv "${p}" "${p/pkg-simple-a-1/pkg-simple-a-2}"
 	done
 
 	../db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"

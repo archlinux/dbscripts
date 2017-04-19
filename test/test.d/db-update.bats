@@ -1,4 +1,6 @@
-testAddSimplePackages() {
+load ../lib/common
+
+@test "testAddSimplePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -19,19 +21,19 @@ testAddSimplePackages() {
 	done
 }
 
-testAddSingleSimplePackage() {
+@test "testAddSingleSimplePackage" {
 	releasePackage extra 'pkg-simple-a' 'i686'
 	db-update
 	checkPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
 }
 
-testAddSingleEpochPackage() {
+@test "testAddSingleEpochPackage" {
 	releasePackage extra 'pkg-simple-epoch' 'i686'
 	db-update
 	checkPackage extra 'pkg-simple-epoch-1:1-1-i686.pkg.tar.xz' 'i686'
 }
 
-testAddAnyPackages() {
+@test "testAddAnyPackages" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 
@@ -46,7 +48,7 @@ testAddAnyPackages() {
 	done
 }
 
-testAddSplitPackages() {
+@test "testAddSplitPackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
@@ -63,18 +65,18 @@ testAddSplitPackages() {
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			for pkg in "${pkgdir}/${pkgbase}"/*-${arch}${PKGEXT}; do
+			for pkg in $(getPackageNamesFromPackageBase ${pkgbase}); do
 				checkPackage extra ${pkg##*/} ${arch}
 			done
 		done
 	done
 }
 
-testUpdateAnyPackage() {
+@test "testUpdateAnyPackage" {
 	releasePackage extra pkg-any-a any
 	db-update
 
-	updatePackage pkg-any-a
+	updatePackage pkg-any-a any
 
 	releasePackage extra pkg-any-a any
 	db-update
@@ -82,10 +84,10 @@ testUpdateAnyPackage() {
 	checkAnyPackage extra pkg-any-a-1-2-any.pkg.tar.xz any
 }
 
-testUpdateAnyPackageToDifferentRepositoriesAtOnce() {
+@test "testUpdateAnyPackageToDifferentRepositoriesAtOnce" {
 	releasePackage extra pkg-any-a any
 
-	updatePackage pkg-any-a
+	updatePackage pkg-any-a any
 
 	releasePackage testing pkg-any-a any
 
@@ -95,32 +97,35 @@ testUpdateAnyPackageToDifferentRepositoriesAtOnce() {
 	checkAnyPackage testing pkg-any-a-1-2-any.pkg.tar.xz any
 }
 
-testUpdateSameAnyPackageToSameRepository() {
+@test "testUpdateSameAnyPackageToSameRepository" {
 	releasePackage extra pkg-any-a any
 	db-update
 	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 
 	releasePackage extra pkg-any-a any
-	db-update >/dev/null 2>&1 && (fail 'Adding an existing package to the same repository should fail'; return 1)
+	run db-update
+	[ "$status" -ne 0 ]
 }
 
-testUpdateSameAnyPackageToDifferentRepositories() {
+@test "testUpdateSameAnyPackageToDifferentRepositories" {
+	local arch
+
 	releasePackage extra pkg-any-a any
 	db-update
 	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 
 	releasePackage testing pkg-any-a any
-	db-update >/dev/null 2>&1 && (fail 'Adding an existing package to another repository should fail'; return 1)
+	run db-update
+	[ "$status" -ne 0 ]
 
-	local arch
 	for arch in i686 x86_64; do
-		( [ -r "${FTP_BASE}/testing/os/${arch}/testing${DBEXT%.tar.*}" ] \
-			&& bsdtar -xf "${FTP_BASE}/testing/os/${arch}/testing${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
-			&& fail "${pkgbase} should not be in testing/os/${arch}/testing${DBEXT%.tar.*}"
+		if [ -r "${FTP_BASE}/testing/os/${arch}/testing${DBEXT%.tar.*}" ]; then
+			echo "$(bsdtar -xf "${FTP_BASE}/testing/os/${arch}/testing${DBEXT%.tar.*}" -O)" | grep -qv ${pkgbase}
+		fi
 	done
 }
 
-testAddIncompleteSplitPackage() {
+@test "testAddIncompleteSplitPackage" {
 	local arches=('i686' 'x86_64')
 	local repo='extra'
 	local pkgbase='pkg-split-a'
@@ -133,57 +138,61 @@ testAddIncompleteSplitPackage() {
 	# remove a split package to make db-update fail
 	rm "${STAGING}"/extra/${pkgbase}1-*
 
-	db-update >/dev/null 2>&1 && fail "db-update should fail when a split package is missing!"
+	run db-update
+	[ "$status" -ne 0 ]
 
 	for arch in ${arches[@]}; do
-		( [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ] \
-		&& bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O | grep -q ${pkgbase}) \
-		&& fail "${pkgbase} should not be in ${repo}/os/${arch}/${repo}${DBEXT%.tar.*}"
+		if [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ]; then
+			echo "$(bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O)" | grep -qv ${pkgbase}
+		fi
 	done
 }
 
-testUnknownRepo() {
+@test "testUnknownRepo" {
 	mkdir "${STAGING}/unknown/"
 	releasePackage extra 'pkg-simple-a' 'i686'
 	releasePackage unknown 'pkg-simple-b' 'i686'
 	db-update
 	checkPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
-	[ -e "${FTP_BASE}/unknown" ] && fail "db-update pushed a package into an unknown repository"
+	[ ! -e "${FTP_BASE}/unknown" ]
 	rm -rf "${STAGING}/unknown/"
 }
 
-testAddUnsignedPackageFails() {
+@test "testAddUnsignedPackageFails" {
 	releasePackage extra 'pkg-simple-a' 'i686'
 	rm "${STAGING}"/extra/*.sig
-	db-update >/dev/null 2>&1 && fail "db-update should fail when a signature is missing!"
+	run db-update
+	[ "$status" -ne 0 ]
 
 	checkRemovedPackage extra pkg-simple-a-1-1-i686.pkg.tar.xz i686
 }
 
-testAddInvalidSignedPackageFails() {
+@test "testAddInvalidSignedPackageFails" {
 	local p
 	releasePackage extra 'pkg-simple-a' 'i686'
 	for p in "${STAGING}"/extra/*${PKGEXT}; do
 		unxz $p
 		xz -0 ${p%%.xz}
 	done
-	db-update >/dev/null 2>&1 && fail "db-update should fail when a signature is invalid!"
+	run db-update
+	[ "$status" -ne 0 ]
 
 	checkRemovedPackage extra pkg-simple-a-1-1-i686.pkg.tar.xz i686
 }
 
-testAddBrokenSignatureFails() {
+@test "testAddBrokenSignatureFails" {
 	local s
 	releasePackage extra 'pkg-simple-a' 'i686'
 	for s in "${STAGING}"/extra/*.sig; do
 		echo 0 > $s
 	done
-	db-update >/dev/null 2>&1 && fail "db-update should fail when a signature is broken!"
+	run db-update
+	[ "$status" -ne 0 ]
 
 	checkRemovedPackage extra pkg-simple-a-1-1-i686.pkg.tar.xz i686
 }
 
-testAddPackageWithInconsistentVersionFails() {
+@test "testAddPackageWithInconsistentVersionFails" {
 	local p
 	releasePackage extra 'pkg-simple-a' 'i686'
 
@@ -191,11 +200,12 @@ testAddPackageWithInconsistentVersionFails() {
 		mv "${p}" "${p/pkg-simple-a-1/pkg-simple-a-2}"
 	done
 
-	db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"
+	run db-update
+	[ "$status" -ne 0 ]
 	checkRemovedPackage extra 'pkg-simple-a-2-1-i686.pkg.tar.xz' 'i686'
 }
 
-testAddPackageWithInconsistentNameFails() {
+@test "testAddPackageWithInconsistentNameFails" {
 	local p
 	releasePackage extra 'pkg-simple-a' 'i686'
 
@@ -203,34 +213,35 @@ testAddPackageWithInconsistentNameFails() {
 		mv "${p}" "${p/pkg-/foo-pkg-}"
 	done
 
-	db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"
+	run db-update
+	[ "$status" -ne 0 ]
 	checkRemovedPackage extra 'foo-pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
 }
 
-testAddPackageWithInconsistentPKGBUILDFails() {
+@test "testAddPackageWithInconsistentPKGBUILDFails" {
 	releasePackage extra 'pkg-simple-a' 'i686'
 
 	updateRepoPKGBUILD 'pkg-simple-a' extra i686
 
-	db-update >/dev/null 2>&1 && fail "db-update should fail when a package is not consistent!"
+	run db-update
+	[ "$status" -ne 0 ]
 	checkRemovedPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
 }
 
-testAddPackageWithInsufficientPermissionsFails()
-{
+@test "testAddPackageWithInsufficientPermissionsFails" {
 	releasePackage core 'pkg-simple-a' 'i686'
 	releasePackage extra 'pkg-simple-b' 'i686'
 
 	chmod -xwr ${FTP_BASE}/core/os/i686
-	db-update >/dev/null 2>&1 && fail "db-update should fail when permissions are insufficient!"
+	run db-update
+	[ "$status" -ne 0 ]
 	chmod +xwr ${FTP_BASE}/core/os/i686
 
 	checkRemovedPackage core 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
 	checkRemovedPackage extra 'pkg-simple-b-1-1-i686.pkg.tar.xz' 'i686'
 }
 
-testPackageHasToBeARegularFile()
-{
+@test "testPackageHasToBeARegularFile" {
 	local p
 	local target=$(mktemp -d)
 	local arches=('i686' 'x86_64')
@@ -244,7 +255,8 @@ testPackageHasToBeARegularFile()
 		ln -s "${target}/${p##*/}" "${p}"
 	done
 
-	db-update >/dev/null 2>&1 && fail "db-update should fail when a package is a symlink!"
+	run db-update
+	[ "$status" -ne 0 ]
 	for arch in ${arches[@]}; do
 		checkRemovedPackage extra "pkg-simple-a-1-1-${arch}.pkg.tar.xz" $arch
 	done

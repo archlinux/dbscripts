@@ -1,4 +1,6 @@
-testRepoRemovePackages() {
+load ../lib/common
+
+@test "testRepoRemovePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-simple-epoch')
 	local pkgbase
@@ -25,7 +27,7 @@ testRepoRemovePackages() {
 	done
 }
 
-testRepoRemoveMultiplePackages() {
+@test "testRepoRemoveMultiplePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-simple-epoch')
 	local pkgbase
@@ -50,7 +52,7 @@ testRepoRemoveMultiplePackages() {
 	done
 }
 
-testRepoRemoveAnyPackages() {
+@test "testRepoRemoveAnyPackages" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 

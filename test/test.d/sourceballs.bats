@@ -1,4 +1,6 @@
-testSourceballs() {
+load ../lib/common
+
+@test "testSourceballs" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-simple-epoch')
 	local pkgbase
@@ -13,11 +15,11 @@ testSourceballs() {
 
 	sourceballs
 	for pkgbase in ${pkgs[@]}; do
-		[ ! -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ] && fail "source package not found!"
+		[ -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
 	done
 }
 
-testAnySourceballs() {
+@test "testAnySourceballs" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 
@@ -28,11 +30,11 @@ testAnySourceballs() {
 
 	sourceballs
 	for pkgbase in ${pkgs[@]}; do
-		[ ! -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ] && fail "source package not found!"
+		[ -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
 	done
 }
 
-testSplitSourceballs() {
+@test "testSplitSourceballs" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
@@ -49,11 +51,11 @@ testSplitSourceballs() {
 
 	sourceballs
 	for pkgbase in ${pkgs[@]}; do
-		[ ! -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ] && fail "source package not found!"
+		[ -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
 	done
 }
 
-testSourceballsCleanup() {
+@test "testSourceballsCleanup" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -72,6 +74,6 @@ testSourceballsCleanup() {
 	done
 
 	sourceballs
-	[ -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-a-*${SRCEXT} ] && fail "source package was not removed!"
-	[ ! -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-b-*${SRCEXT} ] && fail "source package not found!"
+	[ ! -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-a-*${SRCEXT} ]
+	[ -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-b-*${SRCEXT} ]
 }

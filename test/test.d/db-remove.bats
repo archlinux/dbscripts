@@ -1,4 +1,6 @@
-testRemovePackages() {
+load ../lib/common
+
+@test "testRemovePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b' 'pkg-simple-epoch')
 	local pkgbase
@@ -25,7 +27,7 @@ testRemovePackages() {
 	done
 }
 
-testRemoveMultiplePackages() {
+@test "testRemoveMultiplePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b' 'pkg-simple-epoch')
 	local pkgbase
@@ -50,7 +52,7 @@ testRemoveMultiplePackages() {
 	done
 }
 
-testRemoveAnyPackages() {
+@test "testRemoveAnyPackages" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 

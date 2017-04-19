@@ -1,4 +1,6 @@
-testMoveSimplePackages() {
+load ../lib/common
+
+@test "testMoveSimplePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -22,7 +24,7 @@ testMoveSimplePackages() {
 	done
 }
 
-testMoveMultiplePackages() {
+@test "testMoveMultiplePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -46,7 +48,7 @@ testMoveMultiplePackages() {
 	done
 }
 
-testMoveEpochPackages() {
+@test "testMoveEpochPackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-epoch')
 	local pkgbase
@@ -68,7 +70,7 @@ testMoveEpochPackages() {
 	done
 }
 
-testMoveAnyPackages() {
+@test "testMoveAnyPackages" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 
@@ -84,7 +86,7 @@ testMoveAnyPackages() {
 	checkAnyPackage testing pkg-any-b-1-1-any.pkg.tar.xz
 }
 
-testMoveSplitPackages() {
+@test "testMoveSplitPackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
@@ -101,13 +103,13 @@ testMoveSplitPackages() {
 	db-move testing extra pkg-split-a
 
 	for arch in ${arches[@]}; do
-		for pkg in "${pkgdir}/pkg-split-a"/*-${arch}${PKGEXT}; do
-			checkPackage extra ${pkg##*/} ${arch}
+		for pkg in $(getPackageNamesFromPackageBase pkg-split-a); do
+			checkPackage extra ${pkg} ${arch}
 		done
 	done
 	for arch in ${arches[@]}; do
-		for pkg in "${pkgdir}/pkg-split-b"/*-${arch}${PKGEXT}; do
-			checkPackage testing ${pkg##*/} ${arch}
+		for pkg in $(getPackageNamesFromPackageBase pkg-split-b); do
+			checkPackage testing ${pkg} ${arch}
 		done
 	done
 

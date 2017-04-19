@@ -1,22 +1,11 @@
-TESTSUITE_FILE:=$(shell mktemp)
+test:
+	PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) bats test.d
 
-test-suite:
-	echo "#!/usr/bin/bash" > $(TESTSUITE_FILE)
-	echo ". /usr/share/makepkg/util/pkgbuild.sh" >> $(TESTSUITE_FILE)
-	echo ". $(CURDIR)/lib/common.sh" >> $(TESTSUITE_FILE)
-	echo "PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH)" >> $(TESTSUITE_FILE)
-	cat "$(CURDIR)/test.d"/*.sh >> $(TESTSUITE_FILE)
-	echo ". $(CURDIR)/lib/shunit2" >> $(TESTSUITE_FILE)
-	chmod +x $(TESTSUITE_FILE)
-
-test: test-suite
-	$(TESTSUITE_FILE)
-
-test-coverage: test-suite
-	kcov \
+test-coverage:
+	PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) kcov \
 		--include-path=$(CURDIR)/../ \
 		--exclude-path=$(CURDIR)/../test,$(CURDIR)/../cron-jobs/makepkg.conf,$(CURDIR)/../config \
 		$(COVERAGE_DIR) \
-	$(TESTSUITE_FILE)
+		bats test.d
 
-.PHONY: test-suite test test-coverage
+.PHONY: test test-coverage

@@ -1,4 +1,6 @@
-testRepoAddSimplePackages() {
+load ../lib/common
+
+@test "testRepoAddSimplePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -6,8 +8,8 @@ testRepoAddSimplePackages() {
 
 	for pkgbase in ${pkgs[@]}; do
 		for arch in ${arches[@]}; do
-			cp "${pkgdir}/${pkgbase}/${pkgbase}-1-1-${arch}.pkg.tar.xz" "${FTP_BASE}/${PKGPOOL}/"
-			touch "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz.sig"
+			releasePackage extra ${pkgbase} ${arch}
+			mv "${STAGING}"/extra/* "${FTP_BASE}/${PKGPOOL}/"
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz" "${FTP_BASE}/extra/os/${arch}/"
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz.sig" "${FTP_BASE}/extra/os/${arch}/"
 			db-repo-add extra ${arch} ${pkgbase}-1-1-${arch}.pkg.tar.xz
@@ -21,7 +23,7 @@ testRepoAddSimplePackages() {
 	done
 }
 
-testRepoAddMultiplePackages() {
+@test "testRepoAddMultiplePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -30,8 +32,8 @@ testRepoAddMultiplePackages() {
 	for arch in ${arches[@]}; do
 		add_pkgs=()
 		for pkgbase in ${pkgs[@]}; do
-			cp "${pkgdir}/${pkgbase}/${pkgbase}-1-1-${arch}.pkg.tar.xz" "${FTP_BASE}/${PKGPOOL}/"
-			touch "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz.sig"
+			releasePackage extra ${pkgbase} ${arch}
+			mv "${STAGING}"/extra/* "${FTP_BASE}/${PKGPOOL}/"
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz" "${FTP_BASE}/extra/os/${arch}/"
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-${arch}.pkg.tar.xz.sig" "${FTP_BASE}/extra/os/${arch}/"
 			add_pkgs[${#add_pkgs[*]}]=${pkgbase}-1-1-${arch}.pkg.tar.xz
@@ -46,15 +48,15 @@ testRepoAddMultiplePackages() {
 	done
 }
 
-testRepoAddAnyPackages() {
+@test "testRepoAddAnyPackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		cp "${pkgdir}/${pkgbase}/${pkgbase}-1-1-any.pkg.tar.xz" "${FTP_BASE}/${PKGPOOL}/"
-		touch "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-any.pkg.tar.xz.sig"
+		releasePackage extra ${pkgbase} any
+		mv "${STAGING}"/extra/* "${FTP_BASE}/${PKGPOOL}/"
 		for arch in ${arches[@]}; do
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-any.pkg.tar.xz" "${FTP_BASE}/extra/os/${arch}/"
 			ln -s "${FTP_BASE}/${PKGPOOL}/${pkgbase}-1-1-any.pkg.tar.xz.sig" "${FTP_BASE}/extra/os/${arch}/"

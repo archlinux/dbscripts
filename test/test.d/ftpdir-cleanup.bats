@@ -1,4 +1,6 @@
-testCleanupSimplePackages() {
+load ../lib/common
+
+@test "testCleanupSimplePackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -16,20 +18,20 @@ testCleanupSimplePackages() {
 		db-remove extra ${arch} pkg-simple-a
 	done
 
-	ftpdir-cleanup >/dev/null
+	ftpdir-cleanup
 
 	for arch in ${arches[@]}; do
 		local pkg1="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
 		checkRemovedPackage extra 'pkg-simple-a' ${arch}
-		[ -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ] && fail "${PKGPOOL}/${pkg1} found"
-		[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
+		[ ! -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ]
+		[ ! -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ]
 
 		local pkg2="pkg-simple-b-1-1-${arch}.pkg.tar.xz"
 		checkPackage extra ${pkg2} ${arch}
 	done
 }
 
-testCleanupEpochPackages() {
+@test "testCleanupEpochPackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-epoch')
 	local pkgbase
@@ -47,17 +49,17 @@ testCleanupEpochPackages() {
 		db-remove extra ${arch} pkg-simple-epoch
 	done
 
-	ftpdir-cleanup >/dev/null
+	ftpdir-cleanup
 
 	for arch in ${arches[@]}; do
 		local pkg1="pkg-simple-epoch-1:1-1-${arch}.pkg.tar.xz"
 		checkRemovedPackage extra 'pkg-simple-epoch' ${arch}
-		[ -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ] && fail "${PKGPOOL}/${pkg1} found"
-		[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
+		[ ! -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ]
+		[ ! -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ]
 	done
 }
 
-testCleanupAnyPackages() {
+@test "testCleanupAnyPackages" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 	local arch='any'
@@ -68,18 +70,18 @@ testCleanupAnyPackages() {
 
 	db-update
 	db-remove extra any pkg-any-a
-	ftpdir-cleanup >/dev/null
+	ftpdir-cleanup
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
 	checkRemovedAnyPackage extra 'pkg-any-a'
-	[ -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ] && fail "${PKGPOOL}/${pkg1} found"
-	[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ] && fail "${repo}/os/${arch}/${pkg1} found"
+	[ ! -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ]
+	[ ! -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ]
 
 	local pkg2="pkg-any-b-1-1-${arch}.pkg.tar.xz"
 	checkAnyPackage extra ${pkg2}
 }
 
-testCleanupSplitPackages() {
+@test "testCleanupSplitPackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
@@ -98,22 +100,22 @@ testCleanupSplitPackages() {
 		db-remove extra ${arch} ${pkgs[0]}
 	done
 
-	ftpdir-cleanup >/dev/null
+	ftpdir-cleanup
 
 	for arch in ${arches[@]}; do
-		for pkg in "${pkgdir}/${pkgs[0]}"/*-${arch}${PKGEXT}; do
-			checkRemovedPackage extra ${pkgs[0]} ${arch}
-			[ -f "${FTP_BASE}/${PKGPOOL}/${pkg}" ] && fail "${PKGPOOL}/${pkg} found"
-			[ -f "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ] && fail "${repo}/os/${arch}/${pkg} found"
+		for pkg in $(getPackageNamesFromPackageBase ${pkgs[0]}); do
+			checkRemovedPackage extra ${pkg} ${arch}
+			[ ! -f "${FTP_BASE}/${PKGPOOL}/${pkg}" ]
+			[ ! -f "${FTP_BASE}/${repo}/os/${arch}/${pkg}" ]
 		done
 
-		for pkg in "${pkgdir}/${pkgs[1]}"/*-${arch}${PKGEXT}; do
+		for pkg in $(getPackageNamesFromPackageBase ${pkgs[1]}); do
 			checkPackage extra ${pkg##*/} ${arch}
 		done
 	done
 }
 
-testCleanupOldPackages() {
+@test "testCleanupOldPackages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -133,7 +135,7 @@ testCleanupOldPackages() {
 		done
 	done
 
-	ftpdir-cleanup >/dev/null
+	ftpdir-cleanup
 
 	local pkgfilea="pkg-simple-a-1-1-${arch}.pkg.tar.xz"
 	local pkgfileb="pkg-simple-b-1-1-${arch}.pkg.tar.xz"
@@ -141,8 +143,8 @@ testCleanupOldPackages() {
 		touch -d "-$(expr ${CLEANUP_KEEP} + 1)days" ${CLEANUP_DESTDIR}/${pkgfilea}{,.sig}
 	done
 
-	ftpdir-cleanup >/dev/null
+	ftpdir-cleanup
 
-	[ -f ${CLEANUP_DESTDIR}/${pkgfilea} ] && fail "${pkgfilea} was not removed"
-	[ -f ${CLEANUP_DESTDIR}/${pkgfileb} ] || fail "${pkgfileb} was removed"
+	[ ! -f ${CLEANUP_DESTDIR}/${pkgfilea} ]
+	[ -f ${CLEANUP_DESTDIR}/${pkgfileb} ]
 }

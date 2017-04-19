@@ -25,20 +25,29 @@ __updatePKGBUILD() {
 	svn commit -q -m"update pkg to pkgrel=${pkgrel}"
 }
 
+__getCheckSum() {
+	local result=($(sha1sum $1))
+	echo ${result[0]}
+}
+
 __buildPackage() {
 	local arch=$1
 	local pkgver
 	local pkgname
 	local a
 	local p
+	local checkSum
+
+	if [[ -n ${PACKAGE_CACHE} ]]; then
+		checkSum=$(__getCheckSum PKGBUILD)
+			# TODO: Be more specific
+			if cp -av ${PACKAGE_CACHE}/${checkSum}/*-${arch}${PKGEXT}{,.sig} .; then
+				return 0
+			fi
+	fi
 
 	pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
 	pkgver=$(. PKGBUILD; get_full_version)
-
-	# FIXME: Avoid rebuilding of the same package
-	for p in ${pkgname[@]}; do
-		[ -f ${p}-${pkgver}-${arch}${PKGEXT} ] && return 0
-	done
 
 	if [ "${arch}" == 'any' ]; then
 		makepkg -c
@@ -49,6 +58,11 @@ __buildPackage() {
 	for p in ${pkgname[@]}; do
 		gpg --detach-sign --no-armor --use-agent ${p}-${pkgver}-${arch}*
 	done
+
+	if [[ -n ${PACKAGE_CACHE} ]]; then
+		mkdir -p ${PACKAGE_CACHE}/${checkSum}
+		cp -av *-${arch}${PKGEXT}{,.sig} ${PACKAGE_CACHE}/${checkSum}/
+	fi
 }
 
 setup() {

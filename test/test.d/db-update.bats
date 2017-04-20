@@ -118,11 +118,7 @@ load ../lib/common
 	run db-update
 	[ "$status" -ne 0 ]
 
-	for arch in i686 x86_64; do
-		if [ -r "${FTP_BASE}/testing/os/${arch}/testing${DBEXT%.tar.*}" ]; then
-			echo "$(bsdtar -xf "${FTP_BASE}/testing/os/${arch}/testing${DBEXT%.tar.*}" -O)" | grep -qv ${pkgbase}
-		fi
-	done
+	checkRemovedPackageDB testing pkg-any-a any
 }
 
 @test "testAddIncompleteSplitPackage" {
@@ -142,9 +138,7 @@ load ../lib/common
 	[ "$status" -ne 0 ]
 
 	for arch in ${arches[@]}; do
-		if [ -r "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" ]; then
-			echo "$(bsdtar -xf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT%.tar.*}" -O)" | grep -qv ${pkgbase}
-		fi
+		checkRemovedPackageDB ${repo} ${pkgbase} ${arch}
 	done
 }
 

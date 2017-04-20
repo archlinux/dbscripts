@@ -1,5 +1,15 @@
 load ../lib/common
 
+__checkSourcePackage() {
+	local pkgbase=$1
+	[ -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
+}
+
+__checkRemovedSourcePackage() {
+	local pkgbase=$1
+	[ ! -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
+}
+
 @test "testSourceballs" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-simple-epoch')
@@ -15,7 +25,7 @@ load ../lib/common
 
 	sourceballs
 	for pkgbase in ${pkgs[@]}; do
-		[ -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
+		__checkSourcePackage ${pkgbase}
 	done
 }
 
@@ -30,7 +40,7 @@ load ../lib/common
 
 	sourceballs
 	for pkgbase in ${pkgs[@]}; do
-		[ -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
+		__checkSourcePackage ${pkgbase}
 	done
 }
 
@@ -51,7 +61,7 @@ load ../lib/common
 
 	sourceballs
 	for pkgbase in ${pkgs[@]}; do
-		[ -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
+		__checkSourcePackage ${pkgbase}
 	done
 }
 
@@ -74,6 +84,6 @@ load ../lib/common
 	done
 
 	sourceballs
-	[ ! -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-a-*${SRCEXT} ]
-	[ -r ${FTP_BASE}/${SRCPOOL}/pkg-simple-b-*${SRCEXT} ]
+	__checkRemovedSourcePackage pkg-simple-a
+	__checkSourcePackage pkg-simple-b
 }

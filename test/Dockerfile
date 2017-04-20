@@ -3,7 +3,7 @@ RUN pacman -Syu --noconfirm --needed base-devel devtools kcov bash-bats
 RUN pacman-key --init
 RUN echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel
 RUN useradd -N -g users -G wheel -m tester
-RUN install -d -o tester -g users /build
+RUN install -d -m 1777 /build
 USER tester
 RUN echo -e "\
 %echo Generating signing key...\n\

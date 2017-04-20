@@ -44,7 +44,7 @@ load ../lib/common
 	db-update
 
 	for pkgbase in ${pkgs[@]}; do
-		checkAnyPackage extra ${pkgbase}-1-1-any.pkg.tar.xz
+		checkPackage extra ${pkgbase}-1-1-any.pkg.tar.xz any
 	done
 }
 
@@ -81,7 +81,7 @@ load ../lib/common
 	releasePackage extra pkg-any-a any
 	db-update
 
-	checkAnyPackage extra pkg-any-a-1-2-any.pkg.tar.xz any
+	checkPackage extra pkg-any-a-1-2-any.pkg.tar.xz any
 }
 
 @test "testUpdateAnyPackageToDifferentRepositoriesAtOnce" {
@@ -93,14 +93,14 @@ load ../lib/common
 
 	db-update
 
-	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
-	checkAnyPackage testing pkg-any-a-1-2-any.pkg.tar.xz any
+	checkPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
+	checkPackage testing pkg-any-a-1-2-any.pkg.tar.xz any
 }
 
 @test "testUpdateSameAnyPackageToSameRepository" {
 	releasePackage extra pkg-any-a any
 	db-update
-	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
+	checkPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 
 	releasePackage extra pkg-any-a any
 	run db-update
@@ -112,7 +112,7 @@ load ../lib/common
 
 	releasePackage extra pkg-any-a any
 	db-update
-	checkAnyPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
+	checkPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 
 	releasePackage testing pkg-any-a any
 	run db-update

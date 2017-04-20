@@ -73,12 +73,12 @@ load ../lib/common
 	ftpdir-cleanup
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
-	checkRemovedAnyPackage extra 'pkg-any-a'
+	checkRemovedPackage extra 'pkg-any-a' any
 	[ ! -f "${FTP_BASE}/${PKGPOOL}/${pkg1}" ]
 	[ ! -f "${FTP_BASE}/${repo}/os/${arch}/${pkg1}" ]
 
 	local pkg2="pkg-any-b-1-1-${arch}.pkg.tar.xz"
-	checkAnyPackage extra ${pkg2}
+	checkPackage extra ${pkg2} any
 }
 
 @test "testCleanupSplitPackages" {

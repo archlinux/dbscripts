@@ -67,6 +67,6 @@ load ../lib/common
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		checkRemovedAnyPackage extra ${pkgbase}
+		checkRemovedPackage extra ${pkgbase} any
 	done
 }

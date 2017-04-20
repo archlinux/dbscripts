@@ -70,6 +70,30 @@ __buildPackage() {
 	popd
 }
 
+__archrelease() {
+	local repo=$1
+	local pkgarches
+	local tarch
+	local tag
+
+	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
+	pushd ..
+	for tarch in ${pkgarches[@]}; do
+		tag=${repo}-${tarch}
+
+		if [[ -d repos/$tag ]]; then
+			svn rm repos/$tag/PKGBUILD
+		else
+			mkdir -p repos/$tag
+			svn add repos/$tag
+		fi
+
+		svn copy -r HEAD trunk/PKGBUILD repos/$tag/
+	done
+	svn commit -m "__archrelease"
+	popd
+}
+
 setup() {
 	local p
 	local pkg
@@ -118,8 +142,6 @@ teardown() {
 releasePackage() {
 	local repo=$1
 	local pkgbase=$2
-	local pkgarches
-	local tarch
 
 	if [ ! -d "${TMP}/svn-packages-copy/${pkgbase}/trunk" ]; then
 		mkdir -p "${TMP}/svn-packages-copy/${pkgbase}"/{trunk,repos}
@@ -129,12 +151,8 @@ releasePackage() {
 	fi
 
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
-
 	__buildPackage "${STAGING}"/${repo}
-	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
-	for tarch in ${pkgarches[@]}; do
-		archrelease -f ${repo}-${tarch}
-	done
+	__archrelease ${repo}
 	popd
 }
 

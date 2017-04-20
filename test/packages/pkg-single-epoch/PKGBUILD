@@ -7,6 +7,7 @@ arch=('x86_64')
 url='http://www.archlinux.org/'
 license=('GPL')
 depends=('glibc')
+options=(!strip)
 
 package() {
 	install -D -m755 /bin/true ${pkgdir}/usr/bin/${pkgname}

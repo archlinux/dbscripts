@@ -5,6 +5,7 @@ pkgdesc="A package called ${pkgname}"
 arch=('any')
 url='http://www.archlinux.org/'
 license=('GPL')
+options=(!strip)
 
 package() {
 	install -d ${pkgdir}/usr/share/${pkgname}

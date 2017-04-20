@@ -28,8 +28,8 @@ __movePackageToRepo() {
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
 		for arch in ${arches[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
 			__movePackageToRepo extra ${pkgbase} ${arch}
 			db-repo-add extra ${arch} ${pkgbase}-1-1-${arch}.pkg.tar.xz
 		done
@@ -48,10 +48,13 @@ __movePackageToRepo() {
 	local pkgbase
 	local arch
 
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
+	done
+
 	for arch in ${arches[@]}; do
 		add_pkgs=()
 		for pkgbase in ${pkgs[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
 			__movePackageToRepo extra ${pkgbase} ${arch}
 			add_pkgs[${#add_pkgs[*]}]=${pkgbase}-1-1-${arch}.pkg.tar.xz
 		done
@@ -72,7 +75,7 @@ __movePackageToRepo() {
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		releasePackage extra ${pkgbase} any
+		releasePackage extra ${pkgbase}
 		__movePackageToRepo extra ${pkgbase} any
 		db-repo-add extra any ${pkgbase}-1-1-any.pkg.tar.xz
 	done

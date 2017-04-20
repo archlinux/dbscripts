@@ -1,4 +1,4 @@
-. /usr/share/makepkg/util/pkgbuild.sh
+. /usr/share/makepkg/util.sh
 
 __getPackageBaseFromPackage() {
 	local _base
@@ -31,38 +31,43 @@ __getCheckSum() {
 }
 
 __buildPackage() {
-	local arch=$1
-	local pkgver
-	local pkgname
-	local a
+	local pkgdest=${1:-.}
 	local p
-	local checkSum
+	local cache
+	local pkgarches
+	local tarch
+	local pkgnames
 
-	if [[ -n ${PACKAGE_CACHE} ]]; then
-		checkSum=$(__getCheckSum PKGBUILD)
-			# TODO: Be more specific
-			if cp -av ${PACKAGE_CACHE}/${checkSum}/*-${arch}${PKGEXT}{,.sig} .; then
-				return 0
-			fi
+	if [[ -n ${BUILDDIR} ]]; then
+		cache=${BUILDDIR}/$(__getCheckSum PKGBUILD)
+		if [[ -d ${cache} ]]; then
+			cp -Lv ${cache}/*${PKGEXT}{,.sig} ${pkgdest}
+			return 0
+		else
+			mkdir -p ${cache}
+		fi
 	fi
 
-	pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
-	pkgver=$(. PKGBUILD; get_full_version)
-
-	if [ "${arch}" == 'any' ]; then
-		makepkg -c
-	else
-		CARCH=${arch} makepkg -c
-	fi
-
-	for p in ${pkgname[@]}; do
-		gpg --detach-sign --no-armor --use-agent ${p}-${pkgver}-${arch}*
+	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
+	for tarch in ${pkgarches[@]}; do
+		if [ "${tarch}" == 'any' ]; then
+			PKGDEST=${pkgdest} makepkg -c
+		else
+			PKGDEST=${pkgdest} CARCH=${tarch} makepkg -c
+		fi
 	done
 
-	if [[ -n ${PACKAGE_CACHE} ]]; then
-		mkdir -p ${PACKAGE_CACHE}/${checkSum}
-		cp -av *-${arch}${PKGEXT}{,.sig} ${PACKAGE_CACHE}/${checkSum}/
-	fi
+	pkgnames=($(. PKGBUILD; print_all_package_names))
+	pushd ${pkgdest}
+	for p in ${pkgnames[@]/%/${PKGEXT}}; do
+		# Manually sign packages as "makepkg --sign" is buggy
+		gpg -v --detach-sign --no-armor --use-agent ${p}
+
+		if [[ -n ${BUILDDIR} ]]; then
+			cp -Lv ${p}{,.sig} ${cache}/
+		fi
+	done
+	popd
 }
 
 setup() {
@@ -113,11 +118,8 @@ teardown() {
 releasePackage() {
 	local repo=$1
 	local pkgbase=$2
-	local arch=$3
-	local a
-	local p
-	local pkgver
-	local pkgname
+	local pkgarches
+	local tarch
 
 	if [ ! -d "${TMP}/svn-packages-copy/${pkgbase}/trunk" ]; then
 		mkdir -p "${TMP}/svn-packages-copy/${pkgbase}"/{trunk,repos}
@@ -127,27 +129,21 @@ releasePackage() {
 	fi
 
 	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
-	__buildPackage ${arch}
-	archrelease -f ${repo}-${arch}
-	pkgver=$(. PKGBUILD; get_full_version)
-	pkgname=($(. PKGBUILD; echo ${pkgname[@]}))
 
-	for a in ${arch[@]}; do
-		for p in ${pkgname[@]}; do
-			cp ${p}-${pkgver}-${a}${PKGEXT}{,.sig} "${STAGING}"/${repo}/
-		done
+	__buildPackage "${STAGING}"/${repo}
+	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
+	for tarch in ${pkgarches[@]}; do
+		archrelease -f ${repo}-${tarch}
 	done
-
 	popd
 }
 
 updatePackage() {
 	local pkgbase=$1
-	local arch=$2
 
 	pushd "${TMP}/svn-packages-copy/${pkgbase}/trunk/"
 	__updatePKGBUILD
-	__buildPackage ${arch}
+	__buildPackage
 	popd
 }
 

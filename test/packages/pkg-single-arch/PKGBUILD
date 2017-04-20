@@ -1,0 +1,12 @@
+pkgname=pkg-single-arch
+pkgver=1
+pkgrel=1
+pkgdesc="A package called ${pkgname}"
+arch=('x86_64')
+url='http://www.archlinux.org/'
+license=('GPL')
+depends=('glibc')
+
+package() {
+	install -D -m755 /bin/true ${pkgdir}/usr/bin/${pkgname}
+}

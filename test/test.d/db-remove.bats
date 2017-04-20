@@ -7,9 +7,7 @@ load ../lib/common
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
-		done
+		releasePackage extra ${pkgbase}
 	done
 
 	db-update
@@ -34,9 +32,7 @@ load ../lib/common
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
-		done
+		releasePackage extra ${pkgbase}
 	done
 
 	db-update
@@ -57,7 +53,7 @@ load ../lib/common
 	local pkgbase
 
 	for pkgbase in ${pkgs[@]}; do
-		releasePackage extra ${pkgbase} any
+		releasePackage extra ${pkgbase}
 	done
 
 	db-update

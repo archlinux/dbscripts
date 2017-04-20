@@ -17,9 +17,7 @@ __checkRemovedSourcePackage() {
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
-		done
+		releasePackage extra ${pkgbase}
 	done
 	db-update
 
@@ -34,7 +32,7 @@ __checkRemovedSourcePackage() {
 	local pkgbase
 
 	for pkgbase in ${pkgs[@]}; do
-		releasePackage extra ${pkgbase} any
+		releasePackage extra ${pkgbase}
 	done
 	db-update
 
@@ -52,9 +50,7 @@ __checkRemovedSourcePackage() {
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
-		done
+		releasePackage extra ${pkgbase}
 	done
 
 	db-update
@@ -72,9 +68,7 @@ __checkRemovedSourcePackage() {
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
-		done
+		releasePackage extra ${pkgbase}
 	done
 	db-update
 	sourceballs

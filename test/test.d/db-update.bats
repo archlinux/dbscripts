@@ -7,9 +7,7 @@ load ../lib/common
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
-		done
+		releasePackage extra ${pkgbase}
 	done
 
 	db-update
@@ -22,15 +20,15 @@ load ../lib/common
 }
 
 @test "testAddSingleSimplePackage" {
-	releasePackage extra 'pkg-simple-a' 'i686'
+	releasePackage extra 'pkg-single-arch'
 	db-update
-	checkPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+	checkPackage extra 'pkg-single-arch-1-1-x86_64.pkg.tar.xz' 'x86_64'
 }
 
 @test "testAddSingleEpochPackage" {
-	releasePackage extra 'pkg-simple-epoch' 'i686'
+	releasePackage extra 'pkg-single-epoch'
 	db-update
-	checkPackage extra 'pkg-simple-epoch-1:1-1-i686.pkg.tar.xz' 'i686'
+	checkPackage extra 'pkg-single-epoch-1:1-1-x86_64.pkg.tar.xz' 'x86_64'
 }
 
 @test "testAddAnyPackages" {
@@ -38,7 +36,7 @@ load ../lib/common
 	local pkgbase
 
 	for pkgbase in ${pkgs[@]}; do
-		releasePackage extra ${pkgbase} any
+		releasePackage extra ${pkgbase}
 	done
 
 	db-update
@@ -56,9 +54,7 @@ load ../lib/common
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			releasePackage extra ${pkgbase} ${arch}
-		done
+		releasePackage extra ${pkgbase}
 	done
 
 	db-update
@@ -73,23 +69,23 @@ load ../lib/common
 }
 
 @test "testUpdateAnyPackage" {
-	releasePackage extra pkg-any-a any
+	releasePackage extra pkg-any-a
 	db-update
 
-	updatePackage pkg-any-a any
+	updatePackage pkg-any-a
 
-	releasePackage extra pkg-any-a any
+	releasePackage extra pkg-any-a
 	db-update
 
 	checkPackage extra pkg-any-a-1-2-any.pkg.tar.xz any
 }
 
 @test "testUpdateAnyPackageToDifferentRepositoriesAtOnce" {
-	releasePackage extra pkg-any-a any
+	releasePackage extra pkg-any-a
 
-	updatePackage pkg-any-a any
+	updatePackage pkg-any-a
 
-	releasePackage testing pkg-any-a any
+	releasePackage testing pkg-any-a
 
 	db-update
 
@@ -98,11 +94,11 @@ load ../lib/common
 }
 
 @test "testUpdateSameAnyPackageToSameRepository" {
-	releasePackage extra pkg-any-a any
+	releasePackage extra pkg-any-a
 	db-update
 	checkPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 
-	releasePackage extra pkg-any-a any
+	releasePackage extra pkg-any-a
 	run db-update
 	[ "$status" -ne 0 ]
 }
@@ -110,11 +106,11 @@ load ../lib/common
 @test "testUpdateSameAnyPackageToDifferentRepositories" {
 	local arch
 
-	releasePackage extra pkg-any-a any
+	releasePackage extra pkg-any-a
 	db-update
 	checkPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 
-	releasePackage testing pkg-any-a any
+	releasePackage testing pkg-any-a
 	run db-update
 	[ "$status" -ne 0 ]
 
@@ -127,9 +123,7 @@ load ../lib/common
 	local pkgbase='pkg-split-a'
 	local arch
 
-	for arch in ${arches[@]}; do
-		releasePackage ${repo} ${pkgbase} ${arch}
-	done
+	releasePackage ${repo} ${pkgbase}
 
 	# remove a split package to make db-update fail
 	rm "${STAGING}"/extra/${pkgbase}1-*
@@ -144,26 +138,26 @@ load ../lib/common
 
 @test "testUnknownRepo" {
 	mkdir "${STAGING}/unknown/"
-	releasePackage extra 'pkg-simple-a' 'i686'
-	releasePackage unknown 'pkg-simple-b' 'i686'
+	releasePackage extra 'pkg-any-a'
+	releasePackage unknown 'pkg-any-b'
 	db-update
-	checkPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+	checkPackage extra 'pkg-any-a-1-1-any.pkg.tar.xz' any
 	[ ! -e "${FTP_BASE}/unknown" ]
 	rm -rf "${STAGING}/unknown/"
 }
 
 @test "testAddUnsignedPackageFails" {
-	releasePackage extra 'pkg-simple-a' 'i686'
+	releasePackage extra 'pkg-any-a'
 	rm "${STAGING}"/extra/*.sig
 	run db-update
 	[ "$status" -ne 0 ]
 
-	checkRemovedPackage extra pkg-simple-a-1-1-i686.pkg.tar.xz i686
+	checkRemovedPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 }
 
 @test "testAddInvalidSignedPackageFails" {
 	local p
-	releasePackage extra 'pkg-simple-a' 'i686'
+	releasePackage extra 'pkg-any-a'
 	for p in "${STAGING}"/extra/*${PKGEXT}; do
 		unxz $p
 		xz -0 ${p%%.xz}
@@ -171,37 +165,37 @@ load ../lib/common
 	run db-update
 	[ "$status" -ne 0 ]
 
-	checkRemovedPackage extra pkg-simple-a-1-1-i686.pkg.tar.xz i686
+	checkRemovedPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 }
 
 @test "testAddBrokenSignatureFails" {
 	local s
-	releasePackage extra 'pkg-simple-a' 'i686'
+	releasePackage extra 'pkg-any-a'
 	for s in "${STAGING}"/extra/*.sig; do
 		echo 0 > $s
 	done
 	run db-update
 	[ "$status" -ne 0 ]
 
-	checkRemovedPackage extra pkg-simple-a-1-1-i686.pkg.tar.xz i686
+	checkRemovedPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
 }
 
 @test "testAddPackageWithInconsistentVersionFails" {
 	local p
-	releasePackage extra 'pkg-simple-a' 'i686'
+	releasePackage extra 'pkg-any-a'
 
 	for p in "${STAGING}"/extra/*; do
-		mv "${p}" "${p/pkg-simple-a-1/pkg-simple-a-2}"
+		mv "${p}" "${p/pkg-any-a-1/pkg-any-a-2}"
 	done
 
 	run db-update
 	[ "$status" -ne 0 ]
-	checkRemovedPackage extra 'pkg-simple-a-2-1-i686.pkg.tar.xz' 'i686'
+	checkRemovedPackage extra 'pkg-any-a-2-1-any.pkg.tar.xz' 'any'
 }
 
 @test "testAddPackageWithInconsistentNameFails" {
 	local p
-	releasePackage extra 'pkg-simple-a' 'i686'
+	releasePackage extra 'pkg-any-a'
 
 	for p in "${STAGING}"/extra/*; do
 		mv "${p}" "${p/pkg-/foo-pkg-}"
@@ -209,30 +203,30 @@ load ../lib/common
 
 	run db-update
 	[ "$status" -ne 0 ]
-	checkRemovedPackage extra 'foo-pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+	checkRemovedPackage extra 'foo-pkg-any-a-1-1-any.pkg.tar.xz' 'any'
 }
 
 @test "testAddPackageWithInconsistentPKGBUILDFails" {
-	releasePackage extra 'pkg-simple-a' 'i686'
+	releasePackage extra 'pkg-any-a'
 
-	updateRepoPKGBUILD 'pkg-simple-a' extra i686
+	updateRepoPKGBUILD 'pkg-any-a' extra any
 
 	run db-update
 	[ "$status" -ne 0 ]
-	checkRemovedPackage extra 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
+	checkRemovedPackage extra 'pkg-any-a-1-1-any.pkg.tar.xz' 'any'
 }
 
 @test "testAddPackageWithInsufficientPermissionsFails" {
-	releasePackage core 'pkg-simple-a' 'i686'
-	releasePackage extra 'pkg-simple-b' 'i686'
+	releasePackage core 'pkg-any-a'
+	releasePackage extra 'pkg-any-b'
 
 	chmod -xwr ${FTP_BASE}/core/os/i686
 	run db-update
 	[ "$status" -ne 0 ]
 	chmod +xwr ${FTP_BASE}/core/os/i686
 
-	checkRemovedPackage core 'pkg-simple-a-1-1-i686.pkg.tar.xz' 'i686'
-	checkRemovedPackage extra 'pkg-simple-b-1-1-i686.pkg.tar.xz' 'i686'
+	checkRemovedPackage core 'pkg-any-a-1-1-any.pkg.tar.xz' 'any'
+	checkRemovedPackage extra 'pkg-any-b-1-1-any.pkg.tar.xz' 'any'
 }
 
 @test "testPackageHasToBeARegularFile" {
@@ -240,9 +234,7 @@ load ../lib/common
 	local target=$(mktemp -d)
 	local arches=('i686' 'x86_64')
 
-	for arch in ${arches[@]}; do
-		releasePackage extra 'pkg-simple-a' $arch
-	done
+	releasePackage extra 'pkg-simple-a'
 
 	for p in "${STAGING}"/extra/*i686*; do
 		mv "${p}" "${target}"

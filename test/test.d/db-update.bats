@@ -152,7 +152,7 @@ load ../lib/common
 	run db-update
 	[ "$status" -ne 0 ]
 
-	checkRemovedPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
+	checkRemovedPackageDB extra pkg-any-a any
 }
 
 @test "testAddInvalidSignedPackageFails" {
@@ -165,7 +165,7 @@ load ../lib/common
 	run db-update
 	[ "$status" -ne 0 ]
 
-	checkRemovedPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
+	checkRemovedPackageDB extra pkg-any-a any
 }
 
 @test "testAddBrokenSignatureFails" {
@@ -177,7 +177,7 @@ load ../lib/common
 	run db-update
 	[ "$status" -ne 0 ]
 
-	checkRemovedPackage extra pkg-any-a-1-1-any.pkg.tar.xz any
+	checkRemovedPackageDB extra pkg-any-a any
 }
 
 @test "testAddPackageWithInconsistentVersionFails" {
@@ -190,7 +190,7 @@ load ../lib/common
 
 	run db-update
 	[ "$status" -ne 0 ]
-	checkRemovedPackage extra 'pkg-any-a-2-1-any.pkg.tar.xz' 'any'
+	checkRemovedPackageDB extra 'pkg-any-a' 'any'
 }
 
 @test "testAddPackageWithInconsistentNameFails" {
@@ -203,7 +203,7 @@ load ../lib/common
 
 	run db-update
 	[ "$status" -ne 0 ]
-	checkRemovedPackage extra 'foo-pkg-any-a-1-1-any.pkg.tar.xz' 'any'
+	checkRemovedPackage extra 'foo-pkg-any-a' 'any'
 }
 
 @test "testAddPackageWithInconsistentPKGBUILDFails" {
@@ -213,7 +213,7 @@ load ../lib/common
 
 	run db-update
 	[ "$status" -ne 0 ]
-	checkRemovedPackage extra 'pkg-any-a-1-1-any.pkg.tar.xz' 'any'
+	checkRemovedPackageDB extra 'pkg-any-a' 'any'
 }
 
 @test "testAddPackageWithInsufficientPermissionsFails" {
@@ -225,8 +225,8 @@ load ../lib/common
 	[ "$status" -ne 0 ]
 	chmod +xwr ${FTP_BASE}/core/os/i686
 
-	checkRemovedPackage core 'pkg-any-a-1-1-any.pkg.tar.xz' 'any'
-	checkRemovedPackage extra 'pkg-any-b-1-1-any.pkg.tar.xz' 'any'
+	checkRemovedPackageDB core 'pkg-any-a' 'any'
+	checkRemovedPackageDB extra 'pkg-any-b' 'any'
 }
 
 @test "testPackageHasToBeARegularFile" {
@@ -244,6 +244,6 @@ load ../lib/common
 	run db-update
 	[ "$status" -ne 0 ]
 	for arch in ${arches[@]}; do
-		checkRemovedPackage extra "pkg-simple-a-1-1-${arch}.pkg.tar.xz" $arch
+		checkRemovedPackageDB extra "pkg-simple-a" $arch
 	done
 }

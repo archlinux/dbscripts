@@ -1,22 +1,5 @@
 . /usr/share/makepkg/util.sh
 
-__getPackageBaseFromPackage() {
-	local _base
-	_grep_pkginfo() {
-		local _ret
-
-		_ret="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | grep -m 1 "^${2} = ")"
-		echo "${_ret#${2} = }"
-	}
-
-	_base="$(_grep_pkginfo "$1" "pkgbase")"
-	if [ -z "$_base" ]; then
-		_grep_pkginfo "$1" "pkgname"
-	else
-		echo "$_base"
-	fi
-}
-
 __updatePKGBUILD() {
 	local pkgrel
 
@@ -175,86 +158,118 @@ updateRepoPKGBUILD() {
 	popd
 }
 
-getPackageNamesFromPackageBase() {
-	local pkgbase=$1
-
-	$(. "packages/${pkgbase}/PKGBUILD"; echo ${pkgname[@]})
-}
-
 checkPackageDB() {
 	local repo=$1
-	local pkg=$2
-	local arch=$3
+	local pkgbase=$2
 	local db
-	local tarch
-	local tarches
+	local pkgarch
+	local repoarch
+	local repoarches
+	local pkgfile
+	local pkgname
 
-	[ -r "${FTP_BASE}/${PKGPOOL}/${pkg}" ]
-	[ -r "${FTP_BASE}/${PKGPOOL}/${pkg}.sig" ]
-	[ ! -r "${STAGING}"/${repo}/${pkg} ]
-	[ ! -r "${STAGING}"/${repo}/${pkg}.sig ]
+	# FIXME: We guess the location of the PKGBUILD used for this repo
+	# We cannot read from trunk as __updatePKGBUILD() might have bumped the version
+	# and different repos can have different versions of the same package
+	local pkgbuildPaths=($(compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*"))
+	local pkgbuildPath="${pkgbuildPaths[0]}"
+	echo Repo is $repo
+	echo pkgbuildPaths = ${pkgbuildPaths[@]}
+	echo pkgbuildPath = ${pkgbuildPath}
+	ls -ahl ${TMP}/svn-packages-copy/${pkgbase}/repos/
+	[ -r "${pkgbuildPath}/PKGBUILD" ]
 
-	if [[ $arch == any ]]; then
-		tarches=(${ARCHES[@]})
+	local pkgarches=($(. "${pkgbuildPath}/PKGBUILD"; echo ${arch[@]}))
+	local pkgnames=($(. "${pkgbuildPath}/PKGBUILD"; echo ${pkgname[@]}))
+	local pkgver=$(. "${pkgbuildPath}/PKGBUILD"; get_full_version)
+
+	if [[ ${pkgarches[@]} == any ]]; then
+		repoarches=(${ARCHES[@]})
 	else
-		tarches=(${arch})
+		repoarches=(${pkgarches[@]})
 	fi
 
-	for tarch in ${tarches[@]}; do
-		[ -L "${FTP_BASE}/${repo}/os/${tarch}/${pkg}" ]
-		[ "$(readlink -e "${FTP_BASE}/${repo}/os/${tarch}/${pkg}")" == "${FTP_BASE}/${PKGPOOL}/${pkg}" ]
+	for pkgarch in ${pkgarches[@]}; do
+		for pkgname in ${pkgnames[@]}; do
+			pkgfile="${pkgname}-${pkgver}-${pkgarch}${PKGEXT}"
 
-		[ -L "${FTP_BASE}/${repo}/os/${tarch}/${pkg}.sig" ]
-		[ "$(readlink -e "${FTP_BASE}/${repo}/os/${tarch}/${pkg}.sig")" == "${FTP_BASE}/${PKGPOOL}/${pkg}.sig" ]
+			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile} ]
+			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]
+			[ ! -r ${STAGING}/${repo}/${pkgfile} ]
+			[ ! -r ${STAGING}/${repo}/${pkgfile}.sig ]
 
-		for db in ${DBEXT} ${FILESEXT}; do
-			[ -r "${FTP_BASE}/${repo}/os/${tarch}/${repo}${db%.tar.*}" ]
-			bsdtar -xf "${FTP_BASE}/${repo}/os/${tarch}/${repo}${db%.tar.*}" -O | grep -q ${pkg}
+			for repoarch in ${repoarches[@]}; do
+				# Only 'any' packages can be found in repos of both arches
+				if [[ $pkgarch != any ]]; then
+					if [[ $pkgarch != ${repoarch} ]]; then
+						continue
+					fi
+				fi
+
+				[ -L ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile} ]
+				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile})" == ${FTP_BASE}/${PKGPOOL}/${pkgfile} ]
+
+				[ -L ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig ]
+				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig)" == ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]
+
+				for db in ${DBEXT} ${FILESEXT}; do
+					[ -r "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" ]
+					bsdtar -xf "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" -O | grep -q "${pkgfile%${PKGEXT}}"
+				done
+			done
 		done
 	done
 }
 
 checkPackage() {
 	local repo=$1
-	local pkg=$2
-	local arch=$3
+	local pkgbase=$2
 
-	checkPackageDB $repo $pkg $arch
-
-	local pkgbase=$(__getPackageBaseFromPackage "${FTP_BASE}/${PKGPOOL}/${pkg}")
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	[ -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ]
+	# TODO: Does not fail if one arch is missing
+	compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null
+
+	checkPackageDB $repo $pkgbase
 }
 
 checkRemovedPackage() {
 	local repo=$1
 	local pkgbase=$2
-	local arch=$3
-
-	checkRemovedPackageDB $repo $pkgbase $arch
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	[ ! -d "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}" ]
+	! compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null
+
+	checkRemovedPackageDB $repo $pkgbase
 }
 
 checkRemovedPackageDB() {
 	local repo=$1
 	local pkgbase=$2
-	local arch=$3
+	local arch
 	local db
 	local tarch
 	local tarches
+	local pkgarches
+	local pkgnames
+	local pkgname
 
-	if [[ $arch == any ]]; then
+	local pkgbuildPath="${TMP}/svn-packages-copy/${pkgbase}/trunk/PKGBUILD"
+	[[ -r ${pkgbuildPath} ]]
+	pkgarches=($(. "${pkgbuildPath}"; echo ${arch[@]}))
+	pkgnames=($(. "${pkgbuildPath}"; echo ${pkgname[@]}))
+
+	if [[ ${pkgarches[@]} == any ]]; then
 		tarches=(${ARCHES[@]})
 	else
-		tarches=(${arch})
+		tarches=($pkgarches[@])
 	fi
 
 	for db in ${DBEXT} ${FILESEXT}; do
 		for tarch in ${tarches[@]}; do
 			if [ -r "${FTP_BASE}/${repo}/os/${tarch}/${repo}${db%.tar.*}" ]; then
-				echo "$(bsdtar -xf "${FTP_BASE}/${repo}/os/${tarch}/${repo}${db%.tar.*}" -O)" | grep -qv ${pkgbase}
+				for pkgname in ${pkgnames[@]}; do
+					echo "$(bsdtar -xf "${FTP_BASE}/${repo}/os/${tarch}/${repo}${db%.tar.*}" -O)" | grep -qv ${pkgname}
+				done
 			fi
 		done
 	done

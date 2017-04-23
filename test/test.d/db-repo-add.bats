@@ -36,9 +36,7 @@ __movePackageToRepo() {
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			checkPackageDB extra ${pkgbase}-1-1-${arch}.pkg.tar.xz ${arch}
-		done
+		checkPackageDB extra ${pkgbase}
 	done
 }
 
@@ -62,9 +60,7 @@ __movePackageToRepo() {
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			checkPackageDB extra ${pkgbase}-1-1-${arch}.pkg.tar.xz ${arch}
-		done
+		checkPackageDB extra ${pkgbase}
 	done
 }
 
@@ -81,8 +77,6 @@ __movePackageToRepo() {
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			checkPackageDB extra ${pkgbase}-1-1-any.pkg.tar.xz ${arch}
-		done
+		checkPackageDB extra ${pkgbase}
 	done
 }

@@ -19,9 +19,7 @@ load ../lib/common
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			checkRemovedPackageDB extra ${pkgbase} ${arch}
-		done
+		checkRemovedPackageDB extra ${pkgbase}
 	done
 }
 
@@ -42,9 +40,7 @@ load ../lib/common
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		for arch in ${arches[@]}; do
-			checkRemovedPackageDB extra ${pkgbase} ${arch}
-		done
+		checkRemovedPackageDB extra ${pkgbase}
 	done
 }
 
@@ -63,6 +59,6 @@ load ../lib/common
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		checkRemovedPackageDB extra ${pkgbase} any
+		checkRemovedPackageDB extra ${pkgbase}
 	done
 }

@@ -1,13 +1,21 @@
 load ../lib/common
 
+__getPackageNamesFromPackageBase() {
+	local pkgbase=$1
+
+	(. "packages/${pkgbase}/PKGBUILD"; echo ${pkgname[@]})
+}
+
 __checkRepoRemovedPackage() {
 	local repo=$1
 	local pkgbase=$2
-	local arch=$3
+	local repoarch=$3
+	local pkgname
 
-	# FIXME: pkgbase might not be part of the package filename
-	[[ ! -f ${FTP_BASE}/${PKGPOOL}/${pkgbase}*${PKGEXT} ]]
-	[[ ! -f ${FTP_BASE}/${repo}/os/${arch}/${pkgbase}*${PKGEXT} ]]
+	for pkgname in $(__getPackageNamesFromPackageBase ${pkgbase}); do
+		[[ ! -f ${FTP_BASE}/${PKGPOOL}/${pkgname}-*${PKGEXT} ]]
+		[[ ! -f ${FTP_BASE}/${repo}/os/${repoarch}/${pkgname}-*${PKGEXT} ]]
+	done
 }
 
 @test "testCleanupSimplePackages" {
@@ -28,13 +36,12 @@ __checkRepoRemovedPackage() {
 
 	ftpdir-cleanup
 
+	checkRemovedPackage extra 'pkg-simple-a'
 	for arch in ${arches[@]}; do
-		checkRemovedPackage extra 'pkg-simple-a' ${arch}
 		__checkRepoRemovedPackage extra 'pkg-simple-a' ${arch}
-
-		local pkg2="pkg-simple-b-1-1-${arch}.pkg.tar.xz"
-		checkPackage extra ${pkg2} ${arch}
 	done
+
+	checkPackage extra pkg-simple-b
 }
 
 @test "testCleanupEpochPackages" {
@@ -55,13 +62,14 @@ __checkRepoRemovedPackage() {
 
 	ftpdir-cleanup
 
+	checkRemovedPackage extra 'pkg-simple-epoch'
 	for arch in ${arches[@]}; do
-		checkRemovedPackage extra 'pkg-simple-epoch' ${arch}
 		__checkRepoRemovedPackage extra 'pkg-simple-epoch' ${arch}
 	done
 }
 
 @test "testCleanupAnyPackages" {
+	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 	local arch='any'
@@ -75,11 +83,12 @@ __checkRepoRemovedPackage() {
 	ftpdir-cleanup
 
 	local pkg1='pkg-any-a-1-1-any.pkg.tar.xz'
-	checkRemovedPackage extra 'pkg-any-a' any
-	__checkRepoRemovedPackage extra 'pkg-any-a' any
+	checkRemovedPackage extra 'pkg-any-a'
+	for arch in ${arches[@]}; do
+		__checkRepoRemovedPackage extra 'pkg-any-a' ${arch}
+	done
 
-	local pkg2="pkg-any-b-1-1-${arch}.pkg.tar.xz"
-	checkPackage extra ${pkg2} any
+	checkPackage extra pkg-any-b
 }
 
 @test "testCleanupSplitPackages" {
@@ -102,15 +111,11 @@ __checkRepoRemovedPackage() {
 	ftpdir-cleanup
 
 	for arch in ${arches[@]}; do
-		for pkg in $(getPackageNamesFromPackageBase ${pkgs[0]}); do
-			checkRemovedPackage extra ${pkg} ${arch}
-		__checkRepoRemovedPackage extra ${pkg} ${arch}
-		done
-
-		for pkg in $(getPackageNamesFromPackageBase ${pkgs[1]}); do
-			checkPackage extra ${pkg##*/} ${arch}
-		done
+		__checkRepoRemovedPackage extra ${pkg[0]} ${arch}
 	done
+
+	checkRemovedPackage extra ${pkgs[0]}
+	checkPackage extra ${pkgs[1]}
 }
 
 @test "testCleanupOldPackages" {

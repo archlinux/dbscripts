@@ -10,7 +10,7 @@ __checkRemovedSourcePackage() {
 	[ ! -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
 }
 
-@test "testSourceballs" {
+@test "create simple package sourceballs" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-simple-epoch')
 	local pkgbase
@@ -27,7 +27,7 @@ __checkRemovedSourcePackage() {
 	done
 }
 
-@test "testAnySourceballs" {
+@test "create any package sourceballs" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 
@@ -42,7 +42,7 @@ __checkRemovedSourcePackage() {
 	done
 }
 
-@test "testSplitSourceballs" {
+@test "create split package sourceballs" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
@@ -61,7 +61,7 @@ __checkRemovedSourcePackage() {
 	done
 }
 
-@test "testSourceballsCleanup" {
+@test "cleanup sourceballs" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase

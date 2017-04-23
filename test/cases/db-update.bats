@@ -1,6 +1,6 @@
 load ../lib/common
 
-@test "testAddSimplePackages" {
+@test "add simple packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -17,19 +17,19 @@ load ../lib/common
 	done
 }
 
-@test "testAddSingleSimplePackage" {
+@test "add single simple package" {
 	releasePackage extra 'pkg-single-arch'
 	db-update
 	checkPackage extra 'pkg-single-arch'
 }
 
-@test "testAddSingleEpochPackage" {
+@test "add single epoch package" {
 	releasePackage extra 'pkg-single-epoch'
 	db-update
 	checkPackage extra 'pkg-single-epoch'
 }
 
-@test "testAddAnyPackages" {
+@test "add any packages" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
 
@@ -44,7 +44,7 @@ load ../lib/common
 	done
 }
 
-@test "testAddSplitPackages" {
+@test "add split packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
@@ -62,7 +62,7 @@ load ../lib/common
 	done
 }
 
-@test "testUpdateAnyPackage" {
+@test "update any package" {
 	releasePackage extra pkg-any-a
 	db-update
 
@@ -74,7 +74,7 @@ load ../lib/common
 	checkPackage extra pkg-any-a
 }
 
-@test "testUpdateAnyPackageToDifferentRepositoriesAtOnce" {
+@test "update any package to different repositories at once" {
 	releasePackage extra pkg-any-a
 
 	updatePackage pkg-any-a
@@ -87,7 +87,7 @@ load ../lib/common
 	checkPackage testing pkg-any-a
 }
 
-@test "testUpdateSameAnyPackageToSameRepository" {
+@test "update same any package to same repository fails" {
 	releasePackage extra pkg-any-a
 	db-update
 	checkPackage extra pkg-any-a
@@ -97,7 +97,7 @@ load ../lib/common
 	[ "$status" -ne 0 ]
 }
 
-@test "testUpdateSameAnyPackageToDifferentRepositories" {
+@test "update same any package to different repositories fails" {
 	local arch
 
 	releasePackage extra pkg-any-a
@@ -111,7 +111,7 @@ load ../lib/common
 	checkRemovedPackageDB testing pkg-any-a
 }
 
-@test "testAddIncompleteSplitPackage" {
+@test "add incomplete split package fails" {
 	local arches=('i686' 'x86_64')
 	local repo='extra'
 	local pkgbase='pkg-split-a'
@@ -128,7 +128,7 @@ load ../lib/common
 	checkRemovedPackageDB ${repo} ${pkgbase}
 }
 
-@test "testUnknownRepo" {
+@test "add package to unknown repo fails" {
 	mkdir "${STAGING}/unknown/"
 	releasePackage extra 'pkg-any-a'
 	releasePackage unknown 'pkg-any-b'
@@ -138,7 +138,7 @@ load ../lib/common
 	rm -rf "${STAGING}/unknown/"
 }
 
-@test "testAddUnsignedPackageFails" {
+@test "add unsigned package fails" {
 	releasePackage extra 'pkg-any-a'
 	rm "${STAGING}"/extra/*.sig
 	run db-update
@@ -147,7 +147,7 @@ load ../lib/common
 	checkRemovedPackageDB extra pkg-any-a
 }
 
-@test "testAddInvalidSignedPackageFails" {
+@test "add invalid signed package fails" {
 	local p
 	releasePackage extra 'pkg-any-a'
 	for p in "${STAGING}"/extra/*${PKGEXT}; do
@@ -160,7 +160,7 @@ load ../lib/common
 	checkRemovedPackageDB extra pkg-any-a
 }
 
-@test "testAddBrokenSignatureFails" {
+@test "add broken signature fails" {
 	local s
 	releasePackage extra 'pkg-any-a'
 	for s in "${STAGING}"/extra/*.sig; do
@@ -172,7 +172,7 @@ load ../lib/common
 	checkRemovedPackageDB extra pkg-any-a
 }
 
-@test "testAddPackageWithInconsistentVersionFails" {
+@test "add package with inconsistent version fails" {
 	local p
 	releasePackage extra 'pkg-any-a'
 
@@ -185,7 +185,7 @@ load ../lib/common
 	checkRemovedPackageDB extra 'pkg-any-a'
 }
 
-@test "testAddPackageWithInconsistentNameFails" {
+@test "add package with inconsistent name fails" {
 	local p
 	releasePackage extra 'pkg-any-a'
 
@@ -198,7 +198,7 @@ load ../lib/common
 	checkRemovedPackage extra 'pkg-any-a'
 }
 
-@test "testAddPackageWithInconsistentPKGBUILDFails" {
+@test "add package with inconsistent pkgbuild fails" {
 	releasePackage extra 'pkg-any-a'
 
 	updateRepoPKGBUILD 'pkg-any-a' extra any
@@ -208,7 +208,7 @@ load ../lib/common
 	checkRemovedPackageDB extra 'pkg-any-a'
 }
 
-@test "testAddPackageWithInsufficientPermissionsFails" {
+@test "add package with insufficient permissions fails" {
 	releasePackage core 'pkg-any-a'
 	releasePackage extra 'pkg-any-b'
 
@@ -221,7 +221,7 @@ load ../lib/common
 	checkRemovedPackageDB extra 'pkg-any-b'
 }
 
-@test "testPackageHasToBeARegularFile" {
+@test "package has to be aregular file" {
 	local p
 	local target=$(mktemp -d)
 	local arches=('i686' 'x86_64')

@@ -1,6 +1,6 @@
 load ../lib/common
 
-@test "testTesting2xAnyPackage" {
+@test "move any package" {
 	releasePackage core pkg-any-a
 	db-update
 

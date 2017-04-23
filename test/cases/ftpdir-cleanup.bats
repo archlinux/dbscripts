@@ -18,7 +18,7 @@ __checkRepoRemovedPackage() {
 	done
 }
 
-@test "testCleanupSimplePackages" {
+@test "cleanup simple packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -44,7 +44,7 @@ __checkRepoRemovedPackage() {
 	checkPackage extra pkg-simple-b
 }
 
-@test "testCleanupEpochPackages" {
+@test "cleanup epoch packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-epoch')
 	local pkgbase
@@ -68,7 +68,7 @@ __checkRepoRemovedPackage() {
 	done
 }
 
-@test "testCleanupAnyPackages" {
+@test "cleanup any packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase
@@ -91,7 +91,7 @@ __checkRepoRemovedPackage() {
 	checkPackage extra pkg-any-b
 }
 
-@test "testCleanupSplitPackages" {
+@test "cleanup split packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-split-a' 'pkg-split-b')
 	local pkg
@@ -118,7 +118,7 @@ __checkRepoRemovedPackage() {
 	checkPackage extra ${pkgs[1]}
 }
 
-@test "testCleanupOldPackages" {
+@test "cleanup old packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase

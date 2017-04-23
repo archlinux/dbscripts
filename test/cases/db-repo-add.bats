@@ -21,7 +21,7 @@ __movePackageToRepo() {
 	done
 }
 
-@test "testRepoAddSimplePackages" {
+@test "add single packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -40,7 +40,7 @@ __movePackageToRepo() {
 	done
 }
 
-@test "testRepoAddMultiplePackages" {
+@test "add multiple packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-a' 'pkg-simple-b')
 	local pkgbase
@@ -64,7 +64,7 @@ __movePackageToRepo() {
 	done
 }
 
-@test "testRepoAddAnyPackages" {
+@test "add any packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase

@@ -128,7 +128,7 @@ releasePackage() {
 
 	if [ ! -d "${TMP}/svn-packages-copy/${pkgbase}/trunk" ]; then
 		mkdir -p "${TMP}/svn-packages-copy/${pkgbase}"/{trunk,repos}
-		cp -r "packages/${pkgbase}"/* "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
+		cp -r "fixtures/${pkgbase}"/* "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
 		svn add -q "${TMP}/svn-packages-copy"/${pkgbase}
 		svn commit -q -m"initial commit of ${pkgbase}" "${TMP}/svn-packages-copy"
 	fi

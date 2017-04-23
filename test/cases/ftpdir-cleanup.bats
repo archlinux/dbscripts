@@ -3,7 +3,7 @@ load ../lib/common
 __getPackageNamesFromPackageBase() {
 	local pkgbase=$1
 
-	(. "packages/${pkgbase}/PKGBUILD"; echo ${pkgname[@]})
+	(. "fixtures/${pkgbase}/PKGBUILD"; echo ${pkgname[@]})
 }
 
 __checkRepoRemovedPackage() {

@@ -29,7 +29,7 @@ PKGEXT=".pkg.tar.?z"
 SRCEXT=".src.tar.gz"
 
 # Allowed licenses: get sourceballs only for licenses in this array
-ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1')
+ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'GPL3' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1' 'LGPL3')
 
 # Override default config with config.local
 LOCAL_CONFIG=${DBSCRIPTS_CONFIG:-"$(dirname ${BASH_SOURCE[0]})/config.local"}

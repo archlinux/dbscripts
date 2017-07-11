@@ -1,4 +1,4 @@
-FROM pierres/archlinux
+FROM archlinux/base
 RUN pacman -Syu --noconfirm sudo fakeroot awk subversion make kcov bash-bats
 RUN pacman-key --init
 RUN echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel

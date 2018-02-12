@@ -103,13 +103,13 @@ for repo in ${PKGREPOS[@]}; do
 	done < "${WORKDIR}/db-${repo}"
 
 	if [ ${#newpkgs[@]} -ge 1 ]; then
-		msg "Adding source packages for [${repo}]..."
+		msg "Adding source packages for [%s]..." "$repo"
 		for new_pkg in ${newpkgs[@]}; do
 			msg2 "${new_pkg}"
 		done
 	fi
 	if [ ${#failedpkgs[@]} -ge 1 ]; then
-		msg "Failed to create source packages for [${repo}]..."
+		msg "Failed to create source packages for [%s]..." "$repo"
 		for failed_pkg in ${failedpkgs[@]}; do
 			msg2 "${failed_pkg}"
 		done

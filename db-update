@@ -4,13 +4,13 @@
 . "$(dirname $0)/db-functions"
 
 if [ $# -ge 1 ]; then
-	warning "Calling ${0##*/} with a specific repository is no longer supported"
+	warning "Calling %s with a specific repository is no longer supported" "${0##*/}"
 	exit 1
 fi
 
 # Find repos with packages to release
 if ! staging_repos=($(find  "${STAGING}" -mindepth 1 -type f -name "*${PKGEXT}" -printf '%h\n' | sort -u)); then
-	die "Could not read ${STAGING}"
+	die "Could not read %s" "$STAGING"
 fi
 
 repos=()
@@ -30,46 +30,46 @@ done
 # check if packages are valid
 for repo in ${repos[@]}; do
 	if ! check_repo_permission "${repo}"; then
-		die "You don't have permission to update packages in ${repo}"
+		die "You don't have permission to update packages in %s" "$repo"
 	fi
 	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXT}))
 	if [ $? -eq 0 ]; then
 		for pkg in ${pkgs[@]}; do
 			if [ -h "${pkg}" ]; then
-				die "Package ${repo}/${pkg##*/} is a symbolic link"
+				die "Package %s is a symbolic link" "$repo/${pkg##*/}"
 			fi
 			if ! check_pkgfile "${pkg}"; then
-				die "Package ${repo}/${pkg##*/} is not consistent with its meta data"
+				die "Package %s is not consistent with its meta data" "$repo/${pkg##*/}"
 			fi
 			if ! pacman-key -v "${pkg}.sig" >/dev/null 2>&1; then
-				die "Package ${repo}/${pkg##*/} does not have a valid signature"
+				die "Package %s does not have a valid signature" "$repo/${pkg##*/}"
 			fi
 			if ! check_pkgsvn "${pkg}" "${repo}"; then
-				die "Package ${repo}/${pkg##*/} is not consistent with svn repository"
+				die "Package %s is not consistent with svn repository" "$repo/${pkg##*/}"
 			fi
 			if ! check_pkgrepos "${pkg}"; then
-				die "Package ${repo}/${pkg##*/} already exists in another repository"
+				die "Package %s already exists in another repository" "$repo/${pkg##*/}"
 			fi
 			if ! check_packager "${pkg}"; then
-				die "Package ${repo}/${pkg##*/} does not have a valid packager"
+				die "Package %s does not have a valid packager" "$repo/${pkg##*/}"
 			fi
 			if ! check_buildinfo "${pkg}"; then
-				die "Package ${repo}/${pkg##*/} does not have a .BUILDINFO file"
+				die "Package %s does not have a .BUILDINFO file" "$repo/${pkg##*/}"
 			fi
 			if ! check_builddir "${pkg}"; then
-				die "Package ${repo}/${pkg##*/} was not built in a chroot"
+				die "Package %s was not built in a chroot" "$repo/${pkg##*/}"
 			fi
 		done
 		if ! check_splitpkgs ${repo} ${pkgs[@]}; then
-			die "Missing split packages for ${repo}"
+			die "Missing split packages for %s" "$repo"
 		fi
 	else
-		die "Could not read ${STAGING}"
+		die "Could not read %s" "$STAGING"
 	fi
 done
 
 for repo in ${repos[@]}; do
-	msg "Updating [${repo}]..."
+	msg "Updating [%s]..." "$repo"
 	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXT} 2>/dev/null))
 	for pkgarch in ${ARCHES[@]}; do
 		add_pkgs=()

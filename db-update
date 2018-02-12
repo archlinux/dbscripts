@@ -9,8 +9,7 @@ if [ $# -ge 1 ]; then
 fi
 
 # Find repos with packages to release
-staging_repos=($(find  "${STAGING}" -mindepth 1 -type f -name "*${PKGEXT}" -printf '%h\n' | sort -u))
-if [ $? -ge 1 ]; then
+if ! staging_repos=($(find  "${STAGING}" -mindepth 1 -type f -name "*${PKGEXT}" -printf '%h\n' | sort -u)); then
 	die "Could not read ${STAGING}"
 fi
 

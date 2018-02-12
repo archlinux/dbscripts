@@ -292,12 +292,9 @@ getpkgfiles() {
 check_pkgfile() {
 	local pkgfile=$1
 
-	local pkgname="$(getpkgname ${pkgfile})"
-	[ $? -ge 1 ] && return 1
-	local pkgver="$(getpkgver ${pkgfile})"
-	[ $? -ge 1 ] && return 1
-	local pkgarch="$(getpkgarch ${pkgfile})"
-	[ $? -ge 1 ] && return 1
+	local pkgname="$(getpkgname ${pkgfile})" || return 1
+	local pkgver="$(getpkgver ${pkgfile})" || return 1
+	local pkgarch="$(getpkgarch ${pkgfile})" || return 1
 
 	in_array "${pkgarch}" ${ARCHES[@]} 'any' || return 1
 
@@ -310,14 +307,10 @@ check_pkgfile() {
 
 check_pkgsvn() {
 	local pkgfile="${1}"
-	local _pkgbase="$(getpkgbase ${pkgfile})"
-	[ $? -ge 1 ] && return 1
-	local _pkgname="$(getpkgname ${pkgfile})"
-	[ $? -ge 1 ] && return 1
-	local _pkgver="$(getpkgver ${pkgfile})"
-	[ $? -ge 1 ] && return 1
-	local _pkgarch="$(getpkgarch ${pkgfile})"
-	[ $? -ge 1 ] && return 1
+	local _pkgbase="$(getpkgbase ${pkgfile})" || return 1
+	local _pkgname="$(getpkgname ${pkgfile})" || return 1
+	local _pkgver="$(getpkgver ${pkgfile})" || return 1
+	local _pkgarch="$(getpkgarch ${pkgfile})" || return 1
 	local repo="${2}"
 
 	in_array "${repo}" ${PKGREPOS[@]} || return 1
@@ -325,8 +318,7 @@ check_pkgsvn() {
 	if [ ! -f "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" ]; then
 		mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
 		arch_svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
-			"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null
-		[ $? -ge 1 ] && return 1
+			"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
 	fi
 
 	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; get_full_version)"
@@ -360,8 +352,7 @@ check_splitpkgs() {
 		if [ ! -f "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" ]; then
 			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
 			arch_svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
-				"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null
-			[ $? -ge 1 ] && return 1
+				"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
 		fi
 
 		local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))
@@ -386,12 +377,9 @@ check_splitpkgs() {
 check_pkgrepos() {
 	local pkgfile=$1
 
-	local pkgname="$(getpkgname ${pkgfile})"
-	[ $? -ge 1 ] && return 1
-	local pkgver="$(getpkgver ${pkgfile})"
-	[ $? -ge 1 ] && return 1
-	local pkgarch="$(getpkgarch ${pkgfile})"
-	[ $? -ge 1 ] && return 1
+	local pkgname="$(getpkgname ${pkgfile})" || return 1
+	local pkgver="$(getpkgver ${pkgfile})" || return 1
+	local pkgarch="$(getpkgarch ${pkgfile})" || return 1
 
 	[ -f "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXT} ] && return 1
 	[ -f "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXT}.sig ] && return 1

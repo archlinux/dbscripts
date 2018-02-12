@@ -15,7 +15,7 @@ ftppath_from="${FTP_BASE}/${repo_from}/os/"
 ftppath_to="${FTP_BASE}/${repo_to}/os/"
 
 if ! check_repo_permission $repo_to || ! check_repo_permission $repo_from; then
-	die "You don't have permission to move packages from ${repo_from} to ${repo_to}"
+	die "You don't have permission to move packages from %s to %s" "$repo_from" "$repo_to"
 fi
 
 # TODO: this might lock too much (architectures)
@@ -55,10 +55,10 @@ for pkgbase in ${args[@]:2}; do
 			continue 2
 		fi
 	done
-	die "${pkgbase} not found in ${repo_from}"
+	die "%s not found in %s" "$pkgbase" "$repo_from"
 done
 
-msg "Moving packages from [${repo_from}] to [${repo_to}]..."
+msg "Moving packages from [%s] to [%s]..." "$repo_from" "$repo_to"
 
 declare -A add_pkgs
 declare -A remove_pkgs

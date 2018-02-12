@@ -15,7 +15,7 @@ pkgnames=(${@:3})
 ftppath="$FTP_BASE/$repo/os"
 
 if ! check_repo_permission $repo; then
-	die "You don't have permission to remove packages from ${repo}"
+	die "You don't have permission to remove packages from %s" "$repo"
 fi
 
 if [ "$arch" == "any" ]; then
@@ -30,7 +30,7 @@ done
 
 for tarch in ${tarches[@]}; do
 	for pkgname in ${pkgnames[@]}; do
-		msg "Removing $pkgname from [$repo]..."
+		msg "Removing %s from [%s]..." "$pkgname" "$repo"
 	done
 	arch_repo_remove "${repo}" "${tarch}" ${pkgnames[@]}
 	repo_unlock $repo $tarch

@@ -16,7 +16,7 @@ LOGOUT="/tmp/archweb_update.log"
 # figure out what operation to perform
 cmd="${0##*/}"
 if [[ $cmd != "update-web-db" && $cmd != "update-web-files-db" ]]; then
-	die "Invalid command name '$cmd' specified!"
+	die "Invalid command name '%s' specified!" "$cmd"
 fi
 
 script_lock
@@ -24,7 +24,7 @@ script_lock
 # run at nice 5. it can churn quite a bit of cpu after all.
 renice +5 -p $$ > /dev/null
 
-echo "$cmd: Updating DB at $(date)" >> "${LOGOUT}"
+echo "%s: Updating DB at %s" "$cmd" "$(date)" >> "${LOGOUT}"
 
 # source our virtualenv if it exists
 if [ -f "$ENVPATH" ]; then

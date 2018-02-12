@@ -44,7 +44,7 @@ for repo in ${PKGREPOS[@]}; do
 
 		missing_pkgs=($(comm -13 "${WORKDIR}/repo-${repo}-${arch}" "${WORKDIR}/db-${repo}-${arch}"))
 		if [ ${#missing_pkgs[@]} -ge 1 ]; then
-			error "Missing packages in [${repo}] (${arch})..."
+			error "Missing packages in [%s] (%s)..." "$repo" "$arch"
 			for missing_pkg in ${missing_pkgs[@]}; do
 				msg2 "${missing_pkg}"
 			done
@@ -52,7 +52,7 @@ for repo in ${PKGREPOS[@]}; do
 
 		old_pkgs=($(comm -23 "${WORKDIR}/repo-${repo}-${arch}" "${WORKDIR}/db-${repo}-${arch}"))
 		if [ ${#old_pkgs[@]} -ge 1 ]; then
-			msg "Removing old packages from [${repo}] (${arch})..."
+			msg "Removing old packages from [%s] (%s)..." "$repo" "$arch"
 			for old_pkg in ${old_pkgs[@]}; do
 				msg2 "${old_pkg}"
 				clean_pkg "${FTP_BASE}/${repo}/os/${arch}/${old_pkg}"

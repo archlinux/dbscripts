@@ -3,7 +3,7 @@
 . "$(dirname $0)/config"
 . "$(dirname $0)/db-functions"
 
-if [ $# -lt 3 ]; then
+if (( $# < 3 )); then
 	msg "usage: ${0##*/} <repo> <arch> <pkgfile> ..."
 	exit 1
 fi
@@ -18,7 +18,7 @@ if ! check_repo_permission $repo; then
 	die "You don't have permission to add packages to %s" "$repo"
 fi
 
-if [ "$arch" == "any" ]; then
+if [[ $arch = any ]]; then
 	tarches=(${ARCHES[@]})
 else
 	tarches=("$arch")
@@ -30,7 +30,7 @@ done
 
 for tarch in ${tarches[@]}; do
 	for pkgfile in ${pkgfiles[@]}; do
-		if [[ ! -f "${FTP_BASE}/${repo}/os/${tarch}/${pkgfile##*/}" ]]; then
+		if [[ ! -f ${FTP_BASE}/${repo}/os/${tarch}/${pkgfile##*/} ]]; then
 			die "Package file %s not found in %s" "${pkgfile##*/}" "${FTP_BASE}/${repo}/os/${tarch}/"
 		else
 			msg "Adding %s to [%s]..." "$pkgfile" "$repo"

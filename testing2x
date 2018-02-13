@@ -3,7 +3,7 @@
 . "$(dirname $0)/config"
 . "$(dirname $0)/db-functions"
 
-if [ $# -lt 1 ]; then
+if (( $# < 1 )); then
 	msg "usage: ${0##*/} <pkgname|pkgbase> ..."
 	exit 1
 fi
@@ -19,13 +19,13 @@ done
 declare -A pkgs
 
 for pkgbase in $*; do
-	if [ ! -d "${WORKDIR}/${pkgbase}" ]; then
+	if [[ ! -d ${WORKDIR}/${pkgbase} ]]; then
 		arch_svn export -q "${SVNREPO}/${pkgbase}/repos" "${WORKDIR}/${pkgbase}" >/dev/null
 
 		found_source=false
 		for pkgarch in ${ARCHES[@]} 'any'; do
 			svnrepo_from="${WORKDIR}/${pkgbase}/${TESTING_REPO}-${pkgarch}"
-			if [ -r "${svnrepo_from}/PKGBUILD" ]; then
+			if [[ -r ${svnrepo_from}/PKGBUILD ]]; then
 				found_source=true
 				break
 			fi
@@ -35,7 +35,7 @@ for pkgbase in $*; do
 		for pkgarch in ${ARCHES[@]} 'any'; do
 			for repo in ${STABLE_REPOS[@]}; do
 				svnrepo_to="${WORKDIR}/${pkgbase}/${repo}-${pkgarch}"
-				if [ -r "${svnrepo_to}/PKGBUILD" ]; then
+				if [[ -r ${svnrepo_to}/PKGBUILD ]]; then
 					found_target=true
 					pkgs[${repo}]+="${pkgbase} "
 					break 2
@@ -49,11 +49,11 @@ done
 for pkgarch in ${ARCHES[@]}; do
 	repo_unlock ${TESTING_REPO} ${pkgarch}
 done
-for repo in  ${STABLE_REPOS[@]}; do
+for repo in ${STABLE_REPOS[@]}; do
 	for pkgarch in ${ARCHES[@]}; do
 		repo_unlock ${repo} ${pkgarch}
 	done
-	if [ -n "${pkgs[${repo}]}" ]; then
+	if [[ -n ${pkgs[${repo}]} ]]; then
 		"$(dirname $0)/db-move" ${TESTING_REPO} "${repo}" ${pkgs[${repo}]}
 	fi
 done

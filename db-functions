@@ -275,17 +275,11 @@ getpkgfiles() {
 		exit 1
 	fi
 
-	for f in ${@}; do
-		if  [ ! -f "${f}" ]; then
-			error "Package %s not found!" "$f"
-			exit 1
-		elif [ ! -f "${f}.sig" ]; then
-			error "Package signature %s.sig not found!" "$f"
-			exit 1
-		fi
+	for f in "$@"; do
+		files+=("$(getpkgfile "$f")") || exit 1
 	done
 
-	echo ${@}
+	echo ${files[@]}
 }
 
 check_pkgfile() {

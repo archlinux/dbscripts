@@ -134,7 +134,7 @@ repo_lock () {
 			warning "Repo [%s] (%s) is already locked by %s." "$1" "$2" "$_owner"
 			msg2 "Retrying in %s seconds..." "$LOCK_DELAY"
 		else
-			LOCKS[${#LOCKS[*]}]="$1.$2"
+			LOCKS+=("$1.$2")
 			set_umask
 			return 0
 		fi

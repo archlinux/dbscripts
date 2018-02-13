@@ -89,7 +89,7 @@ for repo in ${repos[@]}; do
 			if [ -f "$FTP_BASE/${PKGPOOL}/${pkgfile}.sig" ]; then
 				ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "$FTP_BASE/$repo/os/${pkgarch}"
 			fi
-			add_pkgs[${#add_pkgs[*]}]=${pkgfile}
+			add_pkgs+=("${pkgfile}")
 		done
 		if [ ${#add_pkgs[@]} -ge 1 ]; then
 			arch_repo_add "${repo}" "${pkgarch}" ${add_pkgs[@]}

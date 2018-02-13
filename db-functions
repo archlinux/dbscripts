@@ -410,7 +410,7 @@ check_repo_permission() {
 	[ -w "$FTP_BASE/${PKGPOOL}" ] || return 1
 
 	local arch
-	for arch in ${ARCHES}; do
+	for arch in ${ARCHES[@]}; do
 		local dir="${FTP_BASE}/${repo}/os/${arch}/"
 		[ -w "${dir}" ] || return 1
 		[ -f "${dir}"${repo}${DBEXT} -a ! -w "${dir}"${repo}${DBEXT} ] && return 1

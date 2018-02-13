@@ -91,7 +91,7 @@ for pkgbase in ${args[@]:2}; do
 				arch_svn mv -q -r HEAD "${svnrepo_from}/$file@" "${svnrepo_to}/"
 			done
 			arch_svn rm --force -q "${svnrepo_from}"
-			tag_list="$tag_list, $pkgarch"
+			tag_list+=", $pkgarch"
 
 			for pkgname in ${pkgnames[@]}; do
 				for tarch in ${tarches[@]}; do

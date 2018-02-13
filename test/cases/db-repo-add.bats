@@ -54,7 +54,7 @@ __movePackageToRepo() {
 		add_pkgs=()
 		for pkgbase in ${pkgs[@]}; do
 			__movePackageToRepo extra ${pkgbase} ${arch}
-			add_pkgs[${#add_pkgs[*]}]=${pkgbase}-1-1-${arch}.pkg.tar.xz
+			add_pkgs+=("${pkgbase}-1-1-${arch}.pkg.tar.xz")
 		done
 		db-repo-add extra ${arch} ${add_pkgs[@]}
 	done

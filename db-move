@@ -3,7 +3,7 @@
 . "$(dirname $0)/config"
 . "$(dirname $0)/db-functions"
 
-if [ $# -lt 3 ]; then
+if (( $# < 3 )); then
 	msg "usage: ${0##*/} <repo-from> <repo-to> <pkgname|pkgbase> ..."
 	exit 1
 fi
@@ -30,18 +30,18 @@ for pkgbase in ${args[@]:2}; do
 	arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
 	for pkgarch in ${ARCHES[@]} 'any'; do
 		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-		if [ -r "${svnrepo_from}/PKGBUILD" ]; then
+		if [[ -r ${svnrepo_from}/PKGBUILD ]]; then
 			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
-			if [ ${#pkgnames[@]} -lt 1 ]; then
+			if (( ${#pkgnames[@]} < 1 )); then
 				die "Could not read pkgname"
 			fi
 
 			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
-			if [ -z "${pkgver}" ]; then
+			if [[ -z ${pkgver} ]]; then
 				die "Could not read pkgver"
 			fi
 
-			if [ "${pkgarch}" == 'any' ]; then
+			if [[ ${pkgarch} = any ]]; then
 				tarches=(${ARCHES[@]})
 			else
 				tarches=("${pkgarch}")
@@ -68,8 +68,8 @@ for pkgbase in ${args[@]:2}; do
 		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
 		svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
 
-		if [ -f "${svnrepo_from}/PKGBUILD" ]; then
-			if [ "${pkgarch}" == 'any' ]; then
+		if [[ -f ${svnrepo_from}/PKGBUILD ]]; then
+			if [[ ${pkgarch} = any ]]; then
 				tarches=(${ARCHES[@]})
 			else
 				tarches=("${pkgarch}")
@@ -78,7 +78,7 @@ for pkgbase in ${args[@]:2}; do
 			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
 			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
 
-			if [ -d "${svnrepo_to}" ]; then
+			if [[ -d ${svnrepo_to} ]]; then
 				for file in $(arch_svn ls "${svnrepo_to}"); do
 					arch_svn rm -q "${svnrepo_to}/$file@"
 				done
@@ -99,7 +99,7 @@ for pkgbase in ${args[@]:2}; do
 					pkgfile="${pkgpath##*/}"
 
 					ln -s "../../../${PKGPOOL}/${pkgfile}" ${ftppath_to}/${tarch}/
-					if [ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]; then
+					if [[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]]; then
 						ln -s "../../../${PKGPOOL}/${pkgfile}.sig" ${ftppath_to}/${tarch}/
 					fi
 					add_pkgs[${tarch}]+="${FTP_BASE}/${PKGPOOL}/${pkgfile} "
@@ -113,7 +113,7 @@ for pkgbase in ${args[@]:2}; do
 done
 
 for tarch in ${ARCHES[@]}; do
-	if [ -n "${add_pkgs[${tarch}]}" ]; then
+	if [[ -n ${add_pkgs[${tarch}]} ]]; then
 		arch_repo_add "${repo_to}" "${tarch}" ${add_pkgs[${tarch}]}
 		arch_repo_remove "${repo_from}" "${tarch}" ${remove_pkgs[${tarch}]}
 	fi

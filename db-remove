@@ -3,7 +3,7 @@
 . "$(dirname $0)/config"
 . "$(dirname $0)/db-functions"
 
-if [ $# -lt 3 ]; then
+if (( $# < 3 )); then
 	msg "usage: ${0##*/} <repo> <arch> <pkgname|pkgbase> ..."
 	exit 1
 fi
@@ -19,7 +19,7 @@ if ! check_repo_permission $repo; then
 	die "You don't have permission to remove packages from %s" "$repo"
 fi
 
-if [ "$arch" == "any" ]; then
+if [[ $arch = any ]]; then
 	tarches=(${ARCHES[@]})
 else
 	tarches=("$arch")
@@ -34,7 +34,7 @@ for pkgbase in ${pkgbases[@]}; do
 	msg "Removing %s from [%s]..." "$pkgbase" "$repo"
 	arch_svn checkout -q "${SVNREPO}/${pkgbase}" "${WORKDIR}/svn/${pkgbase}" >/dev/null
 
-	if [ -d "${WORKDIR}/svn/$pkgbase/repos/$svnrepo" ]; then
+	if [[ -d ${WORKDIR}/svn/$pkgbase/repos/$svnrepo ]]; then
 		remove_pkgs+=($(. "${WORKDIR}/svn/$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgname[@]}))
 		arch_svn rm --force -q "${WORKDIR}/svn/$pkgbase/repos/$svnrepo"
 		arch_svn commit -q "${WORKDIR}/svn/$pkgbase" -m "${0##*/}: $pkgbase removed by $(id -un)"

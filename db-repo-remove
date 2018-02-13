@@ -3,7 +3,7 @@
 . "$(dirname $0)/config"
 . "$(dirname $0)/db-functions"
 
-if [ $# -lt 3 ]; then
+if (( $# < 3 )); then
 	msg "usage: ${0##*/} <repo> <arch> <pkgname> ..."
 	exit 1
 fi
@@ -18,7 +18,7 @@ if ! check_repo_permission $repo; then
 	die "You don't have permission to remove packages from %s" "$repo"
 fi
 
-if [ "$arch" == "any" ]; then
+if [[ $arch = any ]]; then
 	tarches=(${ARCHES[@]})
 else
 	tarches=("$arch")

@@ -3,7 +3,7 @@
 . "$(dirname $0)/config"
 . "$(dirname $0)/db-functions"
 
-if [ $# -ge 1 ]; then
+if (( $# >= 1 )); then
 	warning "Calling %s with a specific repository is no longer supported" "${0##*/}"
 	exit 1
 fi
@@ -33,9 +33,9 @@ for repo in ${repos[@]}; do
 		die "You don't have permission to update packages in %s" "$repo"
 	fi
 	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXT}))
-	if [ $? -eq 0 ]; then
+	if (( $? == 0 )); then
 		for pkg in ${pkgs[@]}; do
-			if [ -h "${pkg}" ]; then
+			if [[ -h ${pkg} ]]; then
 				die "Package %s is a symbolic link" "$repo/${pkg##*/}"
 			fi
 			if ! check_pkgfile "${pkg}"; then
@@ -78,20 +78,20 @@ for repo in ${repos[@]}; do
 			pkgfile="${pkg##*/}"
 			msg2 "${pkgfile} (${pkgarch})"
 			# any packages might have been moved by the previous run
-			if [ -f "${pkg}" ]; then
+			if [[ -f ${pkg} ]]; then
 				mv "${pkg}" "$FTP_BASE/${PKGPOOL}"
 			fi
 			ln -s "../../../${PKGPOOL}/${pkgfile}" "$FTP_BASE/$repo/os/${pkgarch}"
 			# also move signatures
-			if [ -f "${pkg}.sig" ]; then
+			if [[ -f ${pkg}.sig ]]; then
 				mv "${pkg}.sig" "$FTP_BASE/${PKGPOOL}"
 			fi
-			if [ -f "$FTP_BASE/${PKGPOOL}/${pkgfile}.sig" ]; then
+			if [[ -f $FTP_BASE/${PKGPOOL}/${pkgfile}.sig ]]; then
 				ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "$FTP_BASE/$repo/os/${pkgarch}"
 			fi
 			add_pkgs+=("${pkgfile}")
 		done
-		if [ ${#add_pkgs[@]} -ge 1 ]; then
+		if (( ${#add_pkgs[@]} >= 1 )); then
 			arch_repo_add "${repo}" "${pkgarch}" ${add_pkgs[@]}
 		fi
 	done

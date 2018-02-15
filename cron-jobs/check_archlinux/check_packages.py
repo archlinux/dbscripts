@@ -366,15 +366,15 @@ def print_usage():
 	print "Options:"
 	print "  --abs-tree=<path[,path]>      Check the specified tree(s) (default : /var/abs)"
 	print "  --repos=<r1,r2,...>           Check the specified repos (default : core,extra)"
-	print "  --arch=<i686|x86_64>          Check the specified arch (default : i686)"
+	print "  --arch=<i686|x86_64>          Check the specified arch (default : x86_64)"
 	print "  --repo-dir=<path>             Check the dbs at the specified path (default : /srv/ftp)"
 	print "  -h, --help                    Show this help and exit"
 	print ""
 	print "Examples:"
 	print "\n  Check core and extra in existing abs tree:"
-	print "    ./check_packages.py --abs-tree=/var/abs --repos=core,extra --arch=i686"
+	print "    ./check_packages.py --abs-tree=/var/abs --repos=core,extra --arch=x86_64"
 	print "\n  Check community:"
-	print "    ./check_packages.py --abs-tree=/var/abs --repos=community --arch=i686"
+	print "    ./check_packages.py --abs-tree=/var/abs --repos=community --arch=x86_64"
 	print ""
 
 if __name__ == "__main__":
@@ -383,7 +383,7 @@ if __name__ == "__main__":
 	## Default list of repos to check
 	repos = ['core', 'extra']
 	## Default arch
-	arch = "i686"
+	arch = "x86_64"
 	## Default repodir
 	repodir = "/srv/ftp"
 

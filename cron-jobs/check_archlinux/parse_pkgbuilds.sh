@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage : parse_pkgbuilds.sh arch <pkgbuilds_dir1,dir2,...>
-# Example : parse_pkgbuilds.sh i686 /var/abs/core /var/abs/extra
+# Example : parse_pkgbuilds.sh x86_64 /var/abs/core /var/abs/extra
 
 exit() { return; }
 

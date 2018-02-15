@@ -22,7 +22,7 @@ LOCK_TIMEOUT=300
 
 STAGING="$HOME/staging"
 TMPDIR="/var/tmp"
-ARCHES=(i686 x86_64)
+ARCHES=(x86_64)
 DBEXT=".db.tar.gz"
 FILESEXT=".files.tar.gz"
 PKGEXT=".pkg.tar.?z"

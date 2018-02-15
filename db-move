@@ -3,7 +3,7 @@
 . "$(dirname $0)/config"
 . "$(dirname $0)/db-functions"
 
-if [ $# -lt 3 ]; then
+if (( $# < 3 )); then
 	msg "usage: ${0##*/} <repo-from> <repo-to> <pkgname|pkgbase> ..."
 	exit 1
 fi
@@ -15,7 +15,7 @@ ftppath_from="${FTP_BASE}/${repo_from}/os/"
 ftppath_to="${FTP_BASE}/${repo_to}/os/"
 
 if ! check_repo_permission $repo_to || ! check_repo_permission $repo_from; then
-	die "You don't have permission to move packages from ${repo_from} to ${repo_to}"
+	die "You don't have permission to move packages from %s to %s" "$repo_from" "$repo_to"
 fi
 
 # TODO: this might lock too much (architectures)
@@ -30,18 +30,18 @@ for pkgbase in ${args[@]:2}; do
 	arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
 	for pkgarch in ${ARCHES[@]} 'any'; do
 		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-		if [ -r "${svnrepo_from}/PKGBUILD" ]; then
+		if [[ -r ${svnrepo_from}/PKGBUILD ]]; then
 			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
-			if [ ${#pkgnames[@]} -lt 1 ]; then
+			if (( ${#pkgnames[@]} < 1 )); then
 				die "Could not read pkgname"
 			fi
 
 			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
-			if [ -z "${pkgver}" ]; then
+			if [[ -z ${pkgver} ]]; then
 				die "Could not read pkgver"
 			fi
 
-			if [ "${pkgarch}" == 'any' ]; then
+			if [[ ${pkgarch} = any ]]; then
 				tarches=(${ARCHES[@]})
 			else
 				tarches=("${pkgarch}")
@@ -55,10 +55,10 @@ for pkgbase in ${args[@]:2}; do
 			continue 2
 		fi
 	done
-	die "${pkgbase} not found in ${repo_from}"
+	die "%s not found in %s" "$pkgbase" "$repo_from"
 done
 
-msg "Moving packages from [${repo_from}] to [${repo_to}]..."
+msg "Moving packages from [%s] to [%s]..." "$repo_from" "$repo_to"
 
 declare -A add_pkgs
 declare -A remove_pkgs
@@ -68,8 +68,8 @@ for pkgbase in ${args[@]:2}; do
 		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
 		svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
 
-		if [ -f "${svnrepo_from}/PKGBUILD" ]; then
-			if [ "${pkgarch}" == 'any' ]; then
+		if [[ -f ${svnrepo_from}/PKGBUILD ]]; then
+			if [[ ${pkgarch} = any ]]; then
 				tarches=(${ARCHES[@]})
 			else
 				tarches=("${pkgarch}")
@@ -78,7 +78,7 @@ for pkgbase in ${args[@]:2}; do
 			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
 			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
 
-			if [ -d "${svnrepo_to}" ]; then
+			if [[ -d ${svnrepo_to} ]]; then
 				for file in $(arch_svn ls "${svnrepo_to}"); do
 					arch_svn rm -q "${svnrepo_to}/$file@"
 				done
@@ -91,7 +91,7 @@ for pkgbase in ${args[@]:2}; do
 				arch_svn mv -q -r HEAD "${svnrepo_from}/$file@" "${svnrepo_to}/"
 			done
 			arch_svn rm --force -q "${svnrepo_from}"
-			tag_list="$tag_list, $pkgarch"
+			tag_list+=", $pkgarch"
 
 			for pkgname in ${pkgnames[@]}; do
 				for tarch in ${tarches[@]}; do
@@ -99,7 +99,7 @@ for pkgbase in ${args[@]:2}; do
 					pkgfile="${pkgpath##*/}"
 
 					ln -s "../../../${PKGPOOL}/${pkgfile}" ${ftppath_to}/${tarch}/
-					if [ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]; then
+					if [[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]]; then
 						ln -s "../../../${PKGPOOL}/${pkgfile}.sig" ${ftppath_to}/${tarch}/
 					fi
 					add_pkgs[${tarch}]+="${FTP_BASE}/${PKGPOOL}/${pkgfile} "
@@ -113,7 +113,7 @@ for pkgbase in ${args[@]:2}; do
 done
 
 for tarch in ${ARCHES[@]}; do
-	if [ -n "${add_pkgs[${tarch}]}" ]; then
+	if [[ -n ${add_pkgs[${tarch}]} ]]; then
 		arch_repo_add "${repo_to}" "${tarch}" ${add_pkgs[${tarch}]}
 		arch_repo_remove "${repo_from}" "${tarch}" ${remove_pkgs[${tarch}]}
 	fi

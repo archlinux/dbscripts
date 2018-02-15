@@ -82,7 +82,7 @@ for repo in ${PKGREPOS[@]}; do
 			arch_svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}" \
 				"${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null 2>&1
 			if [ $? -ge 1 ]; then
-				failedpkgs[${#failedpkgs[*]}]="${pkgbase}-${pkgver}${SRCEXT}"
+				failedpkgs+=("${pkgbase}-${pkgver}${SRCEXT}")
 				continue
 			fi
 
@@ -93,9 +93,9 @@ for repo in ${PKGREPOS[@]}; do
 				mv_acl "${pkgbase}-${pkgver}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}/${pkgbase}-${pkgver}${SRCEXT}"
 				# Avoid creating the same source package for every arch
 				echo "${pkgbase}-${pkgver}${SRCEXT}" >> "${WORKDIR}/available-src-pkgs"
-				newpkgs[${#newpkgs[*]}]="${pkgbase}-${pkgver}${SRCEXT}"
+				newpkgs+=("${pkgbase}-${pkgver}${SRCEXT}")
 			else
-				failedpkgs[${#failedpkgs[*]}]="${pkgbase}-${pkgver}${SRCEXT}"
+				failedpkgs+=("${pkgbase}-${pkgver}${SRCEXT}")
 				cat "${WORKDIR}/${pkgbase}.log" >> "${WORKDIR}/makepkg-fail.log"
 			fi
 			popd >/dev/null
@@ -103,13 +103,13 @@ for repo in ${PKGREPOS[@]}; do
 	done < "${WORKDIR}/db-${repo}"
 
 	if [ ${#newpkgs[@]} -ge 1 ]; then
-		msg "Adding source packages for [${repo}]..."
+		msg "Adding source packages for [%s]..." "$repo"
 		for new_pkg in ${newpkgs[@]}; do
 			msg2 "${new_pkg}"
 		done
 	fi
 	if [ ${#failedpkgs[@]} -ge 1 ]; then
-		msg "Failed to create source packages for [${repo}]..."
+		msg "Failed to create source packages for [%s]..." "$repo"
 		for failed_pkg in ${failedpkgs[@]}; do
 			msg2 "${failed_pkg}"
 		done

@@ -33,4 +33,4 @@ ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'GPL3' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1' 'L
 
 # Override default config with config.local
 LOCAL_CONFIG=${DBSCRIPTS_CONFIG:-"$(dirname ${BASH_SOURCE[0]})/config.local"}
-[ -f "${LOCAL_CONFIG}" ] && . "${LOCAL_CONFIG}"
+[[ -f "${LOCAL_CONFIG}" ]] && . "${LOCAL_CONFIG}"

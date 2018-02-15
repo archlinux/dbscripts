@@ -98,6 +98,7 @@ setup() {
 	SOURCE_CLEANUP_DESTDIR="${TMP}/source-cleanup"
 	STAGING="${TMP}/staging"
 	TMPDIR="${TMP}/tmp"
+	ARCHES=(x86_64 i686)
 	CLEANUP_DRYRUN=false
 	SOURCE_CLEANUP_DRYRUN=false
 eot

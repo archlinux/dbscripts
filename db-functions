@@ -2,6 +2,10 @@
 
 . /usr/share/makepkg/util.sh
 
+# global shell options for enhanced bash scripting
+shopt -s globstar nullglob
+
+
 # Some PKGBUILDs need CARCH to be set
 CARCH="x86_64"
 

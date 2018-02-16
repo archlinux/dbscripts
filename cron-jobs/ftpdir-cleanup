@@ -38,7 +38,11 @@ for repo in ${PKGREPOS[@]}; do
 			continue
 		fi
 		# get a list of actual available package files
-		find "${FTP_BASE}/${repo}/os/${arch}" -xtype f -name "*${PKGEXTS}" -printf '%f\n' | sort > "${WORKDIR}/repo-${repo}-${arch}"
+		for f in "${FTP_BASE}"/${repo}/os/${arch}/*${PKGEXTS}; do
+			if [[ -f $f ]]; then
+				printf '%s\n' "${f##*/}"
+			fi
+		done | sort > "${WORKDIR}/repo-${repo}-${arch}"
 		# get a list of package files defined in the repo db
 		bsdtar -xOf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" | awk '/^%FILENAME%/{getline;print}' | sort > "${WORKDIR}/db-${repo}-${arch}"
 
@@ -61,10 +65,12 @@ for repo in ${PKGREPOS[@]}; do
 	done
 done
 
-# get a list of all available packages in the pacakge pool
-find "$FTP_BASE/${PKGPOOL}" -name "*${PKGEXTS}" -printf '%f\n' | sort > "${WORKDIR}/pool"
+# get a list of all available packages in the package pool
+for f in "$FTP_BASE/${PKGPOOL}"/*${PKGEXTS}; do
+	printf '%s\n' "${f##*/}"
+done | sort > "${WORKDIR}/pool"
 # create a list of packages in our db
-find "${WORKDIR}" -maxdepth 1 -type f -name 'db-*' -exec cat {} \; | sort -u > "${WORKDIR}/db"
+cat "${WORKDIR}"/db-* 2>/dev/null | sort -u > "${WORKDIR}/db"
 
 old_pkgs=($(comm -23 "${WORKDIR}/pool" "${WORKDIR}/db"))
 if (( ${#old_pkgs[@]} >= 1 )); then
@@ -75,7 +81,13 @@ if (( ${#old_pkgs[@]} >= 1 )); then
 	done
 fi
 
-old_pkgs=($(find ${CLEANUP_DESTDIR} -type f -name "*${PKGEXTS}" -mtime +${CLEANUP_KEEP} -printf '%f\n'))
+unset old_pkgs
+touch -d "${CLEANUP_KEEP} days ago"  "${WORKDIR}/cleanup_timestamp"
+for f in "${CLEANUP_DESTDIR}"/**/*${PKGEXTS}; do
+	if [[ ${WORKDIR}/cleanup_timestamp -nt $f ]]; then
+		old_pkgs+=("${f##*/}")
+	fi
+done
 if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do

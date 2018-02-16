@@ -92,7 +92,7 @@ load ../lib/common
 	db-update
 	checkPackage extra pkg-any-a
 
-	releasePackage extra pkg-any-a
+	PKGEXT=.pkg.tar.gz releasePackage extra pkg-any-a
 	run db-update
 	[ "$status" -ne 0 ]
 }

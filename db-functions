@@ -3,7 +3,7 @@
 . /usr/share/makepkg/util.sh
 
 # global shell options for enhanced bash scripting
-shopt -s globstar nullglob
+shopt -s extglob globstar nullglob
 
 
 # Some PKGBUILDs need CARCH to be set
@@ -18,6 +18,14 @@ set_umask () {
 
 restore_umask () {
 	umask $UMASK >/dev/null
+}
+
+# Proxy function to check if a file exists. Using [[ -f ... ]] directly is not
+# always wanted because we might want to expand bash globs first. This way we
+# can pass unquoted globs to is_globfile() and have them expanded as function
+# arguments before being checked.
+is_globfile() {
+	[[ -f $1 ]]
 }
 
 # just like mv -f, but we touch the file and then copy the content so
@@ -378,8 +386,8 @@ check_pkgrepos() {
 	local pkgver="$(getpkgver ${pkgfile})" || return 1
 	local pkgarch="$(getpkgarch ${pkgfile})" || return 1
 
-	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}${PKGEXTS} ]] && return 1
-	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}${PKGEXTS}.sig ]] && return 1
+	is_globfile "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS} && return 1
+	is_globfile "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS}.sig && return 1
 	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile##*/} ]] && return 1
 	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile##*/}.sig ]] && return 1
 

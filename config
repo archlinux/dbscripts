@@ -25,7 +25,8 @@ TMPDIR="/var/tmp"
 ARCHES=(x86_64)
 DBEXT=".db.tar.gz"
 FILESEXT=".files.tar.gz"
-PKGEXTS=".pkg.tar.?z"
+# bash glob listing allowed extensions. Note that db-functions turns on extglob.
+PKGEXTS=".pkg.tar.@(gz|bz2|xz|lzo|lrz|Z)"
 SRCEXT=".src.tar.gz"
 
 # Allowed licenses: get sourceballs only for licenses in this array

@@ -46,7 +46,11 @@ for repo in ${PKGREPOS[@]}; do
 done
 
 # Create a list of all available source package file names
-find "${FTP_BASE}/${SRCPOOL}" -xtype f -name "*${SRCEXT}" -printf '%f\n' | sort -u > "${WORKDIR}/available-src-pkgs"
+for f in "${FTP_BASE}"/${SRCPOOL}/*${SRCEXT}; do
+	if [[ -f $f ]]; then
+		printf '%s\n' "${f##*/}"
+	fi
+done | sort -u > "${WORKDIR}/available-src-pkgs"
 
 # Check for all packages if we need to build a source package
 for repo in ${PKGREPOS[@]}; do
@@ -117,8 +121,8 @@ for repo in ${PKGREPOS[@]}; do
 done
 
 # Cleanup old source packages
-find "${WORKDIR}" -maxdepth 1 -type f -name 'expected-src-pkgs' -exec cat {} \; | sort -u > "${WORKDIR}/expected-src-pkgs.sort"
-find "${WORKDIR}" -maxdepth 1 -type f -name 'available-src-pkgs' -exec cat {} \; | sort -u > "${WORKDIR}/available-src-pkgs.sort"
+sort -u "${WORKDIR}/expected-src-pkgs" > "${WORKDIR}/expected-src-pkgs.sort"
+sort -u "${WORKDIR}/available-src-pkgs" > "${WORKDIR}/available-src-pkgs.sort"
 old_pkgs=($(comm -23 "${WORKDIR}/available-src-pkgs.sort" "${WORKDIR}/expected-src-pkgs.sort"))
 
 if (( ${#old_pkgs[@]} >= 1 )); then
@@ -133,7 +137,14 @@ if (( ${#old_pkgs[@]} >= 1 )); then
 	done
 fi
 
-old_pkgs=($(find ${SOURCE_CLEANUP_DESTDIR} -type f -name "*${SRCEXT}" -mtime +${SOURCE_CLEANUP_KEEP} -printf '%f\n'))
+unset old_pkgs
+touch -d "${SOURCE_CLEANUP_KEEP} days ago"  "${WORKDIR}/cleanup_timestamp"
+for f in "${SOURCE_CLEANUP_DESTDIR}"/*${SRCEXT}; do
+	if [[ ${WORKDIR}/cleanup_timestamp -nt $f ]]; then
+		old_pkgs+=("${f##*/}")
+	fi
+done
+
 if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do

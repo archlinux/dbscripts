@@ -9,9 +9,11 @@ if (( $# >= 1 )); then
 fi
 
 # Find repos with packages to release
-if ! staging_repos=($(find  "${STAGING}" -mindepth 1 -type f -name "*${PKGEXTS}" -printf '%h\n' | sort -u)); then
-	die "Could not read %s" "$STAGING"
-fi
+mapfile -t -d '' staging_repos < <(
+	for f in "${STAGING}"/**/*${PKGEXTS}; do
+		printf '%s\0' "${f%/*}"
+	done | sort -uz
+)
 
 repos=()
 for staging_repo in ${staging_repos[@]##*/}; do

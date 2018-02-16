@@ -23,8 +23,7 @@ __buildPackage() {
 
 	if [[ -n ${BUILDDIR} ]]; then
 		cache=${BUILDDIR}/$(__getCheckSum PKGBUILD)
-		if [[ -d ${cache} ]]; then
-			cp -Lv ${cache}/*${PKGEXT}{,.sig} ${pkgdest}
+		if cp -Lv ${cache}/*${PKGEXT}{,.sig} ${pkgdest} 2>/dev/null; then
 			return 0
 		else
 			mkdir -p ${cache}

@@ -34,9 +34,9 @@ __buildPackage() {
 	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
 	for tarch in ${pkgarches[@]}; do
 		if [ "${tarch}" == 'any' ]; then
-			PKGDEST=${pkgdest} makepkg -c
+			PKGDEST=${pkgdest} makepkg --config "$MAKEPKG_CONF" -c
 		else
-			PKGDEST=${pkgdest} CARCH=${tarch} makepkg -c
+			PKGDEST=${pkgdest} CARCH=${tarch} makepkg --config "$MAKEPKG_CONF" -c
 		fi
 	done
 
@@ -82,6 +82,8 @@ setup() {
 	local pkg
 	local r
 	local a
+	MAKEPKG_CONF="$PWD/../cron-jobs/makepkg.conf"
+	PKGEXT="$(. "$MAKEPKG_CONF"; printf '%s' "$PKGEXT")"
 
 	TMP="$(mktemp -d)"
 

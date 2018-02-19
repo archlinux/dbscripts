@@ -9,7 +9,7 @@ if (( $# >= 1 )); then
 fi
 
 # Find repos with packages to release
-if ! staging_repos=($(find  "${STAGING}" -mindepth 1 -type f -name "*${PKGEXT}" -printf '%h\n' | sort -u)); then
+if ! staging_repos=($(find  "${STAGING}" -mindepth 1 -type f -name "*${PKGEXTS}" -printf '%h\n' | sort -u)); then
 	die "Could not read %s" "$STAGING"
 fi
 
@@ -32,7 +32,7 @@ for repo in ${repos[@]}; do
 	if ! check_repo_permission "${repo}"; then
 		die "You don't have permission to update packages in %s" "$repo"
 	fi
-	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXT}))
+	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXTS}))
 	if (( $? == 0 )); then
 		for pkg in ${pkgs[@]}; do
 			if [[ -h ${pkg} ]]; then
@@ -70,10 +70,10 @@ done
 
 for repo in ${repos[@]}; do
 	msg "Updating [%s]..." "$repo"
-	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXT} 2>/dev/null))
+	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXTS} 2>/dev/null))
 	for pkgarch in ${ARCHES[@]}; do
 		add_pkgs=()
-		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-${pkgarch}${PKGEXT} 2>/dev/null))
+		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-${pkgarch}${PKGEXTS} 2>/dev/null))
 		for pkg in ${arch_pkgs[@]} ${any_pkgs[@]}; do
 			pkgfile="${pkg##*/}"
 			msg2 "${pkgfile} (${pkgarch})"

@@ -21,7 +21,7 @@ renice +10 -p $$ > /dev/null
 for repo in ${PKGREPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
 		# Repo does not exist; skip it
-		if [ ! -f "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" ]; then
+		if [[ ! -f ${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} ]]; then
 			continue
 		fi
 		bsdtar -xOf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" \
@@ -81,7 +81,7 @@ for repo in ${PKGREPOS[@]}; do
 			mkdir -p -m0770 "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}"
 			arch_svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}" \
 				"${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null 2>&1
-			if [ $? -ge 1 ]; then
+			if (( $? >= 1 )); then
 				failedpkgs+=("${pkgbase}-${pkgver}${SRCEXT}")
 				continue
 			fi
@@ -89,7 +89,7 @@ for repo in ${PKGREPOS[@]}; do
 			# Build the actual source package
 			pushd "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}" >/dev/null
 			makepkg --nocolor --allsource --ignorearch --skippgpcheck --config "${dirname}/makepkg.conf" >"${WORKDIR}/${pkgbase}.log" 2>&1
-			if [ $? -eq 0 ] && [ -f "${pkgbase}-${pkgver}${SRCEXT}" ]; then
+			if (( $? == 0 )) && [[ -f ${pkgbase}-${pkgver}${SRCEXT} ]]; then
 				mv_acl "${pkgbase}-${pkgver}${SRCEXT}" "${FTP_BASE}/${SRCPOOL}/${pkgbase}-${pkgver}${SRCEXT}"
 				# Avoid creating the same source package for every arch
 				echo "${pkgbase}-${pkgver}${SRCEXT}" >> "${WORKDIR}/available-src-pkgs"
@@ -121,7 +121,7 @@ find "${WORKDIR}" -maxdepth 1 -type f -name 'expected-src-pkgs' -exec cat {} \; 
 find "${WORKDIR}" -maxdepth 1 -type f -name 'available-src-pkgs' -exec cat {} \; | sort -u > "${WORKDIR}/available-src-pkgs.sort"
 old_pkgs=($(comm -23 "${WORKDIR}/available-src-pkgs.sort" "${WORKDIR}/expected-src-pkgs.sort"))
 
-if [ ${#old_pkgs[@]} -ge 1 ]; then
+if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages..."
 	${SOURCE_CLEANUP_DRYRUN} && warning 'dry run mode is active'
 	for old_pkg in ${old_pkgs[@]}; do
@@ -134,7 +134,7 @@ if [ ${#old_pkgs[@]} -ge 1 ]; then
 fi
 
 old_pkgs=($(find ${SOURCE_CLEANUP_DESTDIR} -type f -name "*${SRCEXT}" -mtime +${SOURCE_CLEANUP_KEEP} -printf '%f\n'))
-if [ ${#old_pkgs[@]} -ge 1 ]; then
+if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 "${old_pkg}"
@@ -142,7 +142,7 @@ if [ ${#old_pkgs[@]} -ge 1 ]; then
 	done
 fi
 
-if [ -f "${WORKDIR}/makepkg-fail.log" ]; then
+if [[ -f ${WORKDIR}/makepkg-fail.log ]]; then
 	msg "Log of failed packages"
 	cat "${WORKDIR}/makepkg-fail.log"
 fi

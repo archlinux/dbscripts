@@ -9,11 +9,11 @@ clean_pkg() {
 
 	if ! ${CLEANUP_DRYRUN}; then
 		for pkg in "$@"; do
-			if [ -h "$pkg" ]; then
+			if [[ -h $pkg ]]; then
 				rm -f "$pkg" "$pkg.sig"
 			else
 				mv_acl "$pkg" "$CLEANUP_DESTDIR/${pkg##*/}"
-				if [ -e "$pkg.sig" ]; then
+				if [[ -e $pkg.sig ]]; then
 					mv_acl "$pkg.sig" "$CLEANUP_DESTDIR/${pkg##*/}.sig"
 				fi
 				touch "${CLEANUP_DESTDIR}/${pkg##*/}"
@@ -34,7 +34,7 @@ ${CLEANUP_DRYRUN} && warning 'dry run mode is active'
 
 for repo in ${PKGREPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
-		if [ ! -f "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" ]; then
+		if [[ ! -f ${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} ]]; then
 			continue
 		fi
 		# get a list of actual available package files
@@ -43,7 +43,7 @@ for repo in ${PKGREPOS[@]}; do
 		bsdtar -xOf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" | awk '/^%FILENAME%/{getline;print}' | sort > "${WORKDIR}/db-${repo}-${arch}"
 
 		missing_pkgs=($(comm -13 "${WORKDIR}/repo-${repo}-${arch}" "${WORKDIR}/db-${repo}-${arch}"))
-		if [ ${#missing_pkgs[@]} -ge 1 ]; then
+		if (( ${#missing_pkgs[@]} >= 1 )); then
 			error "Missing packages in [%s] (%s)..." "$repo" "$arch"
 			for missing_pkg in ${missing_pkgs[@]}; do
 				msg2 "${missing_pkg}"
@@ -51,7 +51,7 @@ for repo in ${PKGREPOS[@]}; do
 		fi
 
 		old_pkgs=($(comm -23 "${WORKDIR}/repo-${repo}-${arch}" "${WORKDIR}/db-${repo}-${arch}"))
-		if [ ${#old_pkgs[@]} -ge 1 ]; then
+		if (( ${#old_pkgs[@]} >= 1 )); then
 			msg "Removing old packages from [%s] (%s)..." "$repo" "$arch"
 			for old_pkg in ${old_pkgs[@]}; do
 				msg2 "${old_pkg}"
@@ -67,7 +67,7 @@ find "$FTP_BASE/${PKGPOOL}" -name "*${PKGEXT}" -printf '%f\n' | sort > "${WORKDI
 find "${WORKDIR}" -maxdepth 1 -type f -name 'db-*' -exec cat {} \; | sort -u > "${WORKDIR}/db"
 
 old_pkgs=($(comm -23 "${WORKDIR}/pool" "${WORKDIR}/db"))
-if [ ${#old_pkgs[@]} -ge 1 ]; then
+if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old packages from package pool..."
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 "${old_pkg}"
@@ -76,7 +76,7 @@ if [ ${#old_pkgs[@]} -ge 1 ]; then
 fi
 
 old_pkgs=($(find ${CLEANUP_DESTDIR} -type f -name "*${PKGEXT}" -mtime +${CLEANUP_KEEP} -printf '%f\n'))
-if [ ${#old_pkgs[@]} -ge 1 ]; then
+if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 "${old_pkg}"

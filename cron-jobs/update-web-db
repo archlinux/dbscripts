@@ -27,7 +27,7 @@ renice +5 -p $$ > /dev/null
 echo "%s: Updating DB at %s" "$cmd" "$(date)" >> "${LOGOUT}"
 
 # source our virtualenv if it exists
-if [ -f "$ENVPATH" ]; then
+if [[ -f "$ENVPATH" ]]; then
 	. "$ENVPATH"
 fi
 
@@ -47,7 +47,7 @@ for repo in ${REPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
 		repo_lock ${repo} ${arch} || exit 1
 		dbfile="/srv/ftp/${repo}/os/${arch}/${repo}${dbfileext}"
-		if [ -f "${dbfile}" ]; then
+		if [[ -f ${dbfile} ]]; then
 			mkdir -p "${WORKDIR}/${repo}/${arch}"
 			cp "${dbfile}" "${WORKDIR}/${repo}/${arch}/${repo}${dbfileext}"
 		fi
@@ -60,7 +60,7 @@ pushd $SPATH >/dev/null
 for repo in ${REPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
 		dbcopy="${WORKDIR}/${repo}/${arch}/${repo}${dbfileext}"
-		if [ -f "${dbcopy}" ]; then
+		if [[ -f ${dbcopy} ]]; then
 			echo "Updating ${repo}-${arch}" >> "${LOGOUT}"
 			./manage.py reporead ${flags} ${arch} "${dbcopy}" >> "${LOGOUT}" 2>&1
 			echo "" >> "${LOGOUT}"

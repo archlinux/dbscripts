@@ -7,17 +7,17 @@ LIST="arch-dev-public@archlinux.org"
 FROM="repomaint@archlinux.org"
 
 SUBJECT="Repository Maintenance $(date +"%d-%m-%Y")"
-if [ $# -ge 1 ]; then
+if (( $# >= 1 )); then
     SUBJECT="$1 $(date +"%d-%m-%Y")"
 fi
 
-if [ $# -ge 2 ]; then
+if (( $# >= 2 )); then
     LIST="$2"
 fi
 
 stdin="$(cat)"
 #echo used to strip whitespace for checking for actual data
-if [ -n "$(echo $stdin)" ]; then
+if [[ -n "$(echo $stdin)" ]]; then
 
 echo "Subject: $SUBJECT
 To: $LIST

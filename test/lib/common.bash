@@ -34,9 +34,9 @@ __buildPackage() {
 	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
 	for tarch in ${pkgarches[@]}; do
 		if [ "${tarch}" == 'any' ]; then
-			PKGDEST=${pkgdest} makepkg -c
+			PKGDEST=${pkgdest} PKGEXT=${PKGEXT} makepkg -c
 		else
-			PKGDEST=${pkgdest} CARCH=${tarch} makepkg -c
+			PKGDEST=${pkgdest} PKGEXT=${PKGEXT} CARCH=${tarch} makepkg -c
 		fi
 	done
 
@@ -82,6 +82,7 @@ setup() {
 	local pkg
 	local r
 	local a
+	PKGEXT=".pkg.tar.xz"
 
 	TMP="$(mktemp -d)"
 

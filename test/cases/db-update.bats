@@ -151,8 +151,7 @@ load ../lib/common
 	local p
 	releasePackage extra 'pkg-any-a'
 	for p in "${STAGING}"/extra/*${PKGEXT}; do
-		unxz $p
-		xz -0 ${p%%.xz}
+		printf '%s\n' "Not a real package" | gpg -v --detach-sign --no-armor --use-agent - > "${p}.sig"
 	done
 	run db-update
 	[ "$status" -ne 0 ]

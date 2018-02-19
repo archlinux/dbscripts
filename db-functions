@@ -374,8 +374,8 @@ check_pkgrepos() {
 	local pkgver="$(getpkgver ${pkgfile})" || return 1
 	local pkgarch="$(getpkgarch ${pkgfile})" || return 1
 
-	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}${PKGEXT} ]] && return 1
-	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}${PKGEXT}.sig ]] && return 1
+	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}${PKGEXTS} ]] && return 1
+	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}${PKGEXTS}.sig ]] && return 1
 	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile##*/} ]] && return 1
 	[[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile##*/}.sig ]] && return 1
 

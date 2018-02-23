@@ -4,7 +4,7 @@
 . "$(dirname $0)/db-functions"
 
 if (( $# < 1 )); then
-	msg "usage: ${0##*/} <pkgname|pkgbase> ..."
+	msg "usage: %s <pkgname|pkgbase> ..." "${0##*/}"
 	exit 1
 fi
 

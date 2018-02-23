@@ -109,13 +109,13 @@ for repo in ${PKGREPOS[@]}; do
 	if [ ${#newpkgs[@]} -ge 1 ]; then
 		msg "Adding source packages for [%s]..." "$repo"
 		for new_pkg in ${newpkgs[@]}; do
-			msg2 "${new_pkg}"
+			msg2 '%s' "${new_pkg}"
 		done
 	fi
 	if [ ${#failedpkgs[@]} -ge 1 ]; then
 		msg "Failed to create source packages for [%s]..." "$repo"
 		for failed_pkg in ${failedpkgs[@]}; do
-			msg2 "${failed_pkg}"
+			msg2 '%s' "${failed_pkg}"
 		done
 	fi
 done
@@ -129,7 +129,7 @@ if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages..."
 	${SOURCE_CLEANUP_DRYRUN} && warning 'dry run mode is active'
 	for old_pkg in ${old_pkgs[@]}; do
-		msg2 "${old_pkg}"
+		msg2 '%s' "${old_pkg}"
 		if ! ${SOURCE_CLEANUP_DRYRUN}; then
 			mv_acl "$FTP_BASE/${SRCPOOL}/${old_pkg}" "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
 			touch "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
@@ -148,7 +148,7 @@ done
 if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do
-		msg2 "${old_pkg}"
+		msg2 '%s' "${old_pkg}"
 		${SOURCE_CLEANUP_DRYRUN} || rm -f "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
 	done
 fi

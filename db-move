@@ -4,7 +4,7 @@
 . "$(dirname $0)/db-functions"
 
 if (( $# < 3 )); then
-	msg "usage: ${0##*/} <repo-from> <repo-to> <pkgname|pkgbase> ..."
+	msg "usage: %s <repo-from> <repo-to> <pkgname|pkgbase> ..." "${0##*/}"
 	exit 1
 fi
 
@@ -74,7 +74,7 @@ for pkgbase in ${args[@]:2}; do
 			else
 				tarches=("${pkgarch}")
 			fi
-			msg2 "${pkgbase} ($(echo ${tarches[@]}))"
+			msg2 "%s (%s)" "$pkgbase" "${tarches[*]}"
 			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo ${pkgname[@]}))
 			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
 

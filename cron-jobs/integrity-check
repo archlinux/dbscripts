@@ -8,7 +8,7 @@ dirname="$(dirname $0)"
 script_lock
 
 if (( $# != 1 )); then
-	die "usage: ${0##*/} <mailto>"
+	die "usage: %s <mailto>" "${0##*/}"
 fi
 mailto=$1
 

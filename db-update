@@ -78,7 +78,7 @@ for repo in ${repos[@]}; do
 		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-${pkgarch}${PKGEXTS} 2>/dev/null))
 		for pkg in ${arch_pkgs[@]} ${any_pkgs[@]}; do
 			pkgfile="${pkg##*/}"
-			msg2 "${pkgfile} (${pkgarch})"
+			msg2 '%s (%s)' "$pkgfile" "$pkgarch"
 			# any packages might have been moved by the previous run
 			if [[ -f ${pkg} ]]; then
 				mv "${pkg}" "$FTP_BASE/${PKGPOOL}"

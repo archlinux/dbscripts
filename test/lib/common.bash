@@ -14,6 +14,16 @@ __getCheckSum() {
 	echo "${result%% *}"
 }
 
+# Proxy function to check if a file exists. Using [[ -f ... ]] directly is not
+# always wanted because we might want to expand bash globs first. This way we
+# can pass unquoted globs to __isGlobfile() and have them expanded as function
+# arguments before being checked.
+#
+# This is a copy of db-functions is_globfile
+__isGlobfile() {
+	[[ -f $1 ]]
+}
+
 __buildPackage() {
 	local pkgdest=${1:-.}
 	local p

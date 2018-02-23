@@ -2,12 +2,12 @@ load ../lib/common
 
 __checkSourcePackage() {
 	local pkgbase=$1
-	[ -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
+	__isGlobfile "${FTP_BASE}/${SRCPOOL}/${pkgbase}"-*"${SRCEXT}"
 }
 
 __checkRemovedSourcePackage() {
 	local pkgbase=$1
-	[ ! -r ${FTP_BASE}/${SRCPOOL}/${pkgbase}-*${SRCEXT} ]
+	! __isGlobfile "${FTP_BASE}/${SRCPOOL}/${pkgbase}"-*"${SRCEXT}"
 }
 
 @test "create simple package sourceballs" {

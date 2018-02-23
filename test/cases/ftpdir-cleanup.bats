@@ -13,8 +13,8 @@ __checkRepoRemovedPackage() {
 	local pkgname
 
 	for pkgname in $(__getPackageNamesFromPackageBase ${pkgbase}); do
-		[[ ! -f ${FTP_BASE}/${PKGPOOL}/${pkgname}-*${PKGEXT} ]]
-		[[ ! -f ${FTP_BASE}/${repo}/os/${repoarch}/${pkgname}-*${PKGEXT} ]]
+		! __isGlobfile "${FTP_BASE}/${PKGPOOL}/${pkgname}"-*"${PKGEXT}"
+		! __isGlobfile "${FTP_BASE}/${repo}/os/${repoarch}/${pkgname}"-*"${PKGEXT}"
 	done
 }
 

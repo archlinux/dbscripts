@@ -114,8 +114,8 @@ done
 
 for tarch in ${ARCHES[@]}; do
 	if [[ -n ${add_pkgs[${tarch}]} ]]; then
-		arch_repo_add "${repo_to}" "${tarch}" ${add_pkgs[${tarch}]}
-		arch_repo_remove "${repo_from}" "${tarch}" ${remove_pkgs[${tarch}]}
+		arch_repo_modify add "${repo_to}" "${tarch}" ${add_pkgs[${tarch}]}
+		arch_repo_modify remove "${repo_from}" "${tarch}" ${remove_pkgs[${tarch}]}
 	fi
 done
 

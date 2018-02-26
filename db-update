@@ -94,7 +94,7 @@ for repo in ${repos[@]}; do
 			add_pkgs+=("${pkgfile}")
 		done
 		if (( ${#add_pkgs[@]} >= 1 )); then
-			arch_repo_add "${repo}" "${pkgarch}" ${add_pkgs[@]}
+			arch_repo_modify add "${repo}" "${pkgarch}" ${add_pkgs[@]}
 		fi
 	done
 done

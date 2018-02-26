@@ -36,6 +36,6 @@ for tarch in ${tarches[@]}; do
 			msg "Adding %s to [%s]..." "$pkgfile" "$repo"
 		fi
 	done
-	arch_repo_add "${repo}" "${tarch}" ${pkgfiles[@]}
+	arch_repo_modify add "${repo}" "${tarch}" ${pkgfiles[@]}
 	repo_unlock $repo $tarch
 done

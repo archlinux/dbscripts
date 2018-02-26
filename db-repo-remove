@@ -32,6 +32,6 @@ for tarch in ${tarches[@]}; do
 	for pkgname in ${pkgnames[@]}; do
 		msg "Removing %s from [%s]..." "$pkgname" "$repo"
 	done
-	arch_repo_remove "${repo}" "${tarch}" ${pkgnames[@]}
+	arch_repo_modify remove "${repo}" "${tarch}" ${pkgnames[@]}
 	repo_unlock $repo $tarch
 done

@@ -47,6 +47,6 @@ for pkgbase in ${pkgbases[@]}; do
 done
 
 for tarch in ${tarches[@]}; do
-	arch_repo_remove "${repo}" "${tarch}" ${remove_pkgs[@]}
+	arch_repo_modify remove "${repo}" "${tarch}" ${remove_pkgs[@]}
 	repo_unlock $repo $tarch
 done

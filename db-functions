@@ -442,34 +442,24 @@ set_repo_permission() {
 	fi
 }
 
-arch_repo_add() {
-	local repo=$1
-	local arch=$2
-	local pkgs=(${@:3})
-
-	# package files might be relative to repo dir
-	pushd "${FTP_BASE}/${repo}/os/${arch}" >/dev/null
-	/usr/bin/repo-add -q "${repo}${DBEXT}" ${pkgs[@]} \
-		|| error "repo-add ${repo}${DBEXT} ${pkgs[@]}"
-	popd >/dev/null
-	set_repo_permission "${repo}" "${arch}"
-
-	REPO_MODIFIED=1
-}
-
-arch_repo_remove() {
-	local repo=$1
-	local arch=$2
-	local pkgs=(${@:3})
+arch_repo_modify() {
+	local action=$1
+	local repo=$2
+	local arch=$3
+	local pkgs=("${@:4}")
 	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}"
 
-	if [[ ! -f ${dbfile} ]]; then
+	if [[ ${action} = remove && ! -f ${dbfile} ]]; then
 		error "No database found at '%s'" "$dbfile"
 		return 1
 	fi
-	/usr/bin/repo-remove -q "${dbfile}" ${pkgs[@]} \
-		|| error "repo-remove ${dbfile} ${pkgs[@]}"
+
+	# package files for repo-add might be relative to repo dir
+	pushd "${dbfile%/*}" >/dev/null
+	/usr/bin/repo-${action} -q "${dbfile}" ${pkgs[@]} \
+		|| error "repo-${action} ${dbfile} ${pkgs[@]}"
 	set_repo_permission "${repo}" "${arch}"
+	popd >/dev/null
 
 	REPO_MODIFIED=1
 }

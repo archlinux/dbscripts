@@ -139,7 +139,7 @@ repo_lock () {
 	fi
 
 	_count=0
-	while (( _count <= _trial )) || $_lockblock ; do
+	while (( _count <= _trial )) || [[ $_lockblock = true ]]; do
 		if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
 			_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
 			warning "Repo [%s] (%s) is already locked by %s." "$1" "$2" "$_owner"

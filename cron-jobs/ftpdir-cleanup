@@ -7,7 +7,7 @@ clean_pkg() {
 	local pkg
 	local target
 
-	if ! ${CLEANUP_DRYRUN}; then
+	if [[ $CLEANUP_DRYRUN != true ]]; then
 		for pkg in "$@"; do
 			if [[ -h $pkg ]]; then
 				rm -f "$pkg" "$pkg.sig"
@@ -30,7 +30,7 @@ for repo in ${PKGREPOS[@]}; do
 	done
 done
 
-${CLEANUP_DRYRUN} && warning 'dry run mode is active'
+[[ $CLEANUP_DRYRUN = true ]] && warning 'dry run mode is active'
 
 for repo in ${PKGREPOS[@]}; do
 	for arch in ${ARCHES[@]}; do
@@ -92,7 +92,7 @@ if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 '%s' "${old_pkg}"
-		if ! ${CLEANUP_DRYRUN}; then
+		if [[ $CLEANUP_DRYRUN != true ]]; then
 			rm -f "${CLEANUP_DESTDIR}/${old_pkg}"
 			rm -f "${CLEANUP_DESTDIR}/${old_pkg}.sig"
 		fi

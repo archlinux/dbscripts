@@ -30,7 +30,7 @@ for pkgbase in $*; do
 				break
 			fi
 		done
-		${found_source} || die "%s not found in [%s]" "$pkgbase" "$TESTING_REPO"
+		[[ $found_source = true ]] || die "%s not found in [%s]" "$pkgbase" "$TESTING_REPO"
 		found_target=false
 		for pkgarch in ${ARCHES[@]} 'any'; do
 			for repo in ${STABLE_REPOS[@]}; do
@@ -42,7 +42,7 @@ for pkgbase in $*; do
 				fi
 			done
 		done
-		${found_target} || die "%s not found in any of these repos: %s" "$pkgbase" "${STABLE_REPOS[*]}"
+		[[ $found_target = true ]] || die "%s not found in any of these repos: %s" "$pkgbase" "${STABLE_REPOS[*]}"
 	fi
 done
 

@@ -127,10 +127,10 @@ old_pkgs=($(comm -23 "${WORKDIR}/available-src-pkgs.sort" "${WORKDIR}/expected-s
 
 if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages..."
-	${SOURCE_CLEANUP_DRYRUN} && warning 'dry run mode is active'
+	[[ $SOURCE_CLEANUP_DRYRUN = true ]] && warning 'dry run mode is active'
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 '%s' "${old_pkg}"
-		if ! ${SOURCE_CLEANUP_DRYRUN}; then
+		if [[ $SOURCE_CLEANUP_DRYRUN != true ]]; then
 			mv_acl "$FTP_BASE/${SRCPOOL}/${old_pkg}" "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
 			touch "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
 		fi
@@ -149,7 +149,7 @@ if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages from the cleanup directory..."
 	for old_pkg in ${old_pkgs[@]}; do
 		msg2 '%s' "${old_pkg}"
-		${SOURCE_CLEANUP_DRYRUN} || rm -f "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
+		[[ $SOURCE_CLEANUP_DRYRUN = true ]] || rm -f "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
 	done
 fi
 

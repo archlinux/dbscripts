@@ -457,7 +457,7 @@ arch_repo_modify() {
 	# package files for repo-add might be relative to repo dir
 	pushd "${dbfile%/*}" >/dev/null
 	/usr/bin/repo-${action} -q "${dbfile}" ${pkgs[@]} \
-		|| error "repo-${action} %s %s " "${dbfile@Q}" "${pkgs[@]@Q}"
+		|| error "repo-${action} %s %s " "${dbfile@Q}" "${pkgs[*]@Q}"
 	set_repo_permission "${repo}" "${arch}"
 	popd >/dev/null
 

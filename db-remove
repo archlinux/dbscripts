@@ -1,7 +1,7 @@
 #!/bin/bash
 
-. "$(dirname $0)/config"
-. "$(dirname $0)/db-functions"
+. "$(dirname "$0")/config"
+. "$(dirname "$0")/db-functions"
 
 if (( $# < 3 )); then
 	msg "usage: %s <repo> <arch> <pkgname|pkgbase> ..." "${0##*/}"
@@ -10,27 +10,27 @@ fi
 
 repo="$1"
 arch="$2"
-pkgbases=(${@:3})
+pkgbases=("${@:3}")
 
 ftppath="$FTP_BASE/$repo/os"
 svnrepo="$repo-$arch"
 
-if ! check_repo_permission $repo; then
+if ! check_repo_permission "$repo"; then
 	die "You don't have permission to remove packages from %s" "$repo"
 fi
 
 if [[ $arch = any ]]; then
-	tarches=(${ARCHES[@]})
+	tarches=("${ARCHES[@]}")
 else
 	tarches=("$arch")
 fi
 
-for tarch in ${tarches[@]}; do
-	repo_lock $repo $tarch || exit 1
+for tarch in "${tarches[@]}"; do
+	repo_lock "$repo" "$tarch" || exit 1
 done
 
 remove_pkgs=()
-for pkgbase in ${pkgbases[@]}; do
+for pkgbase in "${pkgbases[@]}"; do
 	msg "Removing %s from [%s]..." "$pkgbase" "$repo"
 	arch_svn checkout -q "${SVNREPO}/${pkgbase}" "${WORKDIR}/svn/${pkgbase}" >/dev/null
 
@@ -46,7 +46,7 @@ for pkgbase in ${pkgbases[@]}; do
 	fi
 done
 
-for tarch in ${tarches[@]}; do
-	arch_repo_modify remove "${repo}" "${tarch}" ${remove_pkgs[@]}
-	repo_unlock $repo $tarch
+for tarch in "${tarches[@]}"; do
+	arch_repo_modify remove "${repo}" "${tarch}" "${remove_pkgs[@]}"
+	repo_unlock "$repo" "$tarch"
 done

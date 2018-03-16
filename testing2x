@@ -1,7 +1,7 @@
 #!/bin/bash
 
-. "$(dirname $0)/config"
-. "$(dirname $0)/db-functions"
+. "$(dirname "$0")/config"
+. "$(dirname "$0")/db-functions"
 
 if (( $# < 1 )); then
 	msg "usage: %s <pkgname|pkgbase> ..." "${0##*/}"
@@ -11,8 +11,8 @@ fi
 # Lock everything to reduce  possibility of interfering task between the different repo-updates
 script_lock
 for repo in "${TESTING_REPO}" "${STABLE_REPOS[@]}"; do
-	for pkgarch in ${ARCHES[@]}; do
-		repo_lock ${repo} ${pkgarch} || exit 1
+	for pkgarch in "${ARCHES[@]}"; do
+		repo_lock "${repo}" "${pkgarch}" || exit 1
 	done
 done
 
@@ -23,7 +23,7 @@ for pkgbase in "$@"; do
 		arch_svn export -q "${SVNREPO}/${pkgbase}/repos" "${WORKDIR}/${pkgbase}" >/dev/null
 
 		found_source=false
-		for pkgarch in ${ARCHES[@]} 'any'; do
+		for pkgarch in "${ARCHES[@]}" 'any'; do
 			svnrepo_from="${WORKDIR}/${pkgbase}/${TESTING_REPO}-${pkgarch}"
 			if [[ -r ${svnrepo_from}/PKGBUILD ]]; then
 				found_source=true
@@ -32,8 +32,8 @@ for pkgbase in "$@"; do
 		done
 		[[ $found_source = true ]] || die "%s not found in [%s]" "$pkgbase" "$TESTING_REPO"
 		found_target=false
-		for pkgarch in ${ARCHES[@]} 'any'; do
-			for repo in ${STABLE_REPOS[@]}; do
+		for pkgarch in "${ARCHES[@]}" 'any'; do
+			for repo in "${STABLE_REPOS[@]}"; do
 				svnrepo_to="${WORKDIR}/${pkgbase}/${repo}-${pkgarch}"
 				if [[ -r ${svnrepo_to}/PKGBUILD ]]; then
 					found_target=true
@@ -46,15 +46,15 @@ for pkgbase in "$@"; do
 	fi
 done
 
-for pkgarch in ${ARCHES[@]}; do
-	repo_unlock ${TESTING_REPO} ${pkgarch}
+for pkgarch in "${ARCHES[@]}"; do
+	repo_unlock "${TESTING_REPO}" "${pkgarch}"
 done
-for repo in ${STABLE_REPOS[@]}; do
-	for pkgarch in ${ARCHES[@]}; do
-		repo_unlock ${repo} ${pkgarch}
+for repo in "${STABLE_REPOS[@]}"; do
+	for pkgarch in "${ARCHES[@]}"; do
+		repo_unlock "${repo}" "${pkgarch}"
 	done
 	if [[ -n ${pkgs[${repo}]} ]]; then
-		"$(dirname $0)/db-move" ${TESTING_REPO} "${repo}" ${pkgs[${repo}]}
+		"$(dirname "$0")/db-move" "${TESTING_REPO}" "${repo}" ${pkgs[${repo}]}
 	fi
 done
 

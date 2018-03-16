@@ -17,7 +17,7 @@ set_umask () {
 }
 
 restore_umask () {
-	umask $UMASK >/dev/null
+	umask "$UMASK" >/dev/null
 }
 
 # Proxy function to check if a file exists. Using [[ -f ... ]] directly is not
@@ -50,7 +50,7 @@ REPO_MODIFIED=0
 script_lock() {
 	local LOCKDIR="$TMPDIR/.scriptlock.${0##*/}"
 	if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
-		local _owner="$(/usr/bin/stat -c %U $LOCKDIR)"
+		local _owner="$(/usr/bin/stat -c %U "$LOCKDIR")"
 		error "Script %s is already locked by %s." "${0##*/}" "$_owner"
 		exit 1
 	else
@@ -78,12 +78,12 @@ cleanup() {
 	local arch
 
 	trap - EXIT INT QUIT TERM
-	for l in ${LOCKS[@]}; do
+	for l in "${LOCKS[@]}"; do
 		repo=${l%.*}
 		arch=${l#*.}
 		if [[ -d $TMPDIR/.repolock.$repo.$arch ]]; then
 			msg "Removing left over lock from [%s] (%s)" "$repo" "$arch"
-			repo_unlock $repo $arch
+			repo_unlock "$repo" "$arch"
 		fi
 	done
 	if [[ -d $TMPDIR/.scriptlock.${0##*/} ]]; then
@@ -96,7 +96,7 @@ cleanup() {
 		date +%s > "${FTP_BASE}/lastupdate"
 	fi
 
-	[[ -n $1 ]] && exit $1
+	[[ -n $1 ]] && exit "$1"
 }
 
 abort() {
@@ -125,7 +125,7 @@ repo_lock () {
 
 	# This is the lock file used by repo-add and repo-remove
 	if [[ -f ${DBLOCKFILE} ]]; then
-		error "Repo [%s] (%s) is already locked by repo-{add,remove} process %s" "$1" "$2" "$(cat $DBLOCKFILE)"
+		error "Repo [%s] (%s) is already locked by repo-{add,remove} process %s" "$1" "$2" "$(cat "$DBLOCKFILE")"
 		return 1
 	fi
 
@@ -141,7 +141,7 @@ repo_lock () {
 	_count=0
 	while (( _count <= _trial )) || [[ $_lockblock = true ]]; do
 		if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
-			_owner="$(/usr/bin/stat -c %U $LOCKDIR)"
+			_owner="$(/usr/bin/stat -c %U "$LOCKDIR")"
 			warning "Repo [%s] (%s) is already locked by %s." "$1" "$2" "$_owner"
 			msg2 "Retrying in %s seconds..." "$LOCK_DELAY"
 		else
@@ -149,7 +149,7 @@ repo_lock () {
 			set_umask
 			return 0
 		fi
-		sleep $LOCK_DELAY
+		sleep "$LOCK_DELAY"
 		let _count=$_count+1
 	done
 
@@ -277,7 +277,7 @@ getpkgfile() {
 		exit 1
 	fi
 
-	echo ${1}
+	echo "${1}"
 }
 
 getpkgfiles() {
@@ -291,30 +291,30 @@ getpkgfiles() {
 		files+=("$(getpkgfile "$f")") || exit 1
 	done
 
-	echo ${files[@]}
+	echo "${files[@]}"
 }
 
 check_pkgfile() {
 	local pkgfile=$1
 
-	local pkgname="$(getpkgname ${pkgfile})" || return 1
-	local pkgver="$(getpkgver ${pkgfile})" || return 1
-	local pkgarch="$(getpkgarch ${pkgfile})" || return 1
+	local pkgname="$(getpkgname "${pkgfile}")" || return 1
+	local pkgver="$(getpkgver "${pkgfile}")" || return 1
+	local pkgarch="$(getpkgarch "${pkgfile}")" || return 1
 
-	in_array "${pkgarch}" ${ARCHES[@]} 'any' || return 1
+	in_array "${pkgarch}" "${ARCHES[@]}" 'any' || return 1
 
-	[[ ${pkgfile##*/} = ${pkgname}-${pkgver}-${pkgarch}* ]]
+	[[ ${pkgfile##*/} = "${pkgname}-${pkgver}-${pkgarch}"* ]]
 }
 
 check_pkgsvn() {
 	local pkgfile="${1}"
-	local _pkgbase="$(getpkgbase ${pkgfile})" || return 1
-	local _pkgname="$(getpkgname ${pkgfile})" || return 1
-	local _pkgver="$(getpkgver ${pkgfile})" || return 1
-	local _pkgarch="$(getpkgarch ${pkgfile})" || return 1
+	local _pkgbase="$(getpkgbase "${pkgfile}")" || return 1
+	local _pkgname="$(getpkgname "${pkgfile}")" || return 1
+	local _pkgver="$(getpkgver "${pkgfile}")" || return 1
+	local _pkgarch="$(getpkgarch "${pkgfile}")" || return 1
 	local repo="${2}"
 
-	in_array "${repo}" ${PKGREPOS[@]} || return 1
+	in_array "${repo}" "${PKGREPOS[@]}" || return 1
 
 	if [[ ! -f ${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase} ]]; then
 		mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
@@ -325,8 +325,8 @@ check_pkgsvn() {
 	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; get_full_version)"
 	[[ "${svnver}" = "${_pkgver}" ]] || return 1
 
-	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))
-	in_array "${_pkgname}" ${svnnames[@]} || return 1
+	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo "${pkgname[@]}"))
+	in_array "${_pkgname}" "${svnnames[@]}" || return 1
 
 	return 0
 }
@@ -334,7 +334,7 @@ check_pkgsvn() {
 check_splitpkgs() {
 	local repo="${1}"
 	shift
-	local pkgfiles=(${@})
+	local pkgfiles=("${@}")
 	local pkgfile
 	local pkgdir
 	local svnname
@@ -342,11 +342,11 @@ check_splitpkgs() {
 	mkdir -p "${WORKDIR}/check_splitpkgs/"
 	pushd "${WORKDIR}/check_splitpkgs" >/dev/null
 
-	for pkgfile in ${pkgfiles[@]}; do
+	for pkgfile in "${pkgfiles[@]}"; do
 		issplitpkg "${pkgfile}" || continue
-		local _pkgbase="$(getpkgbase ${pkgfile})"
-		local _pkgname="$(getpkgname ${pkgfile})"
-		local _pkgarch="$(getpkgarch ${pkgfile})"
+		local _pkgbase="$(getpkgbase "${pkgfile}")"
+		local _pkgname="$(getpkgname "${pkgfile}")"
+		local _pkgarch="$(getpkgarch "${pkgfile}")"
 		mkdir -p "${repo}/${_pkgarch}/${_pkgbase}"
 		echo "${_pkgname}" >> "${repo}/${_pkgarch}/${_pkgbase}/staging"
 
@@ -356,7 +356,7 @@ check_splitpkgs() {
 				"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
 		fi
 
-		local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo ${pkgname[@]}))
+		local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo "${pkgname[@]}"))
 		printf '%s\n' "${svnnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/svn"
 	done
 	popd >/dev/null
@@ -376,9 +376,9 @@ check_splitpkgs() {
 check_pkgrepos() {
 	local pkgfile=$1
 
-	local pkgname="$(getpkgname ${pkgfile})" || return 1
-	local pkgver="$(getpkgver ${pkgfile})" || return 1
-	local pkgarch="$(getpkgarch ${pkgfile})" || return 1
+	local pkgname="$(getpkgname "${pkgfile}")" || return 1
+	local pkgver="$(getpkgver "${pkgfile}")" || return 1
+	local pkgarch="$(getpkgarch "${pkgfile}")" || return 1
 
 	is_globfile "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS} && return 1
 	is_globfile "${FTP_BASE}/${PKGPOOL}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS}.sig && return 1
@@ -392,7 +392,7 @@ check_pkgrepos() {
 chk_license() {
 	local l
 	for l in "${@}"; do
-		in_array ${l} ${ALLOWED_LICENSES[@]} && return 0
+		in_array "${l}" "${ALLOWED_LICENSES[@]}" && return 0
 	done
 
 	return 1
@@ -404,12 +404,12 @@ check_repo_permission() {
 	(( ${#PKGREPOS[@]} == 0 )) && return 1
 	[[ -z "${PKGPOOL}" ]] && return 1
 
-	in_array "${repo}" ${PKGREPOS[@]} || return 1
+	in_array "${repo}" "${PKGREPOS[@]}" || return 1
 
 	[[ -w $FTP_BASE/${PKGPOOL} ]] || return 1
 
 	local arch
-	for arch in ${ARCHES[@]}; do
+	for arch in "${ARCHES[@]}"; do
 		local dir="${FTP_BASE}/${repo}/os/${arch}/"
 		[[ -w ${dir} ]] || return 1
 		[[ -f ${dir}${repo}${DBEXT} && ! -w ${dir}${repo}${DBEXT} ]] && return 1
@@ -450,7 +450,7 @@ arch_repo_modify() {
 
 	# package files for repo-add might be relative to repo dir
 	pushd "${dbfile%/*}" >/dev/null
-	/usr/bin/repo-${action} -q "${dbfile}" "${pkgs[@]}" \
+	/usr/bin/"repo-${action}" -q "${dbfile}" "${pkgs[@]}" \
 		|| error '%s' "repo-${action} ${dbfile@Q} ${pkgs[*]@Q}"
 	set_repo_permission "${repo}" "${arch}"
 	popd >/dev/null

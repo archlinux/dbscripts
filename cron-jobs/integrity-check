@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dirname="$(dirname $0)"
+dirname="$(dirname "$0")"
 
 . "${dirname}/../config"
 . "${dirname}/../db-functions"
@@ -13,12 +13,12 @@ fi
 mailto=$1
 
 check() {
-	${dirname}/check_archlinux/check_packages.py \
+	"${dirname}"/check_archlinux/check_packages.py \
 		--repos="${repos}" \
 		--abs-tree="/srv/abs/rsync/${arch},/srv/abs/rsync/any" \
 		--repo-dir="${FTP_BASE}" \
 		--arch="${arch}" \
-	2>&1 | ${dirname}/devlist-mailer "Integrity Check ${arch}: ${repos}" "${mailto}"
+	2>&1 | "${dirname}"/devlist-mailer "Integrity Check ${arch}: ${repos}" "${mailto}"
 }
 
 repos='core,extra,community,multilib'

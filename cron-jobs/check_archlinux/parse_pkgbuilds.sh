@@ -6,7 +6,7 @@
 exit() { return; }
 
 splitpkg_overrides=('depends' 'optdepends' 'provides' 'conflicts')
-variables=('pkgname' 'pkgbase' 'epoch' 'pkgver' 'pkgrel' 'makedepends' 'arch' ${splitpkg_overrides[@]})
+variables=('pkgname' 'pkgbase' 'epoch' 'pkgver' 'pkgrel' 'makedepends' 'arch' "${splitpkg_overrides[@]}")
 readonly -a variables splitpkg_overrides
 
 backup_package_variables() {
@@ -30,31 +30,31 @@ print_info() {
 
 	if [ -n "$arch" ]; then
 		echo "%ARCH%"
-		for i in ${arch[@]}; do echo $i; done
+		for i in "${arch[@]}"; do echo "$i"; done
 		echo ""
 	fi
 	if [ -n "$depends" ]; then
 		echo "%DEPENDS%"
-		for i in ${depends[@]}; do
-			echo $i
+		for i in "${depends[@]}"; do
+			echo "$i"
 		done
 		echo ""
 	fi
 	if [ -n "$makedepends" ]; then
 		echo "%MAKEDEPENDS%"
-		for i in ${makedepends[@]}; do
-			echo $i
+		for i in "${makedepends[@]}"; do
+			echo "$i"
 		done
 		echo ""
 	fi
 	if [ -n "$conflicts" ]; then
 		echo "%CONFLICTS%"
-		for i in ${conflicts[@]}; do echo $i; done
+		for i in "${conflicts[@]}"; do echo "$i"; done
 		echo ""
 	fi
 	if [ -n "$provides" ]; then
 		echo "%PROVIDES%"
-		for i in ${provides[@]}; do echo $i; done
+		for i in "${provides[@]}"; do echo "$i"; done
 		echo ""
 	fi
 }
@@ -64,10 +64,10 @@ source_pkgbuild() {
 	ret=0
 	dir=$1
 	pkgbuild=$dir/PKGBUILD
-	for var in ${variables[@]}; do
-		unset ${var}
+	for var in "${variables[@]}"; do
+		unset "${var}"
 	done
-	source $pkgbuild &>/dev/null || ret=$?
+	source "$pkgbuild" &>/dev/null || ret=$?
 
 	# ensure $pkgname and $pkgver variables were found
 	if [ $ret -ne 0 -o -z "$pkgname" -o -z "$pkgver" ]; then
@@ -77,8 +77,8 @@ source_pkgbuild() {
 
 	if [ "${#pkgname[@]}" -gt "1" ]; then
 		pkgbase=${pkgbase:-${pkgname[0]}}
-		for pkg in ${pkgname[@]}; do
-			if [ "$(type -t package_${pkg})" != "function" ]; then
+		for pkg in "${pkgname[@]}"; do
+			if [ "$(type -t "package_${pkg}")" != "function" ]; then
 				echo -e "%INVALID%\n$pkgbuild\n"
 				return 1
 			else
@@ -87,13 +87,13 @@ source_pkgbuild() {
 				while IFS= read -r line; do
 					var=${line%%=*}
 					var="${var#"${var%%[![:space:]]*}"}"   # remove leading whitespace characters
-					for realvar in ${variables[@]}; do
+					for realvar in "${variables[@]}"; do
 						if [ "$var" == "$realvar" ]; then
 							eval $line
 							break
 						fi
 					done
-				done < <(type package_${pkg})
+				done < <(type "package_${pkg}")
 				print_info
 				eval "$restore_package_variables"
 			fi
@@ -113,14 +113,14 @@ find_pkgbuilds() {
 		return
 	fi
 
-	if [ -f $1/PKGBUILD ]; then
-		source_pkgbuild $1
+	if [ -f "$1/PKGBUILD" ]; then
+		source_pkgbuild "$1"
 		return
 	fi
 	empty=1
-	for dir in $1/*; do
-		if [ -d $dir ]; then
-			find_pkgbuilds $dir
+	for dir in "$1"/*; do
+		if [ -d "$dir" ]; then
+			find_pkgbuilds "$dir"
 			unset empty
 		fi
 	done
@@ -136,7 +136,7 @@ fi
 CARCH=$1
 shift
 for dir in "$@"; do
-	find_pkgbuilds $dir
+	find_pkgbuilds "$dir"
 done
 
 exit 0

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-. "$(dirname $0)/../config"
-. "$(dirname $0)/../db-functions"
+. "$(dirname "$0")/../config"
+. "$(dirname "$0")/../db-functions"
 
 clean_pkg() {
 	local pkg
@@ -24,16 +24,16 @@ clean_pkg() {
 
 script_lock
 
-for repo in ${PKGREPOS[@]}; do
-	for arch in ${ARCHES[@]}; do
-		repo_lock ${repo} ${arch} || exit 1
+for repo in "${PKGREPOS[@]}"; do
+	for arch in "${ARCHES[@]}"; do
+		repo_lock "${repo}" "${arch}" || exit 1
 	done
 done
 
 [[ $CLEANUP_DRYRUN = true ]] && warning 'dry run mode is active'
 
-for repo in ${PKGREPOS[@]}; do
-	for arch in ${ARCHES[@]}; do
+for repo in "${PKGREPOS[@]}"; do
+	for arch in "${ARCHES[@]}"; do
 		if [[ ! -f ${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} ]]; then
 			continue
 		fi
@@ -49,7 +49,7 @@ for repo in ${PKGREPOS[@]}; do
 		missing_pkgs=($(comm -13 "${WORKDIR}/repo-${repo}-${arch}" "${WORKDIR}/db-${repo}-${arch}"))
 		if (( ${#missing_pkgs[@]} >= 1 )); then
 			error "Missing packages in [%s] (%s)..." "$repo" "$arch"
-			for missing_pkg in ${missing_pkgs[@]}; do
+			for missing_pkg in "${missing_pkgs[@]}"; do
 				msg2 '%s' "${missing_pkg}"
 			done
 		fi
@@ -57,7 +57,7 @@ for repo in ${PKGREPOS[@]}; do
 		old_pkgs=($(comm -23 "${WORKDIR}/repo-${repo}-${arch}" "${WORKDIR}/db-${repo}-${arch}"))
 		if (( ${#old_pkgs[@]} >= 1 )); then
 			msg "Removing old packages from [%s] (%s)..." "$repo" "$arch"
-			for old_pkg in ${old_pkgs[@]}; do
+			for old_pkg in "${old_pkgs[@]}"; do
 				msg2 '%s' "${old_pkg}"
 				clean_pkg "${FTP_BASE}/${repo}/os/${arch}/${old_pkg}"
 			done
@@ -75,7 +75,7 @@ cat "${WORKDIR}"/db-* 2>/dev/null | sort -u > "${WORKDIR}/db"
 old_pkgs=($(comm -23 "${WORKDIR}/pool" "${WORKDIR}/db"))
 if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old packages from package pool..."
-	for old_pkg in ${old_pkgs[@]}; do
+	for old_pkg in "${old_pkgs[@]}"; do
 		msg2 '%s' "${old_pkg}"
 		clean_pkg "$FTP_BASE/${PKGPOOL}/${old_pkg}"
 	done
@@ -90,7 +90,7 @@ for f in "${CLEANUP_DESTDIR}"/**/*${PKGEXTS}; do
 done
 if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old packages from the cleanup directory..."
-	for old_pkg in ${old_pkgs[@]}; do
+	for old_pkg in "${old_pkgs[@]}"; do
 		msg2 '%s' "${old_pkg}"
 		if [[ $CLEANUP_DRYRUN != true ]]; then
 			rm -f "${CLEANUP_DESTDIR}/${old_pkg}"
@@ -99,9 +99,9 @@ if (( ${#old_pkgs[@]} >= 1 )); then
 	done
 fi
 
-for repo in ${PKGREPOS[@]}; do
-	for arch in ${ARCHES[@]}; do
-		repo_unlock ${repo} ${arch}
+for repo in "${PKGREPOS[@]}"; do
+	for arch in "${ARCHES[@]}"; do
+		repo_unlock "${repo}" "${arch}"
 	done
 done
 

@@ -1,15 +1,15 @@
 #!/bin/bash
 
-dirname="$(dirname $(readlink -e $0))"
+dirname="$(dirname "$(readlink -e "$0")")"
 . "${dirname}/../config"
 . "${dirname}/../db-functions"
 pushd "${WORKDIR}" >/dev/null
 
 script_lock
 
-for repo in ${PKGREPOS[@]}; do
-	for arch in ${ARCHES[@]}; do
-		repo_lock ${repo} ${arch} || exit 1
+for repo in "${PKGREPOS[@]}"; do
+	for arch in "${ARCHES[@]}"; do
+		repo_lock "${repo}" "${arch}" || exit 1
 	done
 done
 
@@ -18,8 +18,8 @@ renice +10 -p $$ > /dev/null
 
 # Create a readable file for each repo with the following format
 # <pkgbase|pkgname> <pkgver>-<pkgrel> <arch> <license>[ <license>]
-for repo in ${PKGREPOS[@]}; do
-	for arch in ${ARCHES[@]}; do
+for repo in "${PKGREPOS[@]}"; do
+	for arch in "${ARCHES[@]}"; do
 		# Repo does not exist; skip it
 		if [[ ! -f ${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} ]]; then
 			continue
@@ -39,9 +39,9 @@ for repo in ${PKGREPOS[@]}; do
 	done | sort -u > "${WORKDIR}/db-${repo}"
 done
 
-for repo in ${PKGREPOS[@]}; do
-	for arch in ${ARCHES[@]}; do
-		repo_unlock ${repo} ${arch}
+for repo in "${PKGREPOS[@]}"; do
+	for arch in "${ARCHES[@]}"; do
+		repo_unlock "${repo}" "${arch}"
 	done
 done
 
@@ -53,7 +53,7 @@ for f in "${FTP_BASE}"/${SRCPOOL}/*${SRCEXT}; do
 done | sort -u > "${WORKDIR}/available-src-pkgs"
 
 # Check for all packages if we need to build a source package
-for repo in ${PKGREPOS[@]}; do
+for repo in "${PKGREPOS[@]}"; do
 	newpkgs=()
 	failedpkgs=()
 	while read -r pkgbase pkgver pkgarch pkglicense; do
@@ -73,7 +73,7 @@ for repo in ${PKGREPOS[@]}; do
 		# Build the source package if its not already there
 		if ! grep -Fqx "${pkgbase}-${pkgver}${SRCEXT}" "${WORKDIR}/available-src-pkgs"; then
 			# Check if we had failed before
-			if in_array "${pkgbase}-${pkgver}${SRCEXT}" ${failedpkgs[@]}; then
+			if in_array "${pkgbase}-${pkgver}${SRCEXT}" "${failedpkgs[@]}"; then
 				continue
 			fi
 
@@ -104,13 +104,13 @@ for repo in ${PKGREPOS[@]}; do
 
 	if [ ${#newpkgs[@]} -ge 1 ]; then
 		msg "Adding source packages for [%s]..." "$repo"
-		for new_pkg in ${newpkgs[@]}; do
+		for new_pkg in "${newpkgs[@]}"; do
 			msg2 '%s' "${new_pkg}"
 		done
 	fi
 	if [ ${#failedpkgs[@]} -ge 1 ]; then
 		msg "Failed to create source packages for [%s]..." "$repo"
-		for failed_pkg in ${failedpkgs[@]}; do
+		for failed_pkg in "${failedpkgs[@]}"; do
 			msg2 '%s' "${failed_pkg}"
 		done
 	fi
@@ -124,7 +124,7 @@ old_pkgs=($(comm -23 "${WORKDIR}/available-src-pkgs.sort" "${WORKDIR}/expected-s
 if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages..."
 	[[ $SOURCE_CLEANUP_DRYRUN = true ]] && warning 'dry run mode is active'
-	for old_pkg in ${old_pkgs[@]}; do
+	for old_pkg in "${old_pkgs[@]}"; do
 		msg2 '%s' "${old_pkg}"
 		if [[ $SOURCE_CLEANUP_DRYRUN != true ]]; then
 			mv_acl "$FTP_BASE/${SRCPOOL}/${old_pkg}" "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
@@ -143,7 +143,7 @@ done
 
 if (( ${#old_pkgs[@]} >= 1 )); then
 	msg "Removing old source packages from the cleanup directory..."
-	for old_pkg in ${old_pkgs[@]}; do
+	for old_pkg in "${old_pkgs[@]}"; do
 		msg2 '%s' "${old_pkg}"
 		[[ $SOURCE_CLEANUP_DRYRUN = true ]] || rm -f "${SOURCE_CLEANUP_DESTDIR}/${old_pkg}"
 	done

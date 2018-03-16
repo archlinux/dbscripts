@@ -1,7 +1,7 @@
 #!/bin/bash
 
-. "$(dirname $0)/config"
-. "$(dirname $0)/db-functions"
+. "$(dirname "$0")/config"
+. "$(dirname "$0")/db-functions"
 
 if (( $# >= 1 )); then
 	warning "Calling %s with a specific repository is no longer supported" "${0##*/}"
@@ -16,27 +16,27 @@ mapfile -t -d '' staging_repos < <(
 )
 
 repos=()
-for staging_repo in ${staging_repos[@]##*/}; do
-	if in_array ${staging_repo} ${PKGREPOS[@]}; then
-		repos+=(${staging_repo})
+for staging_repo in "${staging_repos[@]##*/}"; do
+	if in_array "${staging_repo}" "${PKGREPOS[@]}"; then
+		repos+=("${staging_repo}")
 	fi
 done
 
 # TODO: this might lock too much (architectures)
-for repo in ${repos[@]}; do
-	for pkgarch in ${ARCHES[@]}; do
-		repo_lock ${repo} ${pkgarch} || exit 1
+for repo in "${repos[@]}"; do
+	for pkgarch in "${ARCHES[@]}"; do
+		repo_lock "${repo}" "${pkgarch}" || exit 1
 	done
 done
 
 # check if packages are valid
-for repo in ${repos[@]}; do
+for repo in "${repos[@]}"; do
 	if ! check_repo_permission "${repo}"; then
 		die "You don't have permission to update packages in %s" "$repo"
 	fi
 	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXTS}))
 	if (( $? == 0 )); then
-		for pkg in ${pkgs[@]}; do
+		for pkg in "${pkgs[@]}"; do
 			if [[ -h ${pkg} ]]; then
 				die "Package %s is a symbolic link" "$repo/${pkg##*/}"
 			fi
@@ -62,7 +62,7 @@ for repo in ${repos[@]}; do
 				die "Package %s was not built in a chroot" "$repo/${pkg##*/}"
 			fi
 		done
-		if ! check_splitpkgs ${repo} ${pkgs[@]}; then
+		if ! check_splitpkgs "${repo}" "${pkgs[@]}"; then
 			die "Missing split packages for %s" "$repo"
 		fi
 	else
@@ -70,13 +70,13 @@ for repo in ${repos[@]}; do
 	fi
 done
 
-for repo in ${repos[@]}; do
+for repo in "${repos[@]}"; do
 	msg "Updating [%s]..." "$repo"
 	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXTS} 2>/dev/null))
-	for pkgarch in ${ARCHES[@]}; do
+	for pkgarch in "${ARCHES[@]}"; do
 		add_pkgs=()
-		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-${pkgarch}${PKGEXTS} 2>/dev/null))
-		for pkg in ${arch_pkgs[@]} ${any_pkgs[@]}; do
+		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*"-${pkgarch}"${PKGEXTS} 2>/dev/null))
+		for pkg in "${arch_pkgs[@]}" "${any_pkgs[@]}"; do
 			pkgfile="${pkg##*/}"
 			msg2 '%s (%s)' "$pkgfile" "$pkgarch"
 			# any packages might have been moved by the previous run
@@ -99,8 +99,8 @@ for repo in ${repos[@]}; do
 	done
 done
 
-for repo in ${repos[@]}; do
-	for pkgarch in ${ARCHES[@]}; do
-		repo_unlock ${repo} ${pkgarch}
+for repo in "${repos[@]}"; do
+	for pkgarch in "${ARCHES[@]}"; do
+		repo_unlock "${repo}" "${pkgarch}"
 	done
 done

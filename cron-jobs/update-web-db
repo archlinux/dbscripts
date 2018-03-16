@@ -1,7 +1,7 @@
 #!/bin/bash
 
-. "$(dirname $0)/../config"
-. "$(dirname $0)/../db-functions"
+. "$(dirname "$0")/../config"
+. "$(dirname "$0")/../db-functions"
 
 # setup paths
 SPATH="/srv/http/archweb"
@@ -43,26 +43,26 @@ case "$cmd" in
 esac
 
 # Lock the repos and get a copy of the db files to work on
-for repo in ${REPOS[@]}; do
-	for arch in ${ARCHES[@]}; do
-		repo_lock ${repo} ${arch} || exit 1
+for repo in "${REPOS[@]}"; do
+	for arch in "${ARCHES[@]}"; do
+		repo_lock "${repo}" "${arch}" || exit 1
 		dbfile="/srv/ftp/${repo}/os/${arch}/${repo}${dbfileext}"
 		if [[ -f ${dbfile} ]]; then
 			mkdir -p "${WORKDIR}/${repo}/${arch}"
 			cp "${dbfile}" "${WORKDIR}/${repo}/${arch}/${repo}${dbfileext}"
 		fi
-		repo_unlock ${repo} ${arch}
+		repo_unlock "${repo}" "${arch}"
 	done
 done
 
 # Run reporead on our db copy
-pushd $SPATH >/dev/null
-for repo in ${REPOS[@]}; do
-	for arch in ${ARCHES[@]}; do
+pushd "$SPATH" >/dev/null
+for repo in "${REPOS[@]}"; do
+	for arch in "${ARCHES[@]}"; do
 		dbcopy="${WORKDIR}/${repo}/${arch}/${repo}${dbfileext}"
 		if [[ -f ${dbcopy} ]]; then
 			echo "Updating ${repo}-${arch}" >> "${LOGOUT}"
-			./manage.py reporead ${flags} ${arch} "${dbcopy}" >> "${LOGOUT}" 2>&1
+			./manage.py reporead "${flags}" "${arch}" "${dbcopy}" >> "${LOGOUT}" 2>&1
 			echo "" >> "${LOGOUT}"
 		fi
 	done

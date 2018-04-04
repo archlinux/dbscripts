@@ -111,7 +111,7 @@ __checkRepoRemovedPackage() {
 	ftpdir-cleanup
 
 	for arch in ${arches[@]}; do
-		__checkRepoRemovedPackage extra ${pkg[0]} ${arch}
+		__checkRepoRemovedPackage extra ${pkgs[0]} ${arch}
 	done
 
 	checkRemovedPackage extra ${pkgs[0]}

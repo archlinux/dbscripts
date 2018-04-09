@@ -16,11 +16,22 @@
 #      a non-core package)
 #   8. Circular dependencies
 
-import os,re,commands,getopt,sys,tarfile
+import commands
+import getopt
+import os
 import pdb
+import re
+import subprocess
+import sys
+import tarfile
+
+from os.path import join as j
 
 import ctypes
 _alpm = ctypes.cdll.LoadLibrary("libalpm.so")
+
+import srcinfo.parse
+import srcinfo.utils
 
 DBEXT='.db.tar.gz'
 
@@ -59,58 +70,57 @@ class Depend:
         self.version = version
         self.mod = mod
 
+def parse_pkgbuild(path):
+    pkgs = []
+    out = subprocess.run(['makepkg', '--printsrcinfo'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    if out.returncode == 0:
+        (metadata, errors) = srcinfo.parse.parse_srcinfo(out.stdout)
+        for name in metadata['pkgname']:
+            pkginfo = srcinfo.utils.get_merged_package(name, metadata)
+            pkg = PacmanPackage()
+            pkg.path = path
+
+            pkg.name = pkginfo['pkgname']
+            ver = '-'.join([pkginfo['pkgver'], pkginfo['pkgrel']])
+            pkg.version = ':'.join(filter(None, [pkginfo.get('epoch'), ver]))
+            pkg.base = pkginfo['pkgbase']
+            pkg.archs = pkginfo['arch']
+            if pkginfo['depends']:
+                pkg.deps = pkginfo['depends']
+            if pkginfo['makedepends']:
+                pkg.makedeps = pkginfo['makedepends']
+            if pkginfo['provides']:
+                pkg.provides = pkginfo['provides']
+            if pkginfo['conflicts']:
+                pkg.conflicts = pkginfo['conflicts']
+
+            pkgs += pkg
+        return pkgs
+    else:
+        invalid_pkgbuilds.append(j(root, dir, 'PKGBUILD'))
+        # out.stderr is useful information, what to do with it?
+
 def parse_pkgbuilds(repos,arch):
     for absroot in absroots:
-        for repo in repos:
-            cmd = os.path.dirname(os.path.realpath(sys.argv[0])) + '/parse_pkgbuilds.sh '
-            cmd += arch + ' ' + absroot + '/' + repo
-            (status,output) = commands.getstatusoutput(cmd)
-            if status != 0:
-                print "Error : failed to run '%s'" % cmd
-                sys.exit()
-            parse_data(repo,output)
-
-def parse_data(repo,data):
-    attrname = None
-
-    for line in data.split('\n'):
-        if line.startswith('%'):
-            attrname = line.strip('%').lower()
-        elif line.strip() == '':
-            attrname = None
-        elif attrname == "invalid":
-            if repo in repos:
-                invalid_pkgbuilds.append(line)
-        elif attrname == "missing":
-            if repo in repos:
-                missing_pkgbuilds.append(line)
-        elif attrname == "name":
-            pkg = PacmanPackage()
-            pkg.name = line
-            pkg.repo = repo
-            dup = None
-            if pkg.name in packages:
-                dup = packages[pkg.name]
-            else:
-                packages[pkg.name] = pkg
-        elif attrname == "base":
-            pkg.base = line
-        elif attrname == "version":
-            pkg.version = line
-        elif attrname == "path":
-            pkg.path = line
-            if dup != None and (pkg.repo in repos or dup.repo in repos):
-                dups.append(pkg.path + " vs. " + dup.path)
-        elif attrname == "arch":
-            pkg.archs.append(line)
-        elif attrname == "depends":
-            pkg.deps.append(line)
-        elif attrname == "makedepends":
-            pkg.makedeps.append(line)
-        elif attrname == "conflicts":
-            pkg.conflicts.append(line)
-        elif attrname == "provides":
-            pkg.provides.append(line)
+            for root, dirs, files in os.walk(j(absroot, repo)):
+                dirs[:] = [d for d in dirs if (not d[0] == '.' and not d == 'trunk')]
+                # which dirs do we even check with abs dead and gone?
+                for dir in dirs:
+                    splitdir = dir.split('-')
+                    # should only look at desired subdirs of repos/
+                    # TODO: wait a minute, what about -any? Also what about the elusive repos/roguerepo-x86_64/
+                    if not (splitdir[0] in repos and splitdir[1] == arch):
+                        dirs.remove(dir)
+                    if 'PKGBUILD' in files:
+                        pkgs = parse_pkgbuild(j(root, dir))
+                        for pkg in pkgs:
+                            pkg.repo = repo
+                            if pkg.name in packages:
+                                dups.append(pkg.path + " vs. " + packages[pkg.name].path)
+                            else:
+                                packages[pkg.name] = pkg
+                    else:
+                        missing_pkgbuilds.append(j(root, dir))
 
 def parse_dbs(repos,arch):
     dbpkgs = {}

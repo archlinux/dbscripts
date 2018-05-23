@@ -60,8 +60,10 @@ done
 
 msg "Moving packages from [%s] to [%s]..." "$repo_from" "$repo_to"
 
-declare -A add_pkgs
-declare -A remove_pkgs
+for arch in "${ARCHES[@]}"; do
+	declare -a add_pkgs_$arch
+	declare -a remove_pkgs_$arch
+done
 for pkgbase in "${args[@]:2}"; do
 	tag_list=""
 	for pkgarch in "${ARCHES[@]}" 'any'; do
@@ -95,6 +97,8 @@ for pkgbase in "${args[@]:2}"; do
 
 			for pkgname in "${pkgnames[@]}"; do
 				for tarch in "${tarches[@]}"; do
+					declare -n add_pkgs="add_pkgs_${tarch}"
+					declare -n remove_pkgs="remove_pkgs_${tarch}"
 					pkgpath=$(getpkgfile "${ftppath_from}/${tarch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS})
 					pkgfile="${pkgpath##*/}"
 
@@ -102,8 +106,8 @@ for pkgbase in "${args[@]:2}"; do
 					if [[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]]; then
 						ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "${ftppath_to}/${tarch}/"
 					fi
-					add_pkgs[${tarch}]+="${FTP_BASE}/${PKGPOOL}/${pkgfile} "
-					remove_pkgs[${tarch}]+="${pkgname} "
+					add_pkgs+=("${FTP_BASE}/${PKGPOOL}/${pkgfile}")
+					remove_pkgs+=("${pkgname}")
 				done
 			done
 		fi
@@ -113,9 +117,11 @@ for pkgbase in "${args[@]:2}"; do
 done
 
 for tarch in "${ARCHES[@]}"; do
-	if [[ -n ${add_pkgs[${tarch}]} ]]; then
-		arch_repo_modify add "${repo_to}" "${tarch}" ${add_pkgs[${tarch}]}
-		arch_repo_modify remove "${repo_from}" "${tarch}" ${remove_pkgs[${tarch}]}
+	declare -n add_pkgs="add_pkgs_${tarch}"
+	declare -n remove_pkgs="remove_pkgs_${tarch}"
+	if [[ -n ${add_pkgs[@]} ]]; then
+		arch_repo_modify add "${repo_to}" "${tarch}" "${add_pkgs[@]}"
+		arch_repo_modify remove "${repo_from}" "${tarch}" "${remove_pkgs[@]}"
 	fi
 done
 

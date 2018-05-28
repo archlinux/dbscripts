@@ -1,5 +1,5 @@
 IMAGE:=dbscripts/test
-RUN_OPTIONS:=--rm --network=none -v $(PWD):/dbscripts:ro --tmpfs=/tmp:exec --tmpfs=/build -w /dbscripts/test
+RUN_OPTIONS:=--rm --network=none -v $(PWD):/dbscripts:ro --tmpfs=/tmp:exec -w /dbscripts/test
 
 test-image:
 	docker build --pull -t $(IMAGE) test

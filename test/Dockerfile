@@ -2,8 +2,7 @@ FROM archlinux/base
 RUN pacman -Syu --noconfirm --needed sudo fakeroot awk subversion make kcov bash-bats gettext grep
 RUN pacman-key --init
 RUN echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel
-RUN useradd -N -g users -G wheel -m tester
-RUN install -d -m 1777 /build
+RUN useradd -N -g users -G wheel -d /build -m tester
 USER tester
 RUN echo -e "\
 Key-Type: RSA\n\

@@ -6,9 +6,6 @@
 shopt -s extglob globstar nullglob
 
 
-# Some PKGBUILDs need CARCH to be set
-CARCH="x86_64"
-
 # Useful functions
 UMASK=""
 set_umask () {
@@ -458,6 +455,21 @@ arch_expac() {
 
 	fakeroot pacman --config="${dir}/pacman.conf" -Sy >/dev/null
 	expac --config="${dir}/pacman.conf" --sync "${args[@]}"
+}
+
+# usage: arch_expac_pkgbase repo arch format <pkgname|pkgbase>
+# Like arch_expac, but 'target' may be a pkgbase, instead of the usual
+# pkgname.
+# Only accepts one target.
+arch_expac_pkgbase() {
+	local repo=$1
+	local arch=$2
+	local format=$3
+	local pkgbase=$4
+	arch_expac "$repo" "$arch" "%e %n $format" |
+		awk -F' ' -v pkgbase="$pkgbase" \
+			'$1 == pkgbase || $2 == pkgbase' |
+		cut -d' ' -f3-
 }
 
 arch_repo_modify() {

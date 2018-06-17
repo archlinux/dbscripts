@@ -28,16 +28,23 @@ done
 arch_svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
 for pkgbase in "${args[@]:2}"; do
 	arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
+	found=false
 	for tarch in "${ARCHES[@]}"; do
 		while read -r pkgarch pkgfile; do
+
 			svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-			if [[ -r ${svnrepo_from}/PKGBUILD ]]; then
-				getpkgfile "${ftppath_from}/${tarch}/${pkgfile}" >/dev/null
-				continue 3
+			if ! [[ -r ${svnrepo_from}/PKGBUILD ]]; then
+				die "%s not found in %s-%s" "$pkgbase" "$repo_from" "$pkgarch"
 			fi
+
+			# getpkgfile will `exit` for us if it fails;
+			# no need to check its result
+			getpkgfile "${ftppath_from}/${tarch}/${pkgfile}" >/dev/null
+
+			found=true
 		done < <(arch_expac_pkgbase "$repo_from" "$tarch" '%a %f' "$pkgbase")
 	done
-	die "%s not found in %s" "$pkgbase" "$repo_from"
+	[[ $found = true ]] || die "%s not found in %s" "$pkgbase" "$repo_from"
 done
 
 msg "Moving packages from [%s] to [%s]..." "$repo_from" "$repo_to"

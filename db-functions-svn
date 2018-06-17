@@ -34,12 +34,12 @@ _svn_checkout() {
 # move it to a different repo.
 vcs_move_preflight_check() {
 	local repo_from=$1
-	local pkgarch=$2
+	local tarch=$2
 	local pkgbase=$3
 
 	_svn_checkout "$pkgbase"
-	local svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-	[[ -r ${svnrepo_from}/PKGBUILD ]]
+	local reposdir="${WORKDIR}/svn/${pkgbase}/repos"
+	[[ -r ${reposdir}/${repo_from}-${tarch}/PKGBUILD || -r ${reposdir}/${repo_from}-any/PKGBUILD ]]
 }
 
 # usage: vcs_move_start repo_from repo_to pkgbase
@@ -56,42 +56,50 @@ vcs_move_start() {
 	svn_move_tag_list=""
 }
 
-# usage: vcs_move_arch pkgarch
+# usage: vcs_move_arch tarch
 #
 # Add an architecture to a VCS transaction started by vcs_move_start.
 #
 # If the "from" PKGBUILD doesn't exist, this is a no-op (not an
-# error), so that it can be run for each arch, and the invoker doesn't
-# need to worry about hoisting it out of the loop if arch=(any).  If
-# the nonexistence is such that it should be an error, we count on
-# vcs_move_preflight_check having already caught that.
+# error).  This is because we expect to be called exactly once for
+# each tarch (eg: x86_64, i686), but if arch=(any) then we only need
+# do the work once; on the subsequent calls the "from" PKGBUILD won't
+# exist anymore.  If the source PKGBUILD never existed, we expect that
+# to have already been caught by vcs_move_preflight_check.
 vcs_move_arch() {
-	local pkgarch=$1
+	local tarch=$1
 
 	local repo_from=$svn_move_repo_from
 	local repo_to=$svn_move_repo_to
 	local pkgbase=$svn_move_pkgbase
 
+	local pkgarch
+	if [[ -r "${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${tarch}/PKGBUILD" ]]; then
+		pkgarch=$tarch
+	elif [[ -r "${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-any/PKGBUILD" ]]; then
+		pkgarch=any
+	else
+		return 0
+	fi
+
 	local svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
 	local svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
-	if [[ -f ${svnrepo_from}/PKGBUILD ]]; then
-		msg2 "%s (%s)" "$pkgbase" "$pkgarch"
+	msg2 "%s (%s)" "$pkgbase" "$pkgarch"
 
-		if [[ -d ${svnrepo_to} ]]; then
-			for file in $(arch_svn ls "${svnrepo_to}"); do
-				arch_svn rm -q "${svnrepo_to}/$file@"
-			done
-		else
-			mkdir "${svnrepo_to}"
-			arch_svn add -q "${svnrepo_to}"
-		fi
-
-		for file in $(arch_svn ls "${svnrepo_from}"); do
-			arch_svn mv -q -r HEAD "${svnrepo_from}/$file@" "${svnrepo_to}/"
+	if [[ -d ${svnrepo_to} ]]; then
+		for file in $(arch_svn ls "${svnrepo_to}"); do
+			arch_svn rm -q "${svnrepo_to}/$file@"
 		done
-		arch_svn rm --force -q "${svnrepo_from}"
-		svn_move_tag_list+=", $pkgarch"
+	else
+		mkdir "${svnrepo_to}"
+		arch_svn add -q "${svnrepo_to}"
 	fi
+
+	for file in $(arch_svn ls "${svnrepo_from}"); do
+		arch_svn mv -q -r HEAD "${svnrepo_from}/$file@" "${svnrepo_to}/"
+	done
+	arch_svn rm --force -q "${svnrepo_from}"
+	svn_move_tag_list+=", $pkgarch"
 }
 
 # usage: vcs_move_finish

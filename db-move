@@ -28,10 +28,10 @@ done
 for pkgbase in "${args[@]:2}"; do
 	found=false
 	for tarch in "${ARCHES[@]}"; do
-		while read -r pkgarch pkgfile; do
+		while read -r pkgfile; do
 
-			if ! vcs_move_preflight_check "$repo_from" "$pkgarch" "$pkgbase"; then
-				die "%s not found in %s-%s" "$pkgbase" "$repo_from" "$pkgarch"
+			if ! vcs_move_preflight_check "$repo_from" "$tarch" "$pkgbase"; then
+				die "%s not found in %s-%s" "$pkgbase" "$repo_from" "$tarch"
 			fi
 
 			# getpkgfile will `exit` for us if it fails;
@@ -39,7 +39,7 @@ for pkgbase in "${args[@]:2}"; do
 			getpkgfile "${ftppath_from}/${tarch}/${pkgfile}" >/dev/null
 
 			found=true
-		done < <(arch_expac_pkgbase "$repo_from" "$tarch" '%a %f' "$pkgbase")
+		done < <(arch_expac_pkgbase "$repo_from" "$tarch" '%f' "$pkgbase")
 	done
 	[[ $found = true ]] || die "%s not found in %s" "$pkgbase" "$repo_from"
 done
@@ -53,9 +53,8 @@ done
 for pkgbase in "${args[@]:2}"; do
 	vcs_move_start "$repo_from" "$repo_to" "$pkgbase"
 	for tarch in "${ARCHES[@]}"; do
-		while read -r pkgname pkgver pkgarch pkgfile; do
-			vcs_move_arch "$pkgarch"
-
+		vcs_move_arch "$tarch"
+		while read -r pkgname pkgver pkgfile; do
 			declare -n add_pkgs="add_pkgs_${tarch}"
 			declare -n remove_pkgs="remove_pkgs_${tarch}"
 
@@ -65,7 +64,7 @@ for pkgbase in "${args[@]:2}"; do
 			fi
 			add_pkgs+=("${FTP_BASE}/${PKGPOOL}/${pkgfile}")
 			remove_pkgs+=("${pkgname}")
-		done < <(arch_expac_pkgbase "$repo_from" "$tarch" '%n %v %a %f' "$pkgbase")
+		done < <(arch_expac_pkgbase "$repo_from" "$tarch" '%n %v %f' "$pkgbase")
 	done
 	vcs_move_finish
 done

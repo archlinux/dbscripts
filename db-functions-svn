@@ -1,5 +1,9 @@
 #!/hint/bash
 
+# Within this file (and in most of dbscripts, really):
+# - "pkgarch" refers to the package architecture; may be "any"
+# - "tarch" refers to the repo architecture; may NOT be "any"
+
 if [[ -n ${SVNUSER} ]]; then
 	setfacl -m u:"${SVNUSER}":rwx "${WORKDIR}"
 	setfacl -m d:u:"${USER}":rwx "${WORKDIR}"
@@ -12,4 +16,124 @@ arch_svn() {
 	else
 		sudo -u "${SVNUSER}" -- /usr/bin/svn --username "${USER}" "${@}"
 	fi
+}
+
+_svn_checkout() {
+	local pkgbase=$1
+	if ! [[ -d ${WORKDIR}/svn ]]; then
+		arch_svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
+	fi
+	if ! [[ -d ${WORKDIR}/svn/${pkgbase} ]]; then
+		arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
+	fi
+}
+
+# usage: vcs_move_preflight_check repo_from pkgarch pkgbase
+#
+# Verify that $pkgbase exists in $repo_from in SVN, such that we can
+# move it to a different repo.
+vcs_move_preflight_check() {
+	local repo_from=$1
+	local pkgarch=$2
+	local pkgbase=$3
+
+	_svn_checkout "$pkgbase"
+	local svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
+	[[ -r ${svnrepo_from}/PKGBUILD ]]
+}
+
+# usage: vcs_move_start repo_from repo_to pkgbase
+#
+# Begin a VCS transaction moving $pkgbase from $repo_from to $repo_to.
+# This should be followed by a call to vcs_move_arch for each
+# architecture we're movin it for, and finally by a call to
+# vcs_move_finish.
+vcs_move_start() {
+	svn_move_repo_from=$1
+	svn_move_repo_to=$2
+	svn_move_pkgbase=$3
+
+	svn_move_tag_list=""
+}
+
+# usage: vcs_move_arch pkgarch
+#
+# Add an architecture to a VCS transaction started by vcs_move_start.
+#
+# If the "from" PKGBUILD doesn't exist, this is a no-op (not an
+# error), so that it can be run for each arch, and the invoker doesn't
+# need to worry about hoisting it out of the loop if arch=(any).  If
+# the nonexistence is such that it should be an error, we count on
+# vcs_move_preflight_check having already caught that.
+vcs_move_arch() {
+	local pkgarch=$1
+
+	local repo_from=$svn_move_repo_from
+	local repo_to=$svn_move_repo_to
+	local pkgbase=$svn_move_pkgbase
+
+	local svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
+	local svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
+	if [[ -f ${svnrepo_from}/PKGBUILD ]]; then
+		msg2 "%s (%s)" "$pkgbase" "$pkgarch"
+
+		if [[ -d ${svnrepo_to} ]]; then
+			for file in $(arch_svn ls "${svnrepo_to}"); do
+				arch_svn rm -q "${svnrepo_to}/$file@"
+			done
+		else
+			mkdir "${svnrepo_to}"
+			arch_svn add -q "${svnrepo_to}"
+		fi
+
+		for file in $(arch_svn ls "${svnrepo_from}"); do
+			arch_svn mv -q -r HEAD "${svnrepo_from}/$file@" "${svnrepo_to}/"
+		done
+		arch_svn rm --force -q "${svnrepo_from}"
+		svn_move_tag_list+=", $pkgarch"
+	fi
+}
+
+# usage: vcs_move_finish
+#
+# Commit/finalize a VCS transaction started by vcs_move_start.
+vcs_move_finish() {
+	local repo_from=$svn_move_repo_from
+	local repo_to=$svn_move_repo_to
+	local pkgbase=$svn_move_pkgbase
+
+	local tag_list="${svn_move_tag_list#, }"
+	arch_svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"
+}
+
+# usage: vcs_remove repo pkgarch pkgbase
+#
+# Remove the given package in VCS.
+vcs_remove() {
+	local repo=$1
+	local arch=$2
+	local pkgbase=$3
+
+	local svnrepo="$repo-$arch"
+
+	_svn_checkout "$pkgbase"
+	if [[ -d ${WORKDIR}/svn/$pkgbase/repos/$svnrepo ]]; then
+		arch_svn rm --force -q "${WORKDIR}/svn/$pkgbase/repos/$svnrepo"
+		arch_svn commit -q "${WORKDIR}/svn/$pkgbase" -m "${0##*/}: $pkgbase removed by $(id -un)"
+	else
+		warning "pkgbase '%s' not found in svn; unable to commit removal to svn" "$pkgbase"
+	fi
+}
+
+# usage: vcs_export repo pkgarch pkgbase dest
+#
+# Export the VCS files for a package to the given $dest directory.
+vcs_export() {
+	local repo=$1
+	local pkgarch=$2
+	local pkgbase=$3
+	local dest=$4
+
+	arch_svn export -q "${SVNREPO}/${pkgbase}/repos/${repo}-${pkgarch}" \
+		 "${dest}" >/dev/null 2>&1
 }

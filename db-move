@@ -25,15 +25,12 @@ for pkgarch in "${ARCHES[@]}"; do
 done
 
 # check if packages to be moved exist in svn and ftp dir
-arch_svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
 for pkgbase in "${args[@]:2}"; do
-	arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
 	found=false
 	for tarch in "${ARCHES[@]}"; do
 		while read -r pkgarch pkgfile; do
 
-			svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-			if ! [[ -r ${svnrepo_from}/PKGBUILD ]]; then
+			if ! vcs_move_preflight_check "$repo_from" "$pkgarch" "$pkgbase"; then
 				die "%s not found in %s-%s" "$pkgbase" "$repo_from" "$pkgarch"
 			fi
 
@@ -54,29 +51,10 @@ for arch in "${ARCHES[@]}"; do
 	declare -a remove_pkgs_$arch
 done
 for pkgbase in "${args[@]:2}"; do
-	tag_list=""
+	vcs_move_start "$repo_from" "$repo_to" "$pkgbase"
 	for tarch in "${ARCHES[@]}"; do
 		while read -r pkgname pkgver pkgarch pkgfile; do
-			svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-			svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
-			if [[ -f ${svnrepo_from}/PKGBUILD ]]; then
-				msg2 "%s (%s)" "$pkgbase" "$pkgarch"
-
-				if [[ -d ${svnrepo_to} ]]; then
-					for file in $(arch_svn ls "${svnrepo_to}"); do
-						arch_svn rm -q "${svnrepo_to}/$file@"
-					done
-				else
-					mkdir "${svnrepo_to}"
-					arch_svn add -q "${svnrepo_to}"
-				fi
-
-				for file in $(arch_svn ls "${svnrepo_from}"); do
-					arch_svn mv -q -r HEAD "${svnrepo_from}/$file@" "${svnrepo_to}/"
-				done
-				arch_svn rm --force -q "${svnrepo_from}"
-				tag_list+=", $pkgarch"
-			fi
+			vcs_move_arch "$pkgarch"
 
 			declare -n add_pkgs="add_pkgs_${tarch}"
 			declare -n remove_pkgs="remove_pkgs_${tarch}"
@@ -89,8 +67,7 @@ for pkgbase in "${args[@]:2}"; do
 			remove_pkgs+=("${pkgname}")
 		done < <(arch_expac_pkgbase "$repo_from" "$tarch" '%n %v %a %f' "$pkgbase")
 	done
-	tag_list="${tag_list#, }"
-	arch_svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"
+	vcs_move_finish
 done
 
 for tarch in "${ARCHES[@]}"; do

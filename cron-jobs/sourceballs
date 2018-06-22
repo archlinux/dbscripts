@@ -19,24 +19,19 @@ renice +10 -p $$ > /dev/null
 # Create a readable file for each repo with the following format
 # <pkgbase|pkgname> <pkgver>-<pkgrel> <arch> <license>[ <license>]
 for repo in "${PKGREPOS[@]}"; do
+	# The %n+awk+cut bit is because we can't trust %e, as makepkg
+	# <5.1 didn't set pkgbase in .PKGINFO for non-split packages
+	# when when pkgbase==pkgname; so until all packages have been
+	# rebuilt with makepkg 5.1, we need to look at both pkgbase
+	# (%e) and pkgname (%n) to reliably get pkgbase.
 	for arch in "${ARCHES[@]}"; do
 		# Repo does not exist; skip it
 		if [[ ! -f ${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} ]]; then
 			continue
 		fi
-		bsdtar -xOf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" \
-			| awk '/^%NAME%/ { getline b };
-				/^%BASE%/ { getline b };
-				/^%VERSION%/ { getline v };
-				/^%LICENSE%/,/^$/ {
-					if ( !/^%LICENSE%/ ) { l=l" "$0 }
-					};
-				/^%ARCH%/ {
-					getline a;
-					printf "%s %s %s %s\n", b, v, a, l;
-					l="";
-				}'
-	done | sort -u > "${WORKDIR}/db-${repo}"
+		arch_expac "$repo" "$arch" '%n %e %v %a %L'
+	done | awk -F' ' '$2 == "(null)" { $2 = $1 } { print }' | cut -d' ' -f2- |
+		sort -u > "${WORKDIR}/db-${repo}"
 done
 
 for repo in "${PKGREPOS[@]}"; do

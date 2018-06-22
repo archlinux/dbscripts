@@ -436,6 +436,30 @@ set_repo_permission() {
 	fi
 }
 
+# usage: arch_expac repo arch expac_args...
+arch_expac() {
+	local repo=$1
+	local arch=$2
+	local args=("${@:3}")
+	local dir="${WORKDIR}/expac-${repo}-${arch}"
+
+	if ! [[ -d $dir ]]; then
+		mkdir -p -- "${dir}/root"
+		cat >"${dir}/pacman.conf" <<-EOT
+		[options]
+		RootDir = ${dir}/root
+		DBPath = ${dir}/root
+		Architecture = ${arch}
+
+		[$repo]
+		Server = file://${FTP_BASE}/\$repo/os/\$arch
+		EOT
+	fi
+
+	fakeroot pacman --config="${dir}/pacman.conf" -Sy >/dev/null
+	expac --config="${dir}/pacman.conf" --sync "${args[@]}"
+}
+
 arch_repo_modify() {
 	local action=$1
 	local repo=$2

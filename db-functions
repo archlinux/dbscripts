@@ -294,6 +294,31 @@ getpkgfiles() {
 	echo "${files[@]}"
 }
 
+# usage: dbquery repo arch filter_expr output_expr
+dbquery() {
+	local repo=$1
+	local arch=$2
+	local filter=$3
+	local output=$4
+	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}.db"
+
+	python3 - "$dbfile" "$filter" "$output" <<-'EOT'
+		import os.path
+		import sys
+		import tempfile
+		import pyalpm
+		db_dir, db_file = os.path.split(os.path.abspath(sys.argv[1]))
+		with tempfile.TemporaryDirectory() as tmpdirname:
+		    handle = pyalpm.Handle(tmpdirname, tmpdirname)
+		    db = handle.register_syncdb(db_file[:-3], 0)
+		    db.servers = ["file://{}".format(db_dir)]
+		    db.update(False)
+		    for pkg in db.search(".*"):
+		        if eval(sys.argv[2], {}, {"pkg": pkg}):
+		            print(eval(sys.argv[3], {}, {"pkg": pkg}))
+		EOT
+}
+
 check_pkgfile() {
 	local pkgfile=$1
 

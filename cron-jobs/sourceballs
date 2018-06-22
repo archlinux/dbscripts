@@ -24,18 +24,8 @@ for repo in "${PKGREPOS[@]}"; do
 		if [[ ! -f ${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT} ]]; then
 			continue
 		fi
-		bsdtar -xOf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" \
-			| awk '/^%NAME%/ { getline b };
-				/^%BASE%/ { getline b };
-				/^%VERSION%/ { getline v };
-				/^%LICENSE%/,/^$/ {
-					if ( !/^%LICENSE%/ ) { l=l" "$0 }
-					};
-				/^%ARCH%/ {
-					getline a;
-					printf "%s %s %s %s\n", b, v, a, l;
-					l="";
-				}'
+		dbquery "$repo" "$arch" True \
+			'f"{pkg.base or pkg.name} {pkg.version} {pkg.arch} {'\'' '\''.join(pkg.licenses)}"'
 	done | sort -u > "${WORKDIR}/db-${repo}"
 done
 

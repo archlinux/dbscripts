@@ -39,6 +39,25 @@ load ../lib/common
 	done
 }
 
+@test "move single-arch packages" {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-single-arch' 'pkg-simple-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage testing ${pkgbase}
+	done
+
+	db-update
+
+	db-move testing extra pkg-single-arch
+
+	checkRemovedPackage testing pkg-single-arch
+	checkPackage extra pkg-single-arch
+	checkPackage testing pkg-simple-b
+}
+
 @test "move epoch packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-epoch')

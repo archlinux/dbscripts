@@ -25,3 +25,18 @@ source_pkgbuild() {
 
 	. <(arch_svn cat "${SVNREPO}/${pkgbase}/${tag}/PKGBUILD" 2>/dev/null || echo "false")
 }
+
+# Export PKGBUILD resource(s) from the package's git/svn/whatever repo.
+# Depending on how the VCS is used the tag might be "trunk" or "repos/$repo-$arch"
+# or the full package version (epoch:pkgver-pkgrel) or any other recognized tag.
+export_from_vcs() {
+	local pkgbase=${1}
+	local tag=${2}
+	local src=${3}
+	local dest=${4}
+
+	if [[ ! -e ${dest} ]]; then
+		mkdir -p "${dest%/?*}"
+		arch_svn export -q "${SVNREPO}/${pkgbase}/${tag}/${src}" "${dest}" 2>/dev/null
+	fi
+}

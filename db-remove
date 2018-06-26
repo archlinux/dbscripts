@@ -32,10 +32,9 @@ done
 remove_pkgs=()
 for pkgbase in "${pkgbases[@]}"; do
 	msg "Removing %s from [%s]..." "$pkgbase" "$repo"
-	arch_svn checkout -q "${SVNREPO}/${pkgbase}" "${WORKDIR}/svn/${pkgbase}" >/dev/null
 
-	if [[ -d ${WORKDIR}/svn/$pkgbase/repos/$svnrepo ]]; then
-		remove_pkgs+=($(. "${WORKDIR}/svn/$pkgbase/repos/$svnrepo/PKGBUILD"; echo ${pkgname[@]}))
+	if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "repos/${svnrepo}" && echo ${pkgname[@]})); then
+		arch_svn checkout -q "${SVNREPO}/${pkgbase}" "${WORKDIR}/svn/${pkgbase}" >/dev/null
 		arch_svn rm --force -q "${WORKDIR}/svn/$pkgbase/repos/$svnrepo"
 		arch_svn commit -q "${WORKDIR}/svn/$pkgbase" -m "${0##*/}: $pkgbase removed by $(id -un)"
 	else

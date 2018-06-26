@@ -39,11 +39,6 @@ mv_acl() {
 
 # set up general environment
 WORKDIR=$(mktemp -dt "${0##*/}.XXXXXXXXXX")
-if [[ -n ${SVNUSER} ]]; then
-	setfacl -m u:"${SVNUSER}":rwx "${WORKDIR}"
-	setfacl -m d:u:"${USER}":rwx "${WORKDIR}"
-	setfacl -m d:u:"${SVNUSER}":rwx "${WORKDIR}"
-fi
 LOCKS=()
 REPO_MODIFIED=0
 
@@ -306,27 +301,24 @@ check_pkgfile() {
 	[[ ${pkgfile##*/} = "${pkgname}-${pkgver}-${pkgarch}"* ]]
 }
 
-check_pkgsvn() {
+# Check that the package file is consistent with the PKGBUILD in version control
+check_pkgvcs() {
 	local pkgfile="${1}"
+	local repo="${2}"
 	local _pkgbase="$(getpkgbase "${pkgfile}")" || return 1
 	local _pkgname="$(getpkgname "${pkgfile}")" || return 1
 	local _pkgver="$(getpkgver "${pkgfile}")" || return 1
 	local _pkgarch="$(getpkgarch "${pkgfile}")" || return 1
-	local repo="${2}"
 
 	in_array "${repo}" "${PKGREPOS[@]}" || return 1
 
-	if [[ ! -f ${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase} ]]; then
-		mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
-		arch_svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
-			"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
-	fi
+	local vcsver vcsnames=()
+	read -rd'\n' vcsver vcsnames < <(source_pkgbuild "${_pkgbase}" "repos/${repo}-${_pkgarch}"; \
+	                                 get_full_version; echo "${pkgname[@]}")
+	read -ra vcsnames <<<"${vcsnames}"
 
-	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; get_full_version)"
-	[[ "${svnver}" = "${_pkgver}" ]] || return 1
-
-	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo "${pkgname[@]}"))
-	in_array "${_pkgname}" "${svnnames[@]}" || return 1
+	[[ "${vcsver}" = "${_pkgver}" ]] || return 1
+	in_array "${_pkgname}" "${vcsnames[@]}" || return 1
 
 	return 0
 }
@@ -337,7 +329,7 @@ check_splitpkgs() {
 	local pkgfiles=("${@}")
 	local pkgfile
 	local pkgdir
-	local svnname
+	local vcsname
 
 	mkdir -p "${WORKDIR}/check_splitpkgs/"
 	pushd "${WORKDIR}/check_splitpkgs" >/dev/null
@@ -350,22 +342,16 @@ check_splitpkgs() {
 		mkdir -p "${repo}/${_pkgarch}/${_pkgbase}"
 		echo "${_pkgname}" >> "${repo}/${_pkgarch}/${_pkgbase}/staging"
 
-		if [[ ! -f ${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase} ]]; then
-			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
-			arch_svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
-				"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
-		fi
-
-		local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo "${pkgname[@]}"))
-		printf '%s\n' "${svnnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/svn"
+		local vcsnames=($(source_pkgbuild "${_pkgbase}" "repos/${repo}-${_pkgarch}"; echo "${pkgname[@]}"))
+		printf '%s\n' "${vcsnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/vcs"
 	done
 	popd >/dev/null
 
 	for pkgdir in "${WORKDIR}/check_splitpkgs/${repo}"/*/*; do
 		[[ ! -d ${pkgdir} ]] && continue
 		sort -u "${pkgdir}/staging" -o "${pkgdir}/staging"
-		sort -u "${pkgdir}/svn" -o "${pkgdir}/svn"
-		if [[ ! -z "$(comm -13 "${pkgdir}/staging" "${pkgdir}/svn")" ]]; then
+		sort -u "${pkgdir}/vcs" -o "${pkgdir}/vcs"
+		if [[ ! -z "$(comm -13 "${pkgdir}/staging" "${pkgdir}/vcs")" ]]; then
 			return 1
 		fi
 	done
@@ -458,10 +444,4 @@ arch_repo_modify() {
 	REPO_MODIFIED=1
 }
 
-arch_svn() {
-	if [[ -z ${SVNUSER} ]]; then
-		/usr/bin/svn "${@}"
-	else
-		sudo -u "${SVNUSER}" -- /usr/bin/svn --username "${USER}" "${@}"
-	fi
-}
+. "$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-functions-${VCS}"

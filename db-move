@@ -77,8 +77,9 @@ for pkgbase in "${args[@]:2}"; do
 				tarches=("${pkgarch}")
 			fi
 			msg2 "%s (%s)" "$pkgbase" "${tarches[*]}"
-			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo "${pkgname[@]}"))
-			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
+			read -rd'\n' pkgver pkgnames < <(source_pkgbuild "${pkgbase}" "repos/${repo_from}-${pkgarch}"; \
+			    get_full_version; echo "${pkgname[@]}")
+			read -ra pkgnames <<<"$pkgnames"
 
 			if [[ -d ${svnrepo_to} ]]; then
 				for file in $(arch_svn ls "${svnrepo_to}"); do

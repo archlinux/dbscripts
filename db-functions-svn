@@ -1,0 +1,27 @@
+#!/hint/bash
+
+if [[ -n ${SVNUSER} ]]; then
+	setfacl -m u:"${SVNUSER}":rwx "${WORKDIR}"
+	setfacl -m d:u:"${USER}":rwx "${WORKDIR}"
+	setfacl -m d:u:"${SVNUSER}":rwx "${WORKDIR}"
+fi
+
+arch_svn() {
+	if [[ -z ${SVNUSER} ]]; then
+		/usr/bin/svn "${@}"
+	else
+		sudo -u "${SVNUSER}" -- /usr/bin/svn --username "${USER}" "${@}"
+	fi
+}
+
+# source_pkgbuild pkgbase tag
+#
+# Source the PKGBUILD from the package's git/svn/whatever repo.
+# Depending on how the VCS is used the tag might be "trunk" or "repos/$repo-$arch"
+# or the full package version (epoch:pkgver-pkgrel) or any other recognized tag.
+source_pkgbuild() {
+	local pkgbase=${1}
+	local tag=${2}
+
+	. <(arch_svn cat "${SVNREPO}/${pkgbase}/${tag}/PKGBUILD" 2>/dev/null || echo "false")
+}

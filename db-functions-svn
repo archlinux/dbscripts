@@ -1,0 +1,15 @@
+#!/hint/bash
+
+if [[ -n ${SVNUSER} ]]; then
+	setfacl -m u:"${SVNUSER}":rwx "${WORKDIR}"
+	setfacl -m d:u:"${USER}":rwx "${WORKDIR}"
+	setfacl -m d:u:"${SVNUSER}":rwx "${WORKDIR}"
+fi
+
+arch_svn() {
+	if [[ -z ${SVNUSER} ]]; then
+		/usr/bin/svn "${@}"
+	else
+		sudo -u "${SVNUSER}" -- /usr/bin/svn --username "${USER}" "${@}"
+	fi
+}

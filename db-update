@@ -47,7 +47,7 @@ for repo in "${repos[@]}"; do
 				die "Package %s does not have a valid signature" "$repo/${pkg##*/}"
 			fi
 			if ! check_pkgsvn "${pkg}" "${repo}"; then
-				die "Package %s is not consistent with svn repository" "$repo/${pkg##*/}"
+				die "Package %s is not consistent with %s repository" "$repo/${pkg##*/}" "$VCS"
 			fi
 			if ! check_pkgrepos "${pkg}"; then
 				die "Package %s already exists in another repository" "$repo/${pkg##*/}"

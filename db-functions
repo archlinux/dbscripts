@@ -36,11 +36,6 @@ mv_acl() {
 
 # set up general environment
 WORKDIR=$(mktemp -dt "${0##*/}.XXXXXXXXXX")
-if [[ -n ${SVNUSER} ]]; then
-	setfacl -m u:"${SVNUSER}":rwx "${WORKDIR}"
-	setfacl -m d:u:"${USER}":rwx "${WORKDIR}"
-	setfacl -m d:u:"${SVNUSER}":rwx "${WORKDIR}"
-fi
 LOCKS=()
 REPO_MODIFIED=0
 
@@ -494,10 +489,4 @@ arch_repo_modify() {
 	REPO_MODIFIED=1
 }
 
-arch_svn() {
-	if [[ -z ${SVNUSER} ]]; then
-		/usr/bin/svn "${@}"
-	else
-		sudo -u "${SVNUSER}" -- /usr/bin/svn --username "${USER}" "${@}"
-	fi
-}
+. "$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-functions-${VCS}"

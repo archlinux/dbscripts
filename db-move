@@ -24,7 +24,7 @@ for pkgarch in "${ARCHES[@]}"; do
 	repo_lock "${repo_from}" "${pkgarch}" || exit 1
 done
 
-# check if packages to be moved exist in svn and ftp dir
+# check if packages to be moved exist in vcs and ftp dir
 for pkgbase in "${args[@]:2}"; do
 	found=false
 	for tarch in "${ARCHES[@]}"; do

@@ -72,7 +72,7 @@ for repo in "${PKGREPOS[@]}"; do
 				continue
 			fi
 
-			# Get the sources from svn
+			# Get the sources from vcs
 			mkdir -p -m0770 "${WORKDIR}/pkgbuilds/${repo}-${pkgarch}"
 			vcs_export "$repo" "$pkgarch" "$pkgbase" \
 				"${WORKDIR}/pkgbuilds/${repo}-${pkgarch}/${pkgbase}"

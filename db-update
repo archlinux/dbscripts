@@ -46,7 +46,7 @@ for repo in "${repos[@]}"; do
 			if ! pacman-key -v "${pkg}.sig" >/dev/null 2>&1; then
 				die "Package %s does not have a valid signature" "$repo/${pkg##*/}"
 			fi
-			if ! check_pkgsvn "${pkg}" "${repo}"; then
+			if ! check_pkgvcs "${pkg}" "${repo}"; then
 				die "Package %s is not consistent with %s repository" "$repo/${pkg##*/}" "$VCS"
 			fi
 			if ! check_pkgrepos "${pkg}"; then

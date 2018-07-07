@@ -298,7 +298,7 @@ check_pkgfile() {
 	[[ ${pkgfile##*/} = "${pkgname}-${pkgver}-${pkgarch}"* ]]
 }
 
-check_pkgsvn() {
+check_pkgvcs() {
 	local pkgfile="${1}"
 	local _pkgbase="$(getpkgbase "${pkgfile}")" || return 1
 	local _pkgname="$(getpkgname "${pkgfile}")" || return 1
@@ -314,11 +314,11 @@ check_pkgsvn() {
 			"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
 	fi
 
-	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; get_full_version)"
-	[[ "${svnver}" = "${_pkgver}" ]] || return 1
+	local vcsver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; get_full_version)"
+	[[ "${vcsver}" = "${_pkgver}" ]] || return 1
 
-	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; echo "${pkgname[@]}"))
-	in_array "${_pkgname}" "${svnnames[@]}" || return 1
+	local vcsnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; echo "${pkgname[@]}"))
+	in_array "${_pkgname}" "${vcsnames[@]}" || return 1
 
 	return 0
 }
@@ -329,7 +329,7 @@ check_splitpkgs() {
 	local pkgfiles=("${@}")
 	local pkgfile
 	local pkgdir
-	local svnname
+	local vcsname
 
 	mkdir -p "${WORKDIR}/check_splitpkgs/"
 	pushd "${WORKDIR}/check_splitpkgs" >/dev/null
@@ -348,16 +348,16 @@ check_splitpkgs() {
 				"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
 		fi
 
-		local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; echo "${pkgname[@]}"))
-		printf '%s\n' "${svnnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/svn"
+		local vcsnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; echo "${pkgname[@]}"))
+		printf '%s\n' "${vcsnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/vcs"
 	done
 	popd >/dev/null
 
 	for pkgdir in "${WORKDIR}/check_splitpkgs/${repo}"/*/*; do
 		[[ ! -d ${pkgdir} ]] && continue
 		sort -u "${pkgdir}/staging" -o "${pkgdir}/staging"
-		sort -u "${pkgdir}/svn" -o "${pkgdir}/svn"
-		if [[ ! -z "$(comm -13 "${pkgdir}/staging" "${pkgdir}/svn")" ]]; then
+		sort -u "${pkgdir}/vcs" -o "${pkgdir}/vcs"
+		if [[ ! -z "$(comm -13 "${pkgdir}/staging" "${pkgdir}/vcs")" ]]; then
 			return 1
 		fi
 	done

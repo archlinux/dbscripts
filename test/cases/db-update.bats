@@ -13,20 +13,20 @@ load ../lib/common
 	db-update
 
 	for pkgbase in ${pkgs[@]}; do
-		checkPackage extra ${pkgbase}
+		checkPackage extra ${pkgbase} 1-1
 	done
 }
 
 @test "add single simple package" {
 	releasePackage extra 'pkg-single-arch'
 	db-update
-	checkPackage extra 'pkg-single-arch'
+	checkPackage extra 'pkg-single-arch' 1-1
 }
 
 @test "add single epoch package" {
 	releasePackage extra 'pkg-single-epoch'
 	db-update
-	checkPackage extra 'pkg-single-epoch'
+	checkPackage extra 'pkg-single-epoch' 1:1-1
 }
 
 @test "add any packages" {
@@ -40,7 +40,7 @@ load ../lib/common
 	db-update
 
 	for pkgbase in ${pkgs[@]}; do
-		checkPackage extra ${pkgbase}
+		checkPackage extra ${pkgbase} 1-1
 	done
 }
 
@@ -58,7 +58,7 @@ load ../lib/common
 	db-update
 
 	for pkgbase in ${pkgs[@]}; do
-		checkPackage extra ${pkgbase}
+		checkPackage extra ${pkgbase} 1-1
 	done
 }
 
@@ -71,7 +71,7 @@ load ../lib/common
 	releasePackage extra pkg-any-a
 	db-update
 
-	checkPackage extra pkg-any-a
+	checkPackage extra pkg-any-a 1-2
 }
 
 @test "update any package to different repositories at once" {
@@ -83,14 +83,14 @@ load ../lib/common
 
 	db-update
 
-	checkPackage extra pkg-any-a
-	checkPackage testing pkg-any-a
+	checkPackage extra pkg-any-a 1-1
+	checkPackage testing pkg-any-a 1-2
 }
 
 @test "update same any package to same repository fails" {
 	releasePackage extra pkg-any-a
 	db-update
-	checkPackage extra pkg-any-a
+	checkPackage extra pkg-any-a 1-1
 
 	PKGEXT=.pkg.tar.gz releasePackage extra pkg-any-a
 	run db-update
@@ -109,7 +109,7 @@ load ../lib/common
 
 	releasePackage extra pkg-any-a
 	db-update
-	checkPackage extra pkg-any-a
+	checkPackage extra pkg-any-a 1-1
 
 	releasePackage testing pkg-any-a
 	run db-update
@@ -140,7 +140,7 @@ load ../lib/common
 	releasePackage extra 'pkg-any-a'
 	releasePackage unknown 'pkg-any-b'
 	db-update
-	checkPackage extra 'pkg-any-a'
+	checkPackage extra 'pkg-any-a' 1-1
 	[ ! -e "${FTP_BASE}/unknown" ]
 	rm -rf "${STAGING}/unknown/"
 }

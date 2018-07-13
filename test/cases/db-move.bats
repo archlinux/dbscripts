@@ -15,8 +15,8 @@ load ../lib/common
 	db-move testing extra pkg-simple-a
 
 	checkRemovedPackage testing pkg-simple-a
-	checkPackage extra pkg-simple-a
-	checkPackage testing pkg-simple-b
+	checkPackage extra pkg-simple-a 1-1
+	checkPackage testing pkg-simple-b 1-1
 }
 
 @test "move multiple packages" {
@@ -35,7 +35,7 @@ load ../lib/common
 
 	for pkgbase in ${pkgs[@]}; do
 		checkRemovedPackage testing ${pkgbase}
-		checkPackage extra ${pkgbase}
+		checkPackage extra ${pkgbase} 1-1
 	done
 }
 
@@ -54,8 +54,8 @@ load ../lib/common
 	db-move testing extra pkg-single-arch
 
 	checkRemovedPackage testing pkg-single-arch
-	checkPackage extra pkg-single-arch
-	checkPackage testing pkg-simple-b
+	checkPackage extra pkg-single-arch 1-1
+	checkPackage testing pkg-simple-b 1-1
 }
 
 @test "move epoch packages" {
@@ -73,7 +73,7 @@ load ../lib/common
 	db-move testing extra pkg-simple-epoch
 
 	checkRemovedPackage testing pkg-simple-epoch
-	checkPackage extra pkg-simple-epoch
+	checkPackage extra pkg-simple-epoch 1:1-1
 }
 
 @test "move any packages" {
@@ -87,9 +87,9 @@ load ../lib/common
 	db-update
 	db-move testing extra pkg-any-a
 
-	checkPackage extra pkg-any-a
+	checkPackage extra pkg-any-a 1-1
 	checkRemovedPackage testing pkg-any-a
-	checkPackage testing pkg-any-b
+	checkPackage testing pkg-any-b 1-1
 }
 
 @test "move split packages" {
@@ -106,6 +106,6 @@ load ../lib/common
 	db-update
 	db-move testing extra pkg-split-a
 
-	checkPackage extra pkg-split-a
-	checkPackage testing pkg-split-b
+	checkPackage extra pkg-split-a 1-1
+	checkPackage testing pkg-split-b 1-1
 }

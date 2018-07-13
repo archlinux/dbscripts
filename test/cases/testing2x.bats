@@ -11,6 +11,6 @@ load ../lib/common
 
 	testing2x pkg-any-a
 
-	checkPackage core pkg-any-a
+	checkPackage core pkg-any-a 1-2
 	checkRemovedPackage testing pkg-any-a
 }

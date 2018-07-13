@@ -36,7 +36,7 @@ __movePackageToRepo() {
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		checkPackageDB extra ${pkgbase}
+		checkPackageDB extra ${pkgbase} 1-1
 	done
 }
 
@@ -60,7 +60,7 @@ __movePackageToRepo() {
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		checkPackageDB extra ${pkgbase}
+		checkPackageDB extra ${pkgbase} 1-1
 	done
 }
 
@@ -77,6 +77,6 @@ __movePackageToRepo() {
 	done
 
 	for pkgbase in ${pkgs[@]}; do
-		checkPackageDB extra ${pkgbase}
+		checkPackageDB extra "${pkgbase}" 1-1
 	done
 }

@@ -172,6 +172,7 @@ updateRepoPKGBUILD() {
 checkPackageDB() {
 	local repo=$1
 	local pkgbase=$2
+	local pkgver=$3
 	local db
 	local pkgarch
 	local repoarch
@@ -179,20 +180,8 @@ checkPackageDB() {
 	local pkgfile
 	local pkgname
 
-	# FIXME: We guess the location of the PKGBUILD used for this repo
-	# We cannot read from trunk as __updatePKGBUILD() might have bumped the version
-	# and different repos can have different versions of the same package
-	local pkgbuildPaths=($(compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*"))
-	local pkgbuildPath="${pkgbuildPaths[0]}"
-	echo Repo is $repo
-	echo pkgbuildPaths = ${pkgbuildPaths[@]}
-	echo pkgbuildPath = ${pkgbuildPath}
-	ls -ahl ${TMP}/svn-packages-copy/${pkgbase}/repos/
-	[ -r "${pkgbuildPath}/PKGBUILD" ]
-
-	local pkgarches=($(. "${pkgbuildPath}/PKGBUILD"; echo ${arch[@]}))
-	local pkgnames=($(. "${pkgbuildPath}/PKGBUILD"; echo ${pkgname[@]}))
-	local pkgver=$(. "${pkgbuildPath}/PKGBUILD"; get_full_version)
+	local pkgarches=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${arch[@]}))
+	local pkgnames=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${pkgname[@]}))
 
 	if [[ ${pkgarches[@]} == any ]]; then
 		repoarches=(${ARCHES[@]})
@@ -235,12 +224,13 @@ checkPackageDB() {
 checkPackage() {
 	local repo=$1
 	local pkgbase=$2
+	local pkgver=$3
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
 	# TODO: Does not fail if one arch is missing
 	compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null
 
-	checkPackageDB $repo $pkgbase
+	checkPackageDB "$repo" "$pkgbase" "$pkgver"
 }
 
 checkRemovedPackage() {
@@ -266,10 +256,8 @@ checkRemovedPackageDB() {
 	local pkgnames
 	local pkgname
 
-	local pkgbuildPath="${TMP}/svn-packages-copy/${pkgbase}/trunk/PKGBUILD"
-	[[ -r ${pkgbuildPath} ]]
-	pkgarches=($(. "${pkgbuildPath}"; echo ${arch[@]}))
-	pkgnames=($(. "${pkgbuildPath}"; echo ${pkgname[@]}))
+	pkgarches=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${arch[@]}))
+	pkgnames=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${pkgname[@]}))
 
 	if [[ ${pkgarches[@]} == any ]]; then
 		tarches=(${ARCHES[@]})

@@ -201,7 +201,7 @@ load ../lib/common
 
 	run db-update
 	[ "$status" -ne 0 ]
-	checkRemovedPackage extra 'pkg-any-a'
+	checkRemovedPackageDB extra 'pkg-any-a'
 }
 
 @test "add package with inconsistent pkgbuild fails" {

@@ -248,7 +248,9 @@ checkRemovedPackage() {
 	local pkgbase=$2
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	! compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null
+	if compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null; then
+		return 1
+	fi
 
 	checkRemovedPackageDB $repo $pkgbase
 }

@@ -1,4 +1,5 @@
 . /usr/share/makepkg/util.sh
+shopt -s extglob
 
 __updatePKGBUILD() {
 	local pkgrel
@@ -227,8 +228,27 @@ checkPackage() {
 	local pkgver=$3
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	# TODO: Does not fail if one arch is missing
-	compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null
+
+	local dirarches=() pkgbuildarches=()
+	local pkgbuild dirarch pkgbuildver
+	for pkgbuild in "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-"+([^-])"/PKGBUILD"; do
+		[[ -e $pkgbuild ]] || continue
+		dirarch=${pkgbuild%/PKGBUILD}
+		dirarch=${dirarch##*-}
+
+		dirarches+=("$dirarch")
+		pkgbuildarches+=($(. "$pkgbuild"; echo ${arch[@]}))
+		pkgbuildver=$(. "$pkgbuild"; get_full_version)
+		[[ $pkgver = "$pkgbuildver" ]]
+	done
+	# Verify that the arches-from-dirnames and
+	# arches-from-PKGBUILDs agree (that a PKGBUILD existed for
+	# every arch).
+	(( ${#dirarches[@]} > 0 ))
+	mapfile -d '' dirarches      < <(printf '%s\0' "${dirarches[@]}"      | sort -uz)
+	mapfile -d '' pkgbuildarches < <(printf '%s\0' "${pkgbuildarches[@]}" | sort -uz)
+	declare -p dirarches pkgbuildarches
+	[[ "${dirarches[*]}" = "${pkgbuildarches[*]}" ]]
 
 	checkPackageDB "$repo" "$pkgbase" "$pkgver"
 }
@@ -238,7 +258,8 @@ checkRemovedPackage() {
 	local pkgbase=$2
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	if compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null; then
+
+	if __isGlobfile "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-"+([^-])"/PKGBUILD"; then
 		return 1
 	fi
 

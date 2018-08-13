@@ -13,7 +13,7 @@ arch="$2"
 pkgbases=("${@:3}")
 
 ftppath="$FTP_BASE/$repo/os"
-svnrepo="$repo-$arch"
+vcsrepo="$repo-$arch"
 
 if ! check_repo_permission "$repo"; then
 	die "You don't have permission to remove packages from %s" "$repo"
@@ -33,12 +33,12 @@ remove_pkgs=()
 for pkgbase in "${pkgbases[@]}"; do
 	msg "Removing %s from [%s]..." "$pkgbase" "$repo"
 
-	if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "repos/${svnrepo}" && echo ${pkgname[@]})); then
+	if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "repos/${vcsrepo}" && echo ${pkgname[@]})); then
 		arch_svn checkout -q "${SVNREPO}/${pkgbase}" "${WORKDIR}/svn/${pkgbase}" >/dev/null
-		arch_svn rm --force -q "${WORKDIR}/svn/$pkgbase/repos/$svnrepo"
+		arch_svn rm --force -q "${WORKDIR}/svn/$pkgbase/repos/$vcsrepo"
 		arch_svn commit -q "${WORKDIR}/svn/$pkgbase" -m "${0##*/}: $pkgbase removed by $(id -un)"
 	else
-		warning "%s not found in %s" "$pkgbase" "$svnrepo"
+		warning "%s not found in %s" "$pkgbase" "$vcsrepo"
 		warning "Removing only %s from the repo" "$pkgbase"
 		warning "If it was a split package you have to remove the others yourself!"
 		remove_pkgs+=("$pkgbase")

@@ -24,38 +24,32 @@ for pkgarch in "${ARCHES[@]}"; do
 	repo_lock "${repo_from}" "${pkgarch}" || exit 1
 done
 
-# check if packages to be moved exist in svn and ftp dir
-arch_svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
+# check if packages to be moved exist in version control and ftp dir
 for pkgbase in "${args[@]:2}"; do
-	arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
-	for pkgarch in "${ARCHES[@]}" 'any'; do
-		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-		if [[ -r ${svnrepo_from}/PKGBUILD ]]; then
-			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo "${pkgname[@]}"))
+	found=false
+	for pkgarch in "${ARCHES[@]}"; do
+		if vcsrepo_from=$(find_repo_for_package "${pkgbase}" "${pkgarch}" "${repo_from}"); then
+			#FIXME: abort if PKGBUILD not there
+			read -rd'\n' pkgver pkgnames < <(source_pkgbuild "${pkgbase}" "repos/${vcsrepo_from}"; \
+			    get_full_version; echo "${pkgname[@]}")
+			read -ra pkgnames <<<"$pkgnames"
+
 			if (( ${#pkgnames[@]} < 1 )); then
 				die "Could not read pkgname"
 			fi
 
-			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
 			if [[ -z ${pkgver} ]]; then
 				die "Could not read pkgver"
 			fi
 
-			if [[ "${pkgarch}" = any ]]; then
-				tarches=("${ARCHES[@]}")
-			else
-				tarches=("${pkgarch}")
-			fi
-
 			for pkgname in "${pkgnames[@]}"; do
-				for tarch in "${tarches[@]}"; do
-					getpkgfile "${ftppath_from}/${tarch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS} >/dev/null
-				done
+				getpkgfile "${ftppath_from}/${pkgarch}/${pkgname}-${pkgver}-${vcsrepo_from##*-}"${PKGEXTS} >/dev/null
 			done
+			found=true
 			continue 2
 		fi
 	done
-	die "%s not found in %s" "$pkgbase" "$repo_from"
+	[[ ${found} = true ]] || die "%s not found in %s" "$pkgbase" "$repo_from"
 done
 
 msg "Moving packages from [%s] to [%s]..." "$repo_from" "$repo_to"
@@ -64,7 +58,9 @@ for arch in "${ARCHES[@]}"; do
 	declare -a add_pkgs_$arch
 	declare -a remove_pkgs_$arch
 done
+arch_svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
 for pkgbase in "${args[@]:2}"; do
+	arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
 	tag_list=""
 	for pkgarch in "${ARCHES[@]}" 'any'; do
 		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"

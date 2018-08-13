@@ -19,31 +19,18 @@ done
 declare -A pkgs
 
 for pkgbase in "$@"; do
-	if [[ ! -d ${WORKDIR}/${pkgbase} ]]; then
-		arch_svn export -q "${SVNREPO}/${pkgbase}/repos" "${WORKDIR}/${pkgbase}" >/dev/null
+	for pkgarch in "${ARCHES[@]}"; do
+		vcsrepo_from="$(find_repo_for_package "${pkgbase}" "${pkgarch[@]}" "${TESTING_REPO}")"
+		vcsrepo_to="$(find_repo_for_package "${pkgbase}" "${pkgarch[@]}" "${STABLE_REPOS[@]}")"
 
-		found_source=false
-		for pkgarch in "${ARCHES[@]}" 'any'; do
-			svnrepo_from="${WORKDIR}/${pkgbase}/${TESTING_REPO}-${pkgarch}"
-			if [[ -r ${svnrepo_from}/PKGBUILD ]]; then
-				found_source=true
-				break
-			fi
-		done
-		[[ $found_source = true ]] || die "%s not found in [%s]" "$pkgbase" "$TESTING_REPO"
-		found_target=false
-		for pkgarch in "${ARCHES[@]}" 'any'; do
-			for repo in "${STABLE_REPOS[@]}"; do
-				svnrepo_to="${WORKDIR}/${pkgbase}/${repo}-${pkgarch}"
-				if [[ -r ${svnrepo_to}/PKGBUILD ]]; then
-					found_target=true
-					pkgs[${repo}]+="${pkgbase} "
-					break 2
-				fi
-			done
-		done
-		[[ $found_target = true ]] || die "%s not found in any of these repos: %s" "$pkgbase" "${STABLE_REPOS[*]}"
-	fi
+		if [[ ${vcsrepo_from} && ${vcsrepo_to} ]]; then
+			move_to="${vcsrepo_to%-@(any|${pkgarch})}"
+			pkgs[${move_to}]+="${pkgbase} "
+			break
+		fi
+	done
+	[[ ${vcsrepo_from} ]] || die "%s not found in [%s]" "$pkgbase" "$TESTING_REPO"
+	[[ ${vcsrepo_to} ]] || die "%s not found in any of these repos: %s" "$pkgbase" "${STABLE_REPOS[*]}"
 done
 
 for pkgarch in "${ARCHES[@]}"; do

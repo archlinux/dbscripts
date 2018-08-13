@@ -40,3 +40,21 @@ export_from_vcs() {
 		arch_svn export -q "${SVNREPO}/${pkgbase}/${tag}/${src}" "${dest}" 2>/dev/null
 	fi
 }
+
+# Which repo is this package in?
+find_repo_for_package() {
+	local pkgbase=${1}
+	local pkgarch=${2}
+	local candidates=("${@:3}")
+
+	local repos=($(arch_svn ls "${SVNREPO}/${pkgbase}/repos/" | grep -xFf \
+		<(printf '%s\n' "${candidates[@]/%/-${pkgarch}/}" "${candidates[@]/%/-any/}")))
+	#TODO: check the PKGBUILD exists?
+
+	if (( ${#repos[@]} > 1 )); then
+		die "%s is present in multiple repos (%s)" "${pkgbase}" "${repos[*]}"
+	fi
+	(( ${#repos[@]} == 1 )) || return $?
+
+	printf '%s\n' "${repos[@]%/}"
+}

@@ -11,9 +11,7 @@ The executables that you (might) care about are:
     │   ├── devlist-mailer
     │   ├── ftpdir-cleanup
     │   ├── integrity-check
-    │   ├── sourceballs
-    │   ├── update-web-db
-    │   └── update-web-files-db
+    │   └── sourceballs
     ├── db-move
     ├── db-remove
     ├── db-repo-add
@@ -56,8 +54,6 @@ Things that haven't been mentioned yet:
 
  - `cron-jobs/devlist-mailer`
  - `cron-jobs/sourceballs`
- - `cron-jobs/update-web-db`
- - `cron-jobs/update-web-files-db`
 ## Testing
 * Install the `make` and `docker` packages. Start the docker daemon by issuing `systemctl start docker`.
 * The test suite can now be run with `make test`.

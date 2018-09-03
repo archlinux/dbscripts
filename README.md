@@ -1,4 +1,4 @@
-# Arch Linux repository management scripts [![Build Status](https://travis-ci.org/archlinux/dbscripts.svg?branch=master)](https://travis-ci.org/archlinux/dbscripts)
+# Arch Linux repository management scripts [![Build Status](https://travis-ci.com/archlinux/dbscripts.svg?branch=master)](https://travis-ci.com/archlinux/dbscripts)
 ## Configuration
 * The default configuration can be found in `config`.
 * An optional `config.local` may override the default configuration.

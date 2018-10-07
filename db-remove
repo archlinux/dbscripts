@@ -34,9 +34,8 @@ for pkgbase in "${pkgbases[@]}"; do
 	msg "Removing %s from [%s]..." "$pkgbase" "$repo"
 
 	if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "repos/${vcsrepo}" && echo ${pkgname[@]})); then
-		arch_svn checkout -q "${SVNREPO}/${pkgbase}" "${WORKDIR}/svn/${pkgbase}" >/dev/null
-		arch_svn rm --force -q "${WORKDIR}/svn/$pkgbase/repos/$vcsrepo"
-		arch_svn commit -q "${WORKDIR}/svn/$pkgbase" -m "${0##*/}: $pkgbase removed by $(id -un)"
+		vcs_remove_package "${pkgbase}" "${vcsrepo}"
+		vcs_commit "${0##*/}: $pkgbase removed by $(id -un)"
 	else
 		warning "%s not found in %s" "$pkgbase" "$vcsrepo"
 		warning "Removing only %s from the repo" "$pkgbase"

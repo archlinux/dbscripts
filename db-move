@@ -58,15 +58,12 @@ for arch in "${ARCHES[@]}"; do
 	declare -a add_pkgs_$arch
 	declare -a remove_pkgs_$arch
 done
-arch_svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
 for pkgbase in "${args[@]:2}"; do
-	arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
 	tag_list=""
 	for pkgarch in "${ARCHES[@]}" 'any'; do
-		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-		svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
+		vcsrepo_from=$(find_repo_for_package "${pkgbase}" "${pkgarch}" "${repo_from}")
 
-		if [[ -f ${svnrepo_from}/PKGBUILD ]]; then
+		if [[ ${vcsrepo_from} = ${repo_from}-${pkgarch} ]]; then
 			if [[ ${pkgarch} = any ]]; then
 				tarches=("${ARCHES[@]}")
 			else
@@ -77,19 +74,7 @@ for pkgbase in "${args[@]:2}"; do
 			    get_full_version; echo "${pkgname[@]}")
 			read -ra pkgnames <<<"$pkgnames"
 
-			if [[ -d ${svnrepo_to} ]]; then
-				for file in $(arch_svn ls "${svnrepo_to}"); do
-					arch_svn rm -q "${svnrepo_to}/$file@"
-				done
-			else
-				mkdir "${svnrepo_to}"
-				arch_svn add -q "${svnrepo_to}"
-			fi
-
-			for file in $(arch_svn ls "${svnrepo_from}"); do
-				arch_svn mv -q -r HEAD "${svnrepo_from}/$file@" "${svnrepo_to}/"
-			done
-			arch_svn rm --force -q "${svnrepo_from}"
+			vcs_move_package "${pkgbase}" "${repo_from}-${pkgarch}" "${repo_to}-${pkgarch}"
 			tag_list+=", $pkgarch"
 
 			for tarch in "${tarches[@]}"; do
@@ -110,7 +95,7 @@ for pkgbase in "${args[@]:2}"; do
 		fi
 	done
 	tag_list="${tag_list#, }"
-	arch_svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"
+	vcs_commit "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"
 done
 
 for tarch in "${ARCHES[@]}"; do

@@ -1,13 +1,16 @@
 #!/hint/bash
 
 FTP_BASE="/srv/ftp"
-SVNREPO=''
-SVNUSER=''
 PKGREPOS=()
 PKGPOOL=''
 SRCPOOL=''
 TESTING_REPO=''
 STABLE_REPOS=()
+
+# VCS backend
+VCS=svn
+SVNREPO=''
+SVNUSER=''
 
 CLEANUP_DESTDIR="/var/tmp"
 CLEANUP_DRYRUN=false

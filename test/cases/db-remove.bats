@@ -44,6 +44,25 @@ load ../lib/common
 	done
 }
 
+@test "remove partial split package" {
+	local arches=('i686' 'x86_64')
+	local arch db
+
+	releasePackage extra pkg-split-a
+	db-update
+
+	for arch in ${arches[@]}; do
+		db-remove extra "${arch}" pkg-split-a1
+
+		for db in db files; do
+			if bsdtar -xf "$FTP_BASE/extra/os/${arch}/extra.${db}" -O | grep pkg-split-a1; then
+				return 1
+			fi
+			bsdtar -xf "$FTP_BASE/extra/os/${arch}/extra.${db}" -O | grep pkg-split-a2
+		done
+	done
+}
+
 @test "remove any packages" {
 	local pkgs=('pkg-any-a' 'pkg-any-b')
 	local pkgbase

@@ -6,9 +6,6 @@
 shopt -s extglob globstar nullglob
 
 
-# Some PKGBUILDs need CARCH to be set
-CARCH="x86_64"
-
 # Useful functions
 UMASK=""
 set_umask () {
@@ -39,11 +36,6 @@ mv_acl() {
 
 # set up general environment
 WORKDIR=$(mktemp -dt "${0##*/}.XXXXXXXXXX")
-if [[ -n ${SVNUSER} ]]; then
-	setfacl -m u:"${SVNUSER}":rwx "${WORKDIR}"
-	setfacl -m d:u:"${USER}":rwx "${WORKDIR}"
-	setfacl -m d:u:"${SVNUSER}":rwx "${WORKDIR}"
-fi
 LOCKS=()
 REPO_MODIFIED=0
 
@@ -306,7 +298,7 @@ check_pkgfile() {
 	[[ ${pkgfile##*/} = "${pkgname}-${pkgver}-${pkgarch}"* ]]
 }
 
-check_pkgsvn() {
+check_pkgvcs() {
 	local pkgfile="${1}"
 	local _pkgbase="$(getpkgbase "${pkgfile}")" || return 1
 	local _pkgname="$(getpkgname "${pkgfile}")" || return 1
@@ -316,17 +308,17 @@ check_pkgsvn() {
 
 	in_array "${repo}" "${PKGREPOS[@]}" || return 1
 
-	if [[ ! -f ${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase} ]]; then
+	if [[ ! -f ${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD ]]; then
 		mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
-		arch_svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
+		vcs_export "$repo" "$_pkgarch" "$_pkgbase" \
 			"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
 	fi
 
-	local svnver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; get_full_version)"
-	[[ "${svnver}" = "${_pkgver}" ]] || return 1
+	local vcsver="$(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; get_full_version)"
+	[[ "${vcsver}" = "${_pkgver}" ]] || return 1
 
-	local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo "${pkgname[@]}"))
-	in_array "${_pkgname}" "${svnnames[@]}" || return 1
+	local vcsnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; echo "${pkgname[@]}"))
+	in_array "${_pkgname}" "${vcsnames[@]}" || return 1
 
 	return 0
 }
@@ -337,7 +329,7 @@ check_splitpkgs() {
 	local pkgfiles=("${@}")
 	local pkgfile
 	local pkgdir
-	local svnname
+	local vcsname
 
 	mkdir -p "${WORKDIR}/check_splitpkgs/"
 	pushd "${WORKDIR}/check_splitpkgs" >/dev/null
@@ -350,22 +342,22 @@ check_splitpkgs() {
 		mkdir -p "${repo}/${_pkgarch}/${_pkgbase}"
 		echo "${_pkgname}" >> "${repo}/${_pkgarch}/${_pkgbase}/staging"
 
-		if [[ ! -f ${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase} ]]; then
+		if [[ ! -f ${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD ]]; then
 			mkdir -p "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}"
-			arch_svn export -q "${SVNREPO}/${_pkgbase}/repos/${repo}-${_pkgarch}/PKGBUILD" \
+			vcs_export "$repo" "$_pkgarch" "$_pkgbase" \
 				"${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}" >/dev/null || return 1
 		fi
 
-		local svnnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}"; echo "${pkgname[@]}"))
-		printf '%s\n' "${svnnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/svn"
+		local vcsnames=($(. "${WORKDIR}/pkgbuilds/${repo}-${_pkgarch}/${_pkgbase}/PKGBUILD"; echo "${pkgname[@]}"))
+		printf '%s\n' "${vcsnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/vcs"
 	done
 	popd >/dev/null
 
 	for pkgdir in "${WORKDIR}/check_splitpkgs/${repo}"/*/*; do
 		[[ ! -d ${pkgdir} ]] && continue
 		sort -u "${pkgdir}/staging" -o "${pkgdir}/staging"
-		sort -u "${pkgdir}/svn" -o "${pkgdir}/svn"
-		if [[ ! -z "$(comm -13 "${pkgdir}/staging" "${pkgdir}/svn")" ]]; then
+		sort -u "${pkgdir}/vcs" -o "${pkgdir}/vcs"
+		if [[ ! -z "$(comm -13 "${pkgdir}/staging" "${pkgdir}/vcs")" ]]; then
 			return 1
 		fi
 	done
@@ -436,6 +428,45 @@ set_repo_permission() {
 	fi
 }
 
+# usage: arch_expac repo arch expac_args...
+arch_expac() {
+	local repo=$1
+	local arch=$2
+	local args=("${@:3}")
+	local dir="${WORKDIR}/expac-${repo}-${arch}"
+
+	if ! [[ -d $dir ]]; then
+		mkdir -p -- "${dir}/root"
+		cat >"${dir}/pacman.conf" <<-EOT
+		[options]
+		RootDir = ${dir}/root
+		DBPath = ${dir}/root
+		Architecture = ${arch}
+
+		[$repo]
+		Server = file://${FTP_BASE}/\$repo/os/\$arch
+		EOT
+	fi
+
+	fakeroot pacman --config="${dir}/pacman.conf" -Sy >/dev/null
+	expac --config="${dir}/pacman.conf" --sync "${args[@]}"
+}
+
+# usage: arch_expac_pkgbase repo arch format <pkgname|pkgbase>
+# Like arch_expac, but 'target' may be a pkgbase, instead of the usual
+# pkgname.
+# Only accepts one target.
+arch_expac_pkgbase() {
+	local repo=$1
+	local arch=$2
+	local format=$3
+	local pkgbase=$4
+	arch_expac "$repo" "$arch" "%e %n $format" |
+		awk -F' ' -v pkgbase="$pkgbase" \
+			'$1 == pkgbase || $2 == pkgbase' |
+		cut -d' ' -f3-
+}
+
 arch_repo_modify() {
 	local action=$1
 	local repo=$2
@@ -458,10 +489,4 @@ arch_repo_modify() {
 	REPO_MODIFIED=1
 }
 
-arch_svn() {
-	if [[ -z ${SVNUSER} ]]; then
-		/usr/bin/svn "${@}"
-	else
-		sudo -u "${SVNUSER}" -- /usr/bin/svn --username "${USER}" "${@}"
-	fi
-}
+. "$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-functions-${VCS}"

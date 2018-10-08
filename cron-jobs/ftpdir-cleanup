@@ -44,7 +44,7 @@ for repo in "${PKGREPOS[@]}"; do
 			fi
 		done | sort > "${WORKDIR}/repo-${repo}-${arch}"
 		# get a list of package files defined in the repo db
-		bsdtar -xOf "${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}" | awk '/^%FILENAME%/{getline;print}' | sort > "${WORKDIR}/db-${repo}-${arch}"
+		arch_expac "$repo" "$arch" '%f' | sort > "${WORKDIR}/db-${repo}-${arch}"
 
 		missing_pkgs=($(comm -13 "${WORKDIR}/repo-${repo}-${arch}" "${WORKDIR}/db-${repo}-${arch}"))
 		if (( ${#missing_pkgs[@]} >= 1 )); then

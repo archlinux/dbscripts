@@ -207,7 +207,7 @@ load ../lib/common
 @test "add package with inconsistent pkgbuild fails" {
 	releasePackage extra 'pkg-any-a'
 
-	updateRepoPKGBUILD 'pkg-any-a' extra any
+	updateRepoPKGBUILD 'pkg-any-a' extra
 
 	run db-update
 	[ "$status" -ne 0 ]

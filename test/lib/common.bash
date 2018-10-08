@@ -1,11 +1,12 @@
 . /usr/share/makepkg/util.sh
+shopt -s extglob
 
 __updatePKGBUILD() {
 	local pkgrel
 
 	pkgrel=$(. PKGBUILD; expr ${pkgrel} + 1)
 	sed "s/pkgrel=.*/pkgrel=${pkgrel}/" -i PKGBUILD
-	svn commit -q -m"update pkg to pkgrel=${pkgrel}"
+	vcsCommit "update pkg to pkgrel=${pkgrel}"
 }
 
 __getCheckSum() {
@@ -62,30 +63,6 @@ __buildPackage() {
 	done
 }
 
-__archrelease() {
-	local repo=$1
-	local pkgarches
-	local tarch
-	local tag
-
-	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
-	pushd ..
-	for tarch in ${pkgarches[@]}; do
-		tag=${repo}-${tarch}
-
-		if [[ -d repos/$tag ]]; then
-			svn rm repos/$tag/PKGBUILD
-		else
-			mkdir -p repos/$tag
-			svn add repos/$tag
-		fi
-
-		svn copy -r HEAD trunk/PKGBUILD repos/$tag/
-	done
-	svn commit -m "__archrelease"
-	popd
-}
-
 setup() {
 	local p
 	local pkg
@@ -98,7 +75,6 @@ setup() {
 	export DBSCRIPTS_CONFIG=${TMP}/config.local
 	cat <<eot > "${DBSCRIPTS_CONFIG}"
 	FTP_BASE="${TMP}/ftp"
-	SVNREPO="file://${TMP}/svn-packages-repo"
 	PKGREPOS=('core' 'extra' 'testing')
 	PKGPOOL='pool/packages'
 	SRCPOOL='sources/packages'
@@ -112,9 +88,11 @@ setup() {
 	CLEANUP_DRYRUN=false
 	SOURCE_CLEANUP_DRYRUN=false
 eot
+	. "lib/common-$(. config; echo "$VCS").bash"
+	vcsSetup
 	. config
 
-	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-packages-{copy,repo}}
+	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup}
 
 	for r in ${PKGREPOS[@]}; do
 		mkdir -p "${TMP}/staging/${r}"
@@ -124,9 +102,6 @@ eot
 	done
 	mkdir -p "${TMP}/ftp/${PKGPOOL}"
 	mkdir -p "${TMP}/ftp/${SRCPOOL}"
-
-	svnadmin create "${TMP}/svn-packages-repo"
-	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
 }
 
 teardown() {
@@ -137,23 +112,22 @@ releasePackage() {
 	local repo=$1
 	local pkgbase=$2
 
-	if [ ! -d "${TMP}/svn-packages-copy/${pkgbase}/trunk" ]; then
-		mkdir -p "${TMP}/svn-packages-copy/${pkgbase}"/{trunk,repos}
-		cp -r "fixtures/${pkgbase}"/* "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
-		svn add -q "${TMP}/svn-packages-copy"/${pkgbase}
-		svn commit -q -m"initial commit of ${pkgbase}" "${TMP}/svn-packages-copy"
+	local dir=$(vcsDirOfPKGBUILD "$pkgbase")
+
+	if [[ ! -d $dir ]]; then
+		vcsInitFixture "$pkgbase"
 	fi
 
-	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
+	pushd "$dir"
 	__buildPackage "${STAGING}"/${repo}
-	__archrelease ${repo}
+	vcsRelease ${repo}
 	popd
 }
 
 updatePackage() {
 	local pkgbase=$1
 
-	pushd "${TMP}/svn-packages-copy/${pkgbase}/trunk/"
+	pushd "$(vcsDirOfPKGBUILD "$pkgbase")"
 	__updatePKGBUILD
 	__buildPackage
 	popd
@@ -162,10 +136,12 @@ updatePackage() {
 updateRepoPKGBUILD() {
 	local pkgbase=$1
 	local repo=$2
-	local arch=$3
 
-	pushd "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}/"
+	# Update the PKGBUILD and release the PKGBUILD, but *without*
+	# ever building or releasing the binary package.
+	pushd "$(vcsDirOfPKGBUILD "$pkgbase")"
 	__updatePKGBUILD
+	vcsRelease ${repo}
 	popd
 }
 
@@ -226,9 +202,7 @@ checkPackage() {
 	local pkgbase=$2
 	local pkgver=$3
 
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	# TODO: Does not fail if one arch is missing
-	compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null
+	vcsCheckPackage "$repo" "$pkgbase" "$pkgver"
 
 	checkPackageDB "$repo" "$pkgbase" "$pkgver"
 }
@@ -237,10 +211,7 @@ checkRemovedPackage() {
 	local repo=$1
 	local pkgbase=$2
 
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	if compgen -G "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-*" >/dev/null; then
-		return 1
-	fi
+	vcsCheckRemovedPackage "$repo" "$pkgbase"
 
 	checkRemovedPackageDB $repo $pkgbase
 }

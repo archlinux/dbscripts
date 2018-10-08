@@ -24,38 +24,24 @@ for pkgarch in "${ARCHES[@]}"; do
 	repo_lock "${repo_from}" "${pkgarch}" || exit 1
 done
 
-# check if packages to be moved exist in svn and ftp dir
-arch_svn checkout -q -N "${SVNREPO}" "${WORKDIR}/svn" >/dev/null
+# check if packages to be moved exist in vcs and ftp dir
 for pkgbase in "${args[@]:2}"; do
-	arch_svn up -q "${WORKDIR}/svn/${pkgbase}" >/dev/null
-	for pkgarch in "${ARCHES[@]}" 'any'; do
-		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-		if [[ -r ${svnrepo_from}/PKGBUILD ]]; then
-			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo "${pkgname[@]}"))
-			if (( ${#pkgnames[@]} < 1 )); then
-				die "Could not read pkgname"
+	found=false
+	for tarch in "${ARCHES[@]}"; do
+		while read -r pkgfile; do
+
+			if ! vcs_move_preflight_check "$repo_from" "$tarch" "$pkgbase"; then
+				die "%s not found in %s-%s" "$pkgbase" "$repo_from" "$tarch"
 			fi
 
-			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
-			if [[ -z ${pkgver} ]]; then
-				die "Could not read pkgver"
-			fi
+			# getpkgfile will `exit` for us if it fails;
+			# no need to check its result
+			getpkgfile "${ftppath_from}/${tarch}/${pkgfile}" >/dev/null
 
-			if [[ "${pkgarch}" = any ]]; then
-				tarches=("${ARCHES[@]}")
-			else
-				tarches=("${pkgarch}")
-			fi
-
-			for pkgname in "${pkgnames[@]}"; do
-				for tarch in "${tarches[@]}"; do
-					getpkgfile "${ftppath_from}/${tarch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS} >/dev/null
-				done
-			done
-			continue 2
-		fi
+			found=true
+		done < <(arch_expac_pkgbase "$repo_from" "$tarch" '%f' "$pkgbase")
 	done
-	die "%s not found in %s" "$pkgbase" "$repo_from"
+	[[ $found = true ]] || die "%s not found in %s" "$pkgbase" "$repo_from"
 done
 
 msg "Moving packages from [%s] to [%s]..." "$repo_from" "$repo_to"
@@ -65,55 +51,22 @@ for arch in "${ARCHES[@]}"; do
 	declare -a remove_pkgs_$arch
 done
 for pkgbase in "${args[@]:2}"; do
-	tag_list=""
-	for pkgarch in "${ARCHES[@]}" 'any'; do
-		svnrepo_from="${WORKDIR}/svn/${pkgbase}/repos/${repo_from}-${pkgarch}"
-		svnrepo_to="${WORKDIR}/svn/${pkgbase}/repos/${repo_to}-${pkgarch}"
+	vcs_move_start "$repo_from" "$repo_to" "$pkgbase"
+	for tarch in "${ARCHES[@]}"; do
+		vcs_move_arch "$tarch"
+		while read -r pkgname pkgver pkgfile; do
+			declare -n add_pkgs="add_pkgs_${tarch}"
+			declare -n remove_pkgs="remove_pkgs_${tarch}"
 
-		if [[ -f ${svnrepo_from}/PKGBUILD ]]; then
-			if [[ ${pkgarch} = any ]]; then
-				tarches=("${ARCHES[@]}")
-			else
-				tarches=("${pkgarch}")
+			ln -s "../../../${PKGPOOL}/${pkgfile}" "${ftppath_to}/${tarch}/"
+			if [[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]]; then
+				ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "${ftppath_to}/${tarch}/"
 			fi
-			msg2 "%s (%s)" "$pkgbase" "${tarches[*]}"
-			pkgnames=($(. "${svnrepo_from}/PKGBUILD"; echo "${pkgname[@]}"))
-			pkgver=$(. "${svnrepo_from}/PKGBUILD"; get_full_version)
-
-			if [[ -d ${svnrepo_to} ]]; then
-				for file in $(arch_svn ls "${svnrepo_to}"); do
-					arch_svn rm -q "${svnrepo_to}/$file@"
-				done
-			else
-				mkdir "${svnrepo_to}"
-				arch_svn add -q "${svnrepo_to}"
-			fi
-
-			for file in $(arch_svn ls "${svnrepo_from}"); do
-				arch_svn mv -q -r HEAD "${svnrepo_from}/$file@" "${svnrepo_to}/"
-			done
-			arch_svn rm --force -q "${svnrepo_from}"
-			tag_list+=", $pkgarch"
-
-			for tarch in "${tarches[@]}"; do
-				declare -n add_pkgs="add_pkgs_${tarch}"
-				declare -n remove_pkgs="remove_pkgs_${tarch}"
-				for pkgname in "${pkgnames[@]}"; do
-					pkgpath=$(getpkgfile "${ftppath_from}/${tarch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS})
-					pkgfile="${pkgpath##*/}"
-
-					ln -s "../../../${PKGPOOL}/${pkgfile}" "${ftppath_to}/${tarch}/"
-					if [[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]]; then
-						ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "${ftppath_to}/${tarch}/"
-					fi
-					add_pkgs+=("${FTP_BASE}/${PKGPOOL}/${pkgfile}")
-					remove_pkgs+=("${pkgname}")
-				done
-			done
-		fi
+			add_pkgs+=("${FTP_BASE}/${PKGPOOL}/${pkgfile}")
+			remove_pkgs+=("${pkgname}")
+		done < <(arch_expac_pkgbase "$repo_from" "$tarch" '%n %v %f' "$pkgbase")
 	done
-	tag_list="${tag_list#, }"
-	arch_svn commit -q "${WORKDIR}/svn/${pkgbase}" -m "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"
+	vcs_move_finish
 done
 
 for tarch in "${ARCHES[@]}"; do

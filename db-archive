@@ -1,0 +1,21 @@
+#!/bin/bash
+
+. "$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/config"
+
+if (( $# != 1 )); then
+	echo "usage: %s <pkgfile>" "${0##*/}"
+	exit 1
+fi
+
+if [[ -n ${ARCHIVEUSER} ]]; then
+	exec sudo -u "${ARCHIVEUSER}" bash "${BASH_SOURCE[0]}" "${@}"
+fi
+
+pkgfile=${1##*/}
+pkgname=${pkgfile%-*-*-*}
+archive_dir="${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}"
+
+if [[ ! -f ${archive_dir}/${pkgfile} ]]; then
+	mkdir -p "${archive_dir}"
+	cp -np "${1}"{,.sig} "${archive_dir}/"
+fi

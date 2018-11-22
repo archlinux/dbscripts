@@ -1,6 +1,8 @@
 #!/hint/bash
 
 FTP_BASE="/srv/ftp"
+ARCHIVE_BASE="/srv/archive"
+ARCHIVEUSER='archive'
 PKGREPOS=()
 PKGPOOL=''
 SRCPOOL=''

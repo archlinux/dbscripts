@@ -87,6 +87,12 @@ load ../lib/common
 	checkPackage testing pkg-any-a 1-2
 }
 
+@test "archive package when releasing" {
+	releasePackage extra pkg-any-a
+	db-update
+	[[ -f ${ARCHIVE_BASE}/packages/p/pkg-any-a/pkg-any-a-1-1-any${PKGEXT} ]]
+}
+
 @test "update same any package to same repository fails" {
 	releasePackage extra pkg-any-a
 	db-update

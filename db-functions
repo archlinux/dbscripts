@@ -165,20 +165,23 @@ repo_unlock () { #repo_unlock <repo-name> <arch>
 	fi
 }
 
+# usage: _grep_all_info pkgfile infofile key
+_grep_all_info() {
+	local _ret=()
+
+	mapfile -t _ret < <(/usr/bin/bsdtar -xOqf "$1" "${2}" | grep "^${3} = ")
+
+	printf '%s\n' "${_ret[@]#${3} = }"
+}
+
 # usage: _grep_pkginfo pkgfile pattern
 _grep_pkginfo() {
-	local _ret
-
-	_ret="$(/usr/bin/bsdtar -xOqf "$1" .PKGINFO | grep "^${2} = " | tail -1)"
-	echo "${_ret#${2} = }"
+	_grep_all_info "${1}" .PKGINFO "${2}" | tail -1
 }
 
 # usage: _grep_buildinfo pkgfile pattern
 _grep_buildinfo() {
-	local _ret
-
-	_ret="$(/usr/bin/bsdtar -xOqf "$1" .BUILDINFO | grep "^${2} = " | tail -1)"
-	echo "${_ret#${2} = }"
+	_grep_all_info "${1}" .BUILDINFO "${2}" | tail -1
 }
 
 # Get the package base or name as fallback
@@ -442,6 +445,26 @@ arch_repo_modify() {
 	popd >/dev/null
 
 	REPO_MODIFIED=1
+}
+
+# Verify the existence of dependent packages needed by a given pkgfile
+# usage: check_reproducible pkgfile
+check_reproducible() {
+	local pkg dir pkgs=() pkgfile pkgfiles=()
+
+	mapfile -t pkgs < <(_grep_all_info "${1}" .BUILDINFO installed)
+
+	for pkg in "${pkgs[@]}"; do
+		local pkgname=${pkg%-*-*-*}
+		for dir in "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}" "${STAGING}"/**/; do
+			if pkgfile="$(getpkgfile "${dir}/${pkg}"${PKGEXTS} 2>/dev/null)"; then
+				pkgfiles+=("${pkgfile}")
+				continue 2
+			fi
+		done
+		error "could not find existing or staged package for dependency %s" "${pkg}"
+		return 1
+	done
 }
 
 . "$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-functions-${VCS}"

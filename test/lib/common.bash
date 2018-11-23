@@ -99,6 +99,8 @@ setup() {
 	export DBSCRIPTS_CONFIG=${TMP}/config.local
 	cat <<eot > "${DBSCRIPTS_CONFIG}"
 	FTP_BASE="${TMP}/ftp"
+	ARCHIVE_BASE="${TMP}/archive"
+	ARCHIVEUSER=""
 	SVNREPO="file://${TMP}/svn-packages-repo"
 	PKGREPOS=('core' 'extra' 'testing')
 	PKGPOOL='pool/packages'
@@ -125,6 +127,14 @@ eot
 	done
 	mkdir -p "${TMP}/ftp/${PKGPOOL}"
 	mkdir -p "${TMP}/ftp/${SRCPOOL}"
+
+	# make dummy packages for "reproducibility"
+	pacman -Qq | pacman -Sddp - | while read -r line; do
+		line=${line##*/}
+		pkgname=${line%-*-*-*}
+		mkdir -p "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}"
+		touch "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}/${line}"{,.sig}
+	done
 
 	svnadmin create "${TMP}/svn-packages-repo"
 	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"

@@ -5,7 +5,8 @@ PKGPOOL='pool/packages'
 SRCPOOL='sources/packages'
 SVNREPO='file:///srv/repos/svn-packages/svn'
 SVNUSER='svn-packages'
-TESTING_REPO='testing'
+STAGING_REPOS=('staging')
+TESTING_REPOS=('testing')
 STABLE_REPOS=('core' 'extra')
 
 CLEANUP_DESTDIR="/srv/repos/svn-packages/package-cleanup"

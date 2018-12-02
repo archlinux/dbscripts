@@ -10,7 +10,7 @@ fi
 
 # Lock everything to reduce  possibility of interfering task between the different repo-updates
 script_lock
-for repo in "${TESTING_REPO}" "${STABLE_REPOS[@]}"; do
+for repo in "${TESTING_REPOS[@]}" "${STABLE_REPOS[@]}"; do
 	for pkgarch in "${ARCHES[@]}"; do
 		repo_lock "${repo}" "${pkgarch}" || exit 1
 	done
@@ -18,30 +18,36 @@ done
 
 declare -A pkgs
 
+testing_repo=
 for pkgbase in "$@"; do
 	for pkgarch in "${ARCHES[@]}"; do
-		vcsrepo_from="$(find_repo_for_package "${pkgbase}" "${pkgarch[@]}" "${TESTING_REPO}")"
+		vcsrepo_from="$(find_repo_for_package "${pkgbase}" "${pkgarch[@]}" "${TESTING_REPOS[@]}")"
 		vcsrepo_to="$(find_repo_for_package "${pkgbase}" "${pkgarch[@]}" "${STABLE_REPOS[@]}")"
+		repo_from=${vcsrepo_from%-@(any|${pkgarch})}
+		repo_to="${vcsrepo_to%-@(any|${pkgarch})}"
 
+		if [[ -z ${testing_repo} ]]; then
+			testing_repo=${repo_from}
+		elif [[ ${testing_repo} != ${repo_from} ]]; then
+			die "Cannot move packages from multiple repos at a time: %s" "${testing_repo} ${repo_from}"
+		fi
 		if [[ ${vcsrepo_from} && ${vcsrepo_to} ]]; then
-			move_to="${vcsrepo_to%-@(any|${pkgarch})}"
-			pkgs[${move_to}]+="${pkgbase} "
+			pkgs[${repo_to}]+="${pkgbase} "
 			break
 		fi
 	done
-	[[ ${vcsrepo_from} ]] || die "%s not found in [%s]" "$pkgbase" "$TESTING_REPO"
+	[[ ${vcsrepo_from} ]] || die "%s not found in any of these repos: %s" "${pkgbase}" "${TESTING_REPOS[@]}"
 	[[ ${vcsrepo_to} ]] || die "%s not found in any of these repos: %s" "$pkgbase" "${STABLE_REPOS[*]}"
 done
 
-for pkgarch in "${ARCHES[@]}"; do
-	repo_unlock "${TESTING_REPO}" "${pkgarch}"
-done
-for repo in "${STABLE_REPOS[@]}"; do
+for repo in "${TESTING_REPOS[@]}" "${STABLE_REPOS[@]}"; do
 	for pkgarch in "${ARCHES[@]}"; do
 		repo_unlock "${repo}" "${pkgarch}"
 	done
+done
+for repo in "${STABLE_REPOS[@]}"; do
 	if [[ -n ${pkgs[${repo}]} ]]; then
-		"$(dirname "$(readlink -e "$0")")/db-move" "${TESTING_REPO}" "${repo}" ${pkgs[${repo}]}
+		"$(dirname "$(readlink -e "$0")")/db-move" "${testing_repo}" "${repo}" ${pkgs[${repo}]}
 	fi
 done
 

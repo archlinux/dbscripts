@@ -105,7 +105,8 @@ setup() {
 	PKGREPOS=('core' 'extra' 'testing')
 	PKGPOOL='pool/packages'
 	SRCPOOL='sources/packages'
-	TESTING_REPO='testing'
+	STAGING_REPOS=('staging')
+	TESTING_REPOS=('testing')
 	STABLE_REPOS=('core' 'extra')
 	CLEANUP_DESTDIR="${TMP}/package-cleanup"
 	SOURCE_CLEANUP_DESTDIR="${TMP}/source-cleanup"

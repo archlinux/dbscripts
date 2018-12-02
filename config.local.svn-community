@@ -5,7 +5,8 @@ PKGPOOL='pool/community'
 SRCPOOL='sources/community'
 SVNREPO='file:///srv/repos/svn-community/svn'
 SVNUSER='svn-community'
-TESTING_REPO='community-testing'
+STAGING_REPOS=('community-staging' 'multilib-staging')
+TESTING_REPOS=('community-testing' 'multilib-testing')
 STABLE_REPOS=('community')
 
 CLEANUP_DESTDIR="/srv/repos/svn-community/package-cleanup"

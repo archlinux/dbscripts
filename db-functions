@@ -377,6 +377,31 @@ check_pkgrepos() {
 	return 0
 }
 
+check_stagingrepos() {
+	local pkgfile=${1}
+	local pkgrepo=${2}
+	local pkgname=$(getpkgname "${pkgfile}")
+	local pkgarch=$(getpkgarch "${pkgfile}")
+	local candidate candidates=()
+
+	if in_array "${pkgrepo}" "${STABLE_REPOS[@]}"; then
+		candidates+=($(find_repo_for_package "${pkgname}" "${pkgarch}" "${TESTING_REPOS[@]}"))
+	fi
+	if in_array "${pkgrepo}" "${STABLE_REPOS[@]}" "${TESTING_REPOS[@]}"; then
+		candidates+=($(find_repo_for_package "${pkgname}" "${pkgarch}" "${STAGING_REPOS[@]}"))
+	fi
+	(( ${#candidates[@]} == 0 )) && return 0
+
+	printf '%s\n' "${candidates[@]%-*}"
+	for candidate in "${candidates[@]}"; do
+		for candidate in "${STAGING}/${candidate%-*}"/*${PKGEXTS}; do
+			[[ ${pkgname} = $(getpkgname "${candidate}" 2>/dev/null) ]] && return 0
+		done
+	done
+
+	return 1
+}
+
 #usage: chk_license ${license[@]}"
 chk_license() {
 	local l

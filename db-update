@@ -52,6 +52,9 @@ for repo in "${repos[@]}"; do
 			if ! check_pkgrepos "${pkg}"; then
 				die "Package %s already exists in another repository" "$repo/${pkg##*/}"
 			fi
+			if ! missing_repo="$(check_stagingrepos "${pkg}" "${repo}")"; then
+				die "Package %s in %s needs to be updated in unstable repos as well: %s" "${pkg}" "${repo}" "${missing_repo}"
+			fi
 			if ! check_packager "${pkg}"; then
 				die "Package %s does not have a valid packager" "$repo/${pkg##*/}"
 			fi

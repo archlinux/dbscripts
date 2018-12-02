@@ -102,7 +102,7 @@ setup() {
 	ARCHIVE_BASE="${TMP}/archive"
 	ARCHIVEUSER=""
 	SVNREPO="file://${TMP}/svn-packages-repo"
-	PKGREPOS=('core' 'extra' 'testing')
+	PKGREPOS=('core' 'extra' 'testing' 'staging')
 	PKGPOOL='pool/packages'
 	SRCPOOL='sources/packages'
 	STAGING_REPOS=('staging')

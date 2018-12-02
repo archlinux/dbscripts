@@ -39,6 +39,20 @@ load ../lib/common
 	done
 }
 
+@test "move package from staging to extra while a testing package exists fails" {
+	releasePackage extra pkg-any-a
+	db-update
+	updatePackage pkg-any-a
+	releasePackage testing pkg-any-a
+	db-update
+	updatePackage pkg-any-a
+	releasePackage staging pkg-any-a
+	db-update
+
+	run db-move staging extra pkg-any-a
+	[ "$status" -ne 0 ]
+}
+
 @test "move single-arch packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-single-arch' 'pkg-simple-b')

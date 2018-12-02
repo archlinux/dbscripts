@@ -14,6 +14,11 @@ repo_to="${args[1]}"
 ftppath_from="${FTP_BASE}/${repo_from}/os/"
 ftppath_to="${FTP_BASE}/${repo_to}/os/"
 
+check_leapfrog=false
+if in_array "${repo_from}" "${STAGING_REPOS[@]}" && in_array "${repo_to}" "${STABLE_REPOS[@]}"; then
+	check_leapfrog=true
+fi
+
 if ! check_repo_permission "$repo_to" || ! check_repo_permission "$repo_from"; then
 	die "You don't have permission to move packages from %s to %s" "$repo_from" "$repo_to"
 fi
@@ -40,6 +45,10 @@ for pkgbase in "${args[@]:2}"; do
 
 			if [[ -z ${pkgver} ]]; then
 				die "Could not read pkgver"
+			fi
+
+			if [[ ${check_leapfrog} = true ]] && leapfrog=$(find_repo_for_package "${pkgbase}" "${pkgarch}" "${TESTING_REPOS[@]}"); then
+				die "Package %s cannnot be moved from %s to %s while it exists in %s" "${pkgbase}" "${repo_from}" "${repo_to}" "${leapfrog}"
 			fi
 
 			for pkgname in "${pkgnames[@]}"; do

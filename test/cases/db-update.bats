@@ -91,6 +91,7 @@ load ../lib/common
 	releasePackage extra pkg-any-a
 	db-update
 	[[ -f ${ARCHIVE_BASE}/packages/p/pkg-any-a/pkg-any-a-1-1-any${PKGEXT} ]]
+	[[ -f ${ARCHIVE_BASE}/packages/p/pkg-any-a/pkg-any-a-1-1-any${PKGEXT}.sig ]]
 }
 
 @test "update same any package to same repository fails" {

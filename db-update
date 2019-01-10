@@ -86,13 +86,13 @@ for repo in "${repos[@]}"; do
 			# any packages might have been moved by the previous run
 			if [[ -f ${pkg} ]]; then
 				mv "${pkg}" "$FTP_BASE/${PKGPOOL}"
-				"$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-archive" "${FTP_BASE}/${PKGPOOL}/${pkg##*/}"
 			fi
 			ln -s "../../../${PKGPOOL}/${pkgfile}" "$FTP_BASE/$repo/os/${pkgarch}"
 			# also move signatures
 			if [[ -f ${pkg}.sig ]]; then
 				mv "${pkg}.sig" "$FTP_BASE/${PKGPOOL}"
 			fi
+			"$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-archive" "${FTP_BASE}/${PKGPOOL}/${pkg##*/}"
 			if [[ -f $FTP_BASE/${PKGPOOL}/${pkgfile}.sig ]]; then
 				ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "$FTP_BASE/$repo/os/${pkgarch}"
 			fi

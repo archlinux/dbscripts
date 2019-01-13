@@ -380,15 +380,16 @@ check_pkgrepos() {
 check_stagingrepos() {
 	local pkgfile=${1}
 	local pkgrepo=${2}
+	local pkgbase=$(getpkgbase "${pkgfile}")
 	local pkgname=$(getpkgname "${pkgfile}")
 	local pkgarch=$(getpkgarch "${pkgfile}")
 	local candidate candidates=()
 
 	if in_array "${pkgrepo}" "${STABLE_REPOS[@]}"; then
-		candidates+=($(find_repo_for_package "${pkgname}" "${pkgarch}" "${TESTING_REPOS[@]}"))
+		candidates+=($(find_repo_for_package "${pkgbase}" "${pkgarch}" "${TESTING_REPOS[@]}"))
 	fi
 	if in_array "${pkgrepo}" "${STABLE_REPOS[@]}" "${TESTING_REPOS[@]}"; then
-		candidates+=($(find_repo_for_package "${pkgname}" "${pkgarch}" "${STAGING_REPOS[@]}"))
+		candidates+=($(find_repo_for_package "${pkgbase}" "${pkgarch}" "${STAGING_REPOS[@]}"))
 	fi
 	(( ${#candidates[@]} == 0 )) && return 0
 

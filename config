@@ -36,7 +36,7 @@ FILESEXT=".files.tar.gz"
 SRCEXT=".src.tar.gz"
 
 # bash glob listing allowed extensions. Note that db-functions turns on extglob.
-PKGEXTS=".pkg.tar.@(gz|bz2|xz|lzo|lrz|Z)"
+PKGEXTS=".pkg.tar.@(gz|bz2|xz|zst|lrz|lzo|Z|lz4|lz)"
 
 # Allowed licenses: get sourceballs only for licenses in this array
 ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'GPL3' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1' 'LGPL3')

@@ -482,7 +482,7 @@ check_reproducible() {
 
 	for pkg in "${pkgs[@]}"; do
 		local pkgname=${pkg%-*-*-*}
-		for dir in "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}" "${STAGING}"/**/; do
+		for dir in "${FTP_BASE}"/pool/* "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}" "${STAGING}"/**/; do
 			if pkgfile="$(getpkgfile "${dir}/${pkg}"${PKGEXTS} 2>/dev/null)"; then
 				pkgfiles+=("${pkgfile}")
 				continue 2

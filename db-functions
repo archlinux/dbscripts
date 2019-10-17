@@ -253,7 +253,7 @@ check_packager() {
 }
 
 check_buildinfo() {
-	/usr/bin/bsdtar -tf "$1" .BUILDINFO >/dev/null 2>&1
+	/usr/bin/bsdtar -tqf "$1" .BUILDINFO >/dev/null 2>&1
 }
 
 check_builddir() {

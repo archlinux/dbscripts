@@ -7,9 +7,9 @@ if (( $# != 1 )); then
 	exit 1
 fi
 
-if [[ -n ${ARCHIVEUSER} && ${USER} != ${ARCHIVEUSER} ]]; then
-	exec sudo -u "${ARCHIVEUSER}" "${BASH_SOURCE[0]}" "${@}"
-fi
+# if [[ -n ${ARCHIVEUSER} && ${USER} != ${ARCHIVEUSER} ]]; then
+# 	exec sudo -u "${ARCHIVEUSER}" "${BASH_SOURCE[0]}" "${@}"
+# fi
 
 pkgfile=${1##*/}
 pkgname=${pkgfile%-*-*-*}

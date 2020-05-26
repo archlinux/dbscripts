@@ -305,7 +305,7 @@ check_pkgvcs() {
 	in_array "${repo}" "${PKGREPOS[@]}" || return 1
 
 	local vcsver vcsnames=()
-	read -rd'\n' vcsver vcsnames < <(source_pkgbuild "${_pkgbase}" "repos/${repo}-${_pkgarch}"; \
+	read -rd'\n' vcsver vcsnames < <(source_pkgbuild "${_pkgbase}" "${_pkgver}"; \
 	                                 get_full_version; echo "${pkgname[@]}")
 	read -ra vcsnames <<<"${vcsnames}"
 
@@ -330,13 +330,15 @@ check_splitpkgs() {
 		local _pkgbase="$(getpkgbase "${pkgfile}")"
 		local _pkgname="$(getpkgname "${pkgfile}")"
 		local _pkgarch="$(getpkgarch "${pkgfile}")"
-		local vcsnames=($(source_pkgbuild "${_pkgbase}" "repos/${repo}-${_pkgarch}"; echo "${pkgname[@]}"))
+		local _pkgver="$(getpkgver "${pkgfile}")"
+		local vcsnames=($(source_pkgbuild "${_pkgbase}" "${_pkgver}"; echo "${pkgname[@]}"))
 
 		# not a split package
 		(( ${#vcsnames[@]} > 1 )) || continue
 
 		mkdir -p "${repo}/${_pkgarch}/${_pkgbase}"
 		echo "${_pkgname}" >> "${repo}/${_pkgarch}/${_pkgbase}/staging"
+
 		printf '%s\n' "${vcsnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/vcs"
 	done
 	popd >/dev/null

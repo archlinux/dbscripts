@@ -1,0 +1,93 @@
+#!/hint/bash
+
+
+
+# The SVN version should just check the path is present....
+fetch_pkgbuild(){
+	local pkgbase="${1}"
+	local tag="${2}"
+	git clone --branch "$tag" --depth 1 "${GITREPOS}${pkgbase}.git" "$WORKDIR/${pkgbase}"
+	git -C "${WORKDIR}/${pkgbase}" verify-tag "$tag"
+}
+
+
+# Source the PKGBUILD from the package's git/svn/whatever repo.
+# Depending on how the VCS is used the tag might be "trunk" or "repos/$repo-$arch"
+# or the full package version (epoch:pkgver-pkgrel) or any other recognized tag.
+source_pkgbuild() {
+	local pkgbase="$1"
+	local tag="$2"
+	. <(cat "${WORKDIR}/${pkgbase}/PKGBUILD" 2>/dev/null || echo false)
+}
+
+# Export PKGBUILD resource following the same rules as source_pkgbuild()
+export_from_pkgrepo() {
+	local pkgbase="$1"
+	local tag="$2"
+	local src="$3"
+	local dest="$4"
+	
+	if [[ ! -e ${dest} ]]; then
+		mkdir -p "${dest}"
+		git -C "${workdir}" archive "$tag" | bsdtar -xf - -C "${dest}"
+	fi
+}
+
+# Which repo is this package in?
+find_repo_for_package() {
+	# check 'historyrepo'
+	local pkgbase=${1}
+	local pkgarch=${2}
+	local candidates=("${@:3}")
+
+	# FIXME
+	local repos=($(git -C "${GITREPO}" ls-files "*/$pkgbase" | awk -F/ '{print $1}' | \
+		grep -xFf <(printf "%s\n" "${candidates[@]/%/-${pkgarch}}" "${candidates[@]/%/-any}")))
+
+	if (( ${#repos[@]} > 1 )); then
+		die "%s is present in multiple repos (%s)" "${pkgbase}" "${repos[*]}"
+	fi
+	(( ${#repos[@]} == 1 )) || return $?
+
+	printf '%s\n' "${repos[@]%/}"
+}
+
+# Commit changes staged by (successive?) vcs_(re)?move_package runs.
+vcs_commit() {
+	git -C "${GITREPO}" commit -m "${1}:" 
+}
+
+
+vcs_update_package(){
+	local pkgbase="$1"
+	local tag="$2"
+	local dest="$3"
+	echo "$dest"
+	if [[ ! -e "$GITREPO/${dest}" ]]; then
+		mkdir -p "$GITREPO/${dest}"
+	fi
+	echo "$pkgbase $tag $(git -C "${WORKDIR}/${pkgbase}" rev-list -n 1 $tag)" > "$GITREPO/$dest/$pkgbase"
+	git -C "${GITREPO}" add "$GITREPO/$dest/$pkgbase" || true
+	vcs_commit "updated ${pkgbase}-${tag} in [${dest}]" || true
+}
+
+# Write to the VCS in order to track a package moving between different pacman
+# repositories.
+vcs_move_package() {
+	local pkgbase=${1}
+	local vcsrepo_from=${GITREPO}/${2}
+	local vcsrepo_to=${GITREPO}/${3}
+	if [[ ! -e "${vcsrepo_to}" ]]; then
+		mkdir -p "${vcsrepo_to}"
+	fi
+	git -C "$GITREPO" mv "$vcsrepo_from/${pkgbase}" "$vcsrepo_to/${pkgbase}"
+}
+
+# Write to the VCS in order to track a package being deleted from a pacman
+# repository.
+vcs_remove_package() {
+	local pkgbase=${1}
+	local vcsrepo=${GITREPO}/${2}/${pkgbase}
+
+	git -C "$GITREPO" rm "$vcsrepo" 
+}

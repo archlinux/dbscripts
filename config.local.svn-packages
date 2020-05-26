@@ -3,12 +3,23 @@
 PKGREPOS=('core' 'extra' 'testing' 'staging' 'kde-unstable' 'gnome-unstable')
 PKGPOOL='pool/packages'
 SRCPOOL='sources/packages'
-SVNREPO='file:///srv/repos/svn-packages/svn'
-SVNUSER='svn-packages'
+SVNREPO=''
+SVNUSER=''
 STAGING_REPOS=('staging')
 TESTING_REPOS=('testing')
 STABLE_REPOS=('core' 'extra')
 
-CLEANUP_DESTDIR="/srv/repos/svn-packages/package-cleanup"
-SOURCE_CLEANUP_DESTDIR="/srv/repos/svn-packages/source-cleanup"
-TMPDIR="/srv/repos/svn-packages/tmp"
+
+
+GITREPOS="https://github.com/foxboron/"
+TESTDIR="/home/fox/Git/prosjekter/Bash/dbscripts/test-dbscripts"
+GITREPO="${TESTDIR}/history"
+STAGING="${TESTDIR}/staging"
+CLEANUP_DESTDIR="${TESTDIR}/package-cleanup"
+SOURCE_CLEANUP_DESTDIR="${TESTDIR}/source-cleanup"
+TMPDIR="${TESTDIR}/tmp"
+FTP_BASE="${TESTDIR}/ftp"
+VCS=git
+ARCHIVE_BASE="${TESTDIR}/archive"
+ARCHIVEUSER='fox'
+WORKDIR="${TESTDIR}/workdir"

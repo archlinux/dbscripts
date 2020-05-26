@@ -29,6 +29,19 @@ for repo in "${repos[@]}"; do
 	done
 done
 
+
+for repo in "${repos[@]}"; do
+	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXTS}))
+	if (( $? == 0 )); then
+		for pkg in "${pkgs[@]}"; do
+			echo "$pkg"
+			fetch_pkgbuild "$(getpkgbase ${pkg})" "$(getpkgver ${pkg})"
+		done
+	fi
+done
+
+
+
 # check if packages are valid
 for repo in "${repos[@]}"; do
 	if ! check_repo_permission "${repo}"; then
@@ -72,6 +85,8 @@ for repo in "${repos[@]}"; do
 		if ! check_splitpkgs "${repo}" "${pkgs[@]}"; then
 			die "Missing split packages for %s" "$repo"
 		fi
+		# TODO:
+		# Add history repo information check as detailed in proposal
 	else
 		die "Could not read %s" "$STAGING"
 	fi
@@ -85,6 +100,8 @@ for repo in "${repos[@]}"; do
 		debug_pkgs=()
 		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*"-${pkgarch}"${PKGEXTS} 2>/dev/null))
 		for pkg in "${arch_pkgs[@]}" "${any_pkgs[@]}"; do
+			pkgbase="$(getpkgbase ${pkg})"
+			pkgver="$(getpkgver ${pkg})"
 			pkgfile="${pkg##*/}"
 
 			if is_debug_package "${pkg}"; then
@@ -120,6 +137,9 @@ for repo in "${repos[@]}"; do
 		fi
 		if (( ${#debug_pkgs[@]} >= 1 )); then
 			arch_repo_modify add "${repo}-debug" "${pkgarch}" "${debug_pkgs[@]}"
+		fi
+		if ((REPO_MODIFIED)); then
+			vcs_update_package "$pkgbase" "$pkgver" "${repo}-${pkgarch}"
 		fi
 	done
 done

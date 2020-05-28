@@ -548,4 +548,13 @@ check_reproducible() {
 	done
 }
 
+# TODO: Needs to verify the keyid is in the keyring
+check_signed_tag(){
+	local pkgbase="$(getpkgbase ${1})"
+	local pkgver="$(getpkgbase ${1})"
+	if ! git -C "${WORKDIR}/${pkgbase}" verify-tag "${pkgver}" 1>/dev/null ; then
+		return 1
+	fi
+}
+
 . "$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-functions-${VCS}"

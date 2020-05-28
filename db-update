@@ -56,6 +56,9 @@ for repo in "${repos[@]}"; do
 			if ! check_signed_tag "${pkg}"; then
 				die "Package %s does not have a signed tag matching the version" "$repo/${pkg##*/}"
 			fi
+			if ! check_pkgbuild_checksum "${pkg}"; then
+				die "Package %s was not built with the checked in PKGBUILD" "$repo/${pkg##*/}"
+			fi
 			if ! check_pkgfile "${pkg}"; then
 				die "Package %s is not consistent with its meta data" "$repo/${pkg##*/}"
 			fi

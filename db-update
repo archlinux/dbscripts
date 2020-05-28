@@ -53,6 +53,9 @@ for repo in "${repos[@]}"; do
 			if [[ -h ${pkg} ]]; then
 				die "Package %s is a symbolic link" "$repo/${pkg##*/}"
 			fi
+			if ! check_signed_tag "${pkg}"; then
+				die "Package %s does not have a signed tag matching the version" "$repo/${pkg##*/}"
+			fi
 			if ! check_pkgfile "${pkg}"; then
 				die "Package %s is not consistent with its meta data" "$repo/${pkg##*/}"
 			fi

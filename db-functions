@@ -557,4 +557,17 @@ check_signed_tag(){
 	fi
 }
 
+# Verified the package .BUIDINFO PKGBUID sha256sum against the checked out version
+check_pkgbuild_checksum(){
+	local pkgbase="$(getpkgbase ${1})"
+	local pkgver="$(getpkgbase ${1})"
+	local pkgfile_checksum="$(_grep_buildinfo "${1}" "pkgbuild_sha256sum")"
+
+	local sum="$(sha256sum "${WORKDIR}/${pkgbase}/PKGBUILD")"
+	if [[ "$pkgfile_checksum" != "${sum%% *}" ]]; then
+		return 1
+	fi
+}
+
+
 . "$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-functions-${VCS}"

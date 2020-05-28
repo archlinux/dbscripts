@@ -449,8 +449,8 @@ check_stagingrepos() {
 	return 1
 }
 
-#usage: chk_license ${license[@]}"
-chk_license() {
+#usage: check_license ${license[@]}"
+check_license() {
 	local l
 	for l in "${@}"; do
 		in_array "${l}" "${ALLOWED_LICENSES[@]}" && return 0

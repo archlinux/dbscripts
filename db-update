@@ -34,8 +34,9 @@ for repo in "${repos[@]}"; do
 	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXTS}))
 	if (( $? == 0 )); then
 		for pkg in "${pkgs[@]}"; do
-			echo "$pkg"
-			fetch_pkgbuild "$(getpkgbase ${pkg})" "$(getpkgver ${pkg})"
+			if ! fetch_pkgbuild "$(getpkgbase ${pkg})" "$(getpkgver ${pkg})"; then
+				die "Couldn't find package %s in git!" "${pkg}"
+			fi
 		done
 	fi
 done

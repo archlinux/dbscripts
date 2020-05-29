@@ -151,6 +151,10 @@ for repo in "${repos[@]}"; do
 	done
 done
 
+if ((REPO_MODIFIED)); then
+	vcs_push
+fi
+
 for repo in "${repos[@]}"; do
 	for pkgarch in "${ARCHES[@]}"; do
 		repo_unlock "${repo}" "${pkgarch}"

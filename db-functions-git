@@ -1,5 +1,18 @@
 #!/hint/bash
 
+if [[ -n ${GITUSER} ]]; then
+	setfacl -m u:"${GITUSER}":rwx "${WORKDIR}"
+	setfacl -m d:u:"${USER}":rwx "${WORKDIR}"
+	setfacl -m d:u:"${GITUSER}":rwx "${WORKDIR}"
+fi
+
+arch_git() {
+	if [[ -z ${GITUSER} ]]; then
+		/usr/bin/git "${@}"
+	else
+		sudo -u "${GITUSER}" -- /usr/bin/git "${@}"
+	fi
+}
 
 
 # The SVN version should just check the path is present....

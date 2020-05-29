@@ -19,8 +19,16 @@ arch_git() {
 fetch_pkgbuild(){
 	local pkgbase="${1}"
 	local tag="${2}"
-	git clone --branch "$tag" --depth 1 "${GITREPOS}${pkgbase}.git" "$WORKDIR/${pkgbase}"
-	git -C "${WORKDIR}/${pkgbase}" verify-tag "$tag"
+	local found=0
+	for repo in "${UPSTREAM_REPOS[@]}"; do
+		if arch_git clone --branch "$tag" --depth 1 "${GITREPOS}/${repo}/${pkgbase}.git" "$WORKDIR/${pkgbase}"; then
+			found=1
+			break
+		fi
+	done
+	if ((!found)); then
+		return 1
+	fi
 }
 
 

@@ -50,7 +50,7 @@ export_from_pkgrepo() {
 	
 	if [[ ! -e ${dest} ]]; then
 		mkdir -p "${dest}"
-		git -C "${workdir}" archive "$tag" | bsdtar -xf - -C "${dest}"
+		arch_git -C "${workdir}" archive "$tag" | bsdtar -xf - -C "${dest}"
 	fi
 }
 
@@ -62,7 +62,7 @@ find_repo_for_package() {
 	local candidates=("${@:3}")
 
 	# FIXME
-	local repos=($(git -C "${GITREPO}" ls-files "*/$pkgbase" | awk -F/ '{print $1}' | \
+	local repos=($(arch_git -C "${GITREPO}" ls-files "*/$pkgbase" | awk -F/ '{print $1}' | \
 		grep -xFf <(printf "%s\n" "${candidates[@]/%/-${pkgarch}}" "${candidates[@]/%/-any}")))
 
 	if (( ${#repos[@]} > 1 )); then
@@ -75,7 +75,7 @@ find_repo_for_package() {
 
 # Commit changes staged by (successive?) vcs_(re)?move_package runs.
 vcs_commit() {
-	git -C "${GITREPO}" commit -m "${1}:" 
+	arch_git -C "${GITREPO}" commit -m "${1}:" 
 }
 
 
@@ -88,7 +88,7 @@ vcs_update_package(){
 		mkdir -p "$GITREPO/${dest}"
 	fi
 	echo "$pkgbase $tag $(git -C "${WORKDIR}/${pkgbase}" rev-list -n 1 $tag)" > "$GITREPO/$dest/$pkgbase"
-	git -C "${GITREPO}" add "$GITREPO/$dest/$pkgbase" || true
+	arch_git -C "${GITREPO}" add "$GITREPO/$dest/$pkgbase" || true
 	vcs_commit "updated ${pkgbase}-${tag} in [${dest}]" || true
 }
 
@@ -101,7 +101,7 @@ vcs_move_package() {
 	if [[ ! -e "${vcsrepo_to}" ]]; then
 		mkdir -p "${vcsrepo_to}"
 	fi
-	git -C "$GITREPO" mv "$vcsrepo_from/${pkgbase}" "$vcsrepo_to/${pkgbase}"
+	arch_git -C "$GITREPO" mv "$vcsrepo_from/${pkgbase}" "$vcsrepo_to/${pkgbase}"
 }
 
 # Write to the VCS in order to track a package being deleted from a pacman
@@ -110,5 +110,9 @@ vcs_remove_package() {
 	local pkgbase=${1}
 	local vcsrepo=${GITREPO}/${2}/${pkgbase}
 
-	git -C "$GITREPO" rm "$vcsrepo" 
+	arch_git -C "$GITREPO" rm "$vcsrepo" 
+}
+
+vcs_push(){
+	arch_git -C "$GITREPO" push --tags origin master
 }

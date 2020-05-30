@@ -24,32 +24,15 @@ else
 	tarches=("$arch")
 fi
 
+# The three for loops look ugly. But it's probably better to seperate all
+# these actions into independant portions so it's easier to handle failures
+
+# Lock the repository. We are acting on it now
 for tarch in "${tarches[@]}"; do
 	repo_lock "$repo" "$tarch" || exit 1
 done
 
-remove_pkgs=()
-remove_debug_pkgs=()
-for pkgbase in "${pkgbases[@]}"; do
-	msg "Removing %s from [%s]..." "$pkgbase" "$repo"
-
-	_pkgver=$(cat "${GITREPO}/${vcsrepo}/${pkgbase}"| awk '{print $2}')
-	fetch_pkgbuild "${pkgbase}" "${_pkgver}"
-	if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "" && echo ${pkgname[@]})); then
-		vcs_remove_package "${pkgbase}" "${vcsrepo}"
-		vcs_commit "${0##*/}: $pkgbase removed by $(id -un)"
-	else
-		warning "%s not found in %s" "$pkgbase" "$vcsrepo"
-		warning "Removing only %s from the repo" "$pkgbase"
-		warning "If it was a split package you have to remove the others yourself!"
-		remove_pkgs+=("$pkgbase")
-	fi
-	if is_globfile "${FTP_BASE}/${repo}-debug/os/${tarch}/${pkgbase}-debug"*; then
-		msg "Found debug package. Removing %s from [%s]..." "${pkgbase}-debug" "${repo}-debug"
-		remove_debug_pkgs+=("${pkgbase}-debug")
-	fi
-done
-
+# Remove the package from the repository
 for tarch in "${tarches[@]}"; do
 	if (( ${#remove_pkgs[@]} >= 1 )); then
 		arch_repo_modify remove "${repo}" "${tarch}" "${remove_pkgs[@]}"
@@ -57,5 +40,47 @@ for tarch in "${tarches[@]}"; do
 	if (( ${#remove_debug_pkgs[@]} >= 1 )); then
 		arch_repo_modify remove "${repo}-debug" "${tarch}" "${remove_debug_pkgs[@]}"
 	fi
+done
+
+# REPO_MODIFIED is 1 if we managed to remove the packages.
+# Thus it's safe to act on the historical repository
+if ((REPO_MODIFIED)); then
+	remove_pkgs=()
+	remove_debug_pkgs=()
+	for pkgbase in "${pkgbases[@]}"; do
+		msg "Removing %s from [%s]..." "$pkgbase" "$repo"
+
+		if ! vcsrepo_from=$(find_repo_for_package "${pkgbase}" "${arch}" "${repo}"); then
+			die "Couldn't find package %s in a repository!" "${pkgbase}"
+		fi
+
+		_pkgver=$(awk '{print $2}' "${GITREPO}/${vcsrepo}/${pkgbase}")
+		if ! fetch_pkgbuild "${pkgbase}" "${_pkgver}"; then
+			die "Couldn't find package %s in git!" "${pkgbase}"
+		fi
+		if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "" && echo ${pkgname[@]})); then
+			vcs_remove_package "${pkgbase}" "${vcsrepo}"
+			vcs_commit "${0##*/}: $pkgbase removed by $(id -un)"
+		else
+			warning "%s not found in %s" "$pkgbase" "$vcsrepo"
+			warning "Removing only %s from the repo" "$pkgbase"
+			warning "If it was a split package you have to remove the others yourself!"
+			remove_pkgs+=("$pkgbase")
+		fi
+		if is_globfile "${FTP_BASE}/${repo}-debug/os/${tarch}/${pkgbase}-debug"*; then
+			msg "Found debug package. Removing %s from [%s]..." "${pkgbase}-debug" "${repo}-debug"
+			remove_debug_pkgs+=("${pkgbase}-debug")
+		fi
+	done
+	if ! vcs_tag; then
+		die "Couldn't tag a release to the repository"
+	fi
+	if ! vcs_push; then
+		die "Couldn't push to the repository"
+	fi
+fi
+
+# Remove all the locks we created
+for tarch in "${tarches[@]}"; do
 	repo_unlock "$repo" "$tarch"
 done

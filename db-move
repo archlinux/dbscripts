@@ -89,7 +89,6 @@ for pkgbase in "${args[@]:2}"; do
 			    get_full_version; echo "${pkgname[@]}")
 			read -ra pkgnames <<<"$pkgnames"
 
-			vcs_move_package "${pkgbase}" "${repo_from}-${pkgarch}" "${repo_to}-${pkgarch}"
 			tag_list+=", $pkgarch"
 
 			for tarch in "${tarches[@]}"; do
@@ -110,7 +109,6 @@ for pkgbase in "${args[@]:2}"; do
 		fi
 	done
 	tag_list="${tag_list#, }"
-	vcs_commit "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"
 done
 
 for tarch in "${ARCHES[@]}"; do
@@ -121,6 +119,27 @@ for tarch in "${ARCHES[@]}"; do
 		arch_repo_modify remove "${repo_from}" "${tarch}" "${remove_pkgs[@]}"
 	fi
 done
+
+# Only modify repository if everything else has been done
+# We really don't want it to represent a broken state
+if ((REPO_MODIFIED)); then
+	for pkgbase in "${args[@]:2}"; do
+		for tarch in "${ARCHES[@]}"; do
+			if ! vcs_move_package "${pkgbase}" "${repo_from}-${tarch}" "${repo_to}-${tarch}"; then
+				die "Couldn't move %s from %s to %s" "${pkgbase}" "${repo_from}" "${repo_to}"
+			fi
+			if ! vcs_commit "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"; then
+				die "Couldn't commit the move %s from %s to %s" "${pkgbase}" "${repo_from}" "${repo_to}"
+			fi
+		done
+	done
+	if ! vcs_tag; then
+		die "Couldn't tag a release to the repository"
+	fi
+	if ! vcs_push; then
+		die "Couldn't push to the repository"
+	fi
+fi
 
 for pkgarch in "${ARCHES[@]}"; do
 	repo_unlock "${repo_from}" "${pkgarch}"

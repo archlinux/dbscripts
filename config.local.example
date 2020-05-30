@@ -1,0 +1,21 @@
+#!/hint/bash
+PKGREPOS=('core' 'extra' 'testing' 'staging' 'kde-unstable' 'gnome-unstable' 'community' 'community-testing' 'community-staging' 'multilib' 'multilib-testing' 'multilib-staging')
+PKGPOOL='pool/packages'
+SRCPOOL='sources/packages'
+STAGING_REPOS=('staging' 'community-staging' 'multilib-staging')
+TESTING_REPOS=('testing' 'community-testing' 'multilib-testing')
+STABLE_REPOS=('core' 'extra' 'community')
+UPSTREAM_REPOS=('packages' 'community')
+
+PKGPOOL='pool/packages'
+SRCPOOL='sources/packages'
+CLEANUP_DESTDIR="/srv/repos/svn-packages/package-cleanup"
+SOURCE_CLEANUP_DESTDIR="/srv/repos/svn-packages/source-cleanup"
+TMPDIR="/srv/repos/svn-packages/tmp"
+
+VCS=git
+
+GNUPGHOME="/etc/pacman.d/gnupg"
+GITREPOS="ssh://git@gitlab.archlinux.org:222/packages-test"
+GITREPO="/repository"
+GITUSER="git"

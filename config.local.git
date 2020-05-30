@@ -1,0 +1,31 @@
+#!/hint/bash
+
+VCS=git
+
+PKGREPOS=(
+	core core-staging core-testing
+	extra extra-staging extra-testing
+	multilib multilib-staging multilib-testing
+	kde-unstable gnome-unstable
+)
+DEBUGREPOS=(
+	core-debug core-staging-debug core-testing-debug
+	extra-debug extra-staging-debug extra-testing-debug
+	multilib-debug multilib-staging-debug multilib-testing-debug
+	kde-unstable-debug gnome-unstable-debug
+)
+TESTING_REPOS=(core-testing extra-testing multilib-testing)
+STABLE_REPOS=(core extra)
+
+PKGPOOL='pool/packages'
+DEBUGPKGPOOL='pool/packages-debug'
+SRCPOOL='sources/packages'
+
+CLEANUP_DESTDIR="/srv/repos/svn-packages/package-cleanup"
+SOURCE_CLEANUP_DESTDIR="/srv/repos/svn-packages/source-cleanup"
+TMPDIR="/srv/repos/svn-packages/tmp"
+
+export GNUPGHOME="/etc/pacman.d/gnupg"
+GITREPOS="https://gitlab.archlinux.org/archlinux/packaging/packages"
+GITREPO="/repository"
+GITUSER="git"

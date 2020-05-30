@@ -152,6 +152,7 @@ for repo in "${repos[@]}"; do
 done
 
 if ((REPO_MODIFIED)); then
+	vcs_tag
 	vcs_push
 fi
 

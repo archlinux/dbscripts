@@ -56,12 +56,10 @@ export_from_pkgrepo() {
 
 # Which repo is this package in?
 find_repo_for_package() {
-	# check 'historyrepo'
 	local pkgbase=${1}
 	local pkgarch=${2}
 	local candidates=("${@:3}")
 
-	# FIXME
 	local repos=($(arch_git -C "${GITREPO}" ls-files "*/$pkgbase" | awk -F/ '{print $1}' | \
 		grep -xFf <(printf "%s\n" "${candidates[@]/%/-${pkgarch}}" "${candidates[@]/%/-any}")))
 

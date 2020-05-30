@@ -113,3 +113,9 @@ vcs_remove_package() {
 vcs_push(){
 	arch_git -C "$GITREPO" push --tags origin master
 }
+
+vcs_tag(){
+	tag=$(arch_git -C "$GITREPO" describe --tags --abbrev=0)
+	((tag++))
+	arch_git -C "$GITREPO" tag "$tag"
+}

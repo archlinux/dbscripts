@@ -498,7 +498,7 @@ check_signed_tag(){
 # Verified the package .BUIDINFO PKGBUID sha256sum against the checked out version
 check_pkgbuild_checksum(){
 	local pkgbase="$(getpkgbase ${1})"
-	local pkgver="$(getpkgbase ${1})"
+	local pkgver="$(getpkgver ${1})"
 	local pkgfile_checksum="$(_grep_buildinfo "${1}" "pkgbuild_sha256sum")"
 
 	local sum="$(sha256sum "${WORKDIR}/${pkgbase}/PKGBUILD")"

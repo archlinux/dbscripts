@@ -58,3 +58,23 @@ Things that haven't been mentioned yet:
 * Install the `make` and `docker` packages. Start the docker daemon by issuing `systemctl start docker`.
 * The test suite can now be run with `make test`.
 * A coverage report can be generated with `make test-coverage`. Open `coverage/index.html` in your web browser to inspect the results.
+
+## License
+For a long time, dbscripts didn't have an explicit license. Currently it is
+primarily licensed under the GPL-2.0-or-later, but some code is of unknown
+license. Details on clarifying the license status may be found in LICENSE_STATUS.md
+
+tl;dr
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/.

@@ -196,17 +196,6 @@ getpkgbase() {
 	fi
 }
 
-issplitpkg() {
-	local _base
-
-	_base="$(_grep_pkginfo "$1" "pkgbase")"
-	if [[ -z $_base ]]; then
-		return 1
-	else
-		return 0
-	fi
-}
-
 # Get the package name
 getpkgname() {
 	local _name
@@ -338,14 +327,16 @@ check_splitpkgs() {
 	pushd "${WORKDIR}/check_splitpkgs" >/dev/null
 
 	for pkgfile in "${pkgfiles[@]}"; do
-		issplitpkg "${pkgfile}" || continue
 		local _pkgbase="$(getpkgbase "${pkgfile}")"
 		local _pkgname="$(getpkgname "${pkgfile}")"
 		local _pkgarch="$(getpkgarch "${pkgfile}")"
+		local vcsnames=($(source_pkgbuild "${_pkgbase}" "repos/${repo}-${_pkgarch}"; echo "${pkgname[@]}"))
+
+		# not a split package
+		(( ${#vcsnames[@]} > 1 )) || continue
+
 		mkdir -p "${repo}/${_pkgarch}/${_pkgbase}"
 		echo "${_pkgname}" >> "${repo}/${_pkgarch}/${_pkgbase}/staging"
-
-		local vcsnames=($(source_pkgbuild "${_pkgbase}" "repos/${repo}-${_pkgarch}"; echo "${pkgname[@]}"))
 		printf '%s\n' "${vcsnames[@]}" >> "${repo}/${_pkgarch}/${_pkgbase}/vcs"
 	done
 	popd >/dev/null

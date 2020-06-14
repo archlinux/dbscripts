@@ -121,9 +121,9 @@ eot
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-packages-{copy,repo}}
 
 	for r in ${PKGREPOS[@]}; do
-		mkdir -p "${TMP}/staging/${r}"
+		mkdir -p "${TMP}"/staging/${r}{,-debug}
 		for a in ${ARCHES[@]}; do
-			mkdir -p "${TMP}/ftp/${r}/os/${a}"
+			mkdir -p "${TMP}"/ftp/${r}{,-debug}/os/${a}
 		done
 	done
 	mkdir -p "${TMP}/ftp/${PKGPOOL}"

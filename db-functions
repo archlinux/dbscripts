@@ -234,6 +234,14 @@ getpkgarch() {
 	echo "$_ver"
 }
 
+is_debug_package() {
+	local pkgfile=${1}
+	local pkgbase="$(getpkgbase "${pkgfile}")"
+	local pkgname="$(getpkgname "${pkgfile}")"
+
+	[[ ${pkgbase}-debug = ${pkgname} ]]
+}
+
 check_packager() {
 	local _packager
 
@@ -310,7 +318,7 @@ check_pkgvcs() {
 	read -ra vcsnames <<<"${vcsnames}"
 
 	[[ "${vcsver}" = "${_pkgver}" ]] || return 1
-	in_array "${_pkgname}" "${vcsnames[@]}" || return 1
+	in_array "${_pkgname}" "${vcsnames[@]}" "${_pkgbase}-debug" || return 1
 
 	return 0
 }
@@ -334,6 +342,7 @@ check_splitpkgs() {
 
 		# not a split package
 		(( ${#vcsnames[@]} > 1 )) || continue
+		[[ ${_pkgbase}-debug = ${_pkgname} ]] && continue
 
 		mkdir -p "${repo}/${_pkgarch}/${_pkgbase}"
 		echo "${_pkgname}" >> "${repo}/${_pkgarch}/${_pkgbase}/staging"

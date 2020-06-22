@@ -48,7 +48,7 @@ for pkgbase in "${args[@]:2}"; do
 			fi
 
 			if [[ ${check_leapfrog} = true ]] && leapfrog=$(find_repo_for_package "${pkgbase}" "${pkgarch}" "${TESTING_REPOS[@]}"); then
-				die "Package %s cannnot be moved from %s to %s while it exists in %s" "${pkgbase}" "${repo_from}" "${repo_to}" "${leapfrog}"
+				die "Package %s cannot be moved from %s to %s while it exists in %s" "${pkgbase}" "${repo_from}" "${repo_to}" "${leapfrog}"
 			fi
 
 			for pkgname in "${pkgnames[@]}"; do

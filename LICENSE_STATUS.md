@@ -16,33 +16,37 @@ GPL-2.0-or-later. This covers the following contributions:
 -   32	Eli Schwartz
 -   29	Dan McGee
 
-# Outstanding issues
+The following additional contributors have been contacted and agreed to the
+licensing update:
 
-We still need to contact these people and acquire a license grant or otherwise
-resolve the status of their contributions.
-
--   23	Luke Shumaker
 -   16	Francois Charette
 -   16	Thomas Bächler
--   15	Eric Bélanger
 -   13	Xavier Chantry
 -    8	Rémy Oudompheng
--    7	Abhishek Dasgupta
 -    7	Florian Pritz
 -    7	François Charette
--    3	Daniel J Griffiths
 -    2	Allan McRae
 -    2	Henning Garus
 -    2	Jelle van der Waa
 -    2	Simo Leone
 -    2	anthraxx
 -    1	Andrea Scarpino
+-    1	Johannes Löthberg
+-    1	Levente Polyak
+-    1	Travis Willard
+
+# Outstanding issues
+
+We still need to contact these people and acquire a license grant or otherwise
+resolve the status of their contributions.
+
+-   23	Luke Shumaker
+-   15	Eric Bélanger
+-    7	Abhishek Dasgupta
+-    3	Daniel J Griffiths
 -    1	Dave Reisner
 -    1	Eric B�langer
 -    1	Jan Alexander Steffens (heftig)
 -    1	Jan de Groot
--    1	Johannes Löthberg
--    1	Levente Polyak
 -    1	Scott Horowitz
--    1	Travis Willard
 

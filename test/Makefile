@@ -1,11 +1,13 @@
+CASES ?= cases
+
 test:
-	PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) bats cases
+	BUILDDIR=/build PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) bats $(CASES)
 
 test-coverage:
-	PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) kcov \
+	BUILDDIR=/build PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) kcov \
 		--include-path=$(CURDIR)/../ \
 		--exclude-path=$(CURDIR)/../test,$(CURDIR)/../cron-jobs/makepkg.conf,$(CURDIR)/../config \
 		$(COVERAGE_DIR) \
-		bats cases
+		bats $(CASES)
 
 .PHONY: test test-coverage

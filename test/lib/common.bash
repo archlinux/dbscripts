@@ -130,12 +130,16 @@ eot
 	mkdir -p "${TMP}/ftp/${SRCPOOL}"
 
 	# make dummy packages for "reproducibility"
-	pacman -Qq | pacman -Sddp - | while read -r line; do
-		line=${line##*/}
-		pkgname=${line%-*-*-*}
-		mkdir -p "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}"
-		touch "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}/${line}"{,.sig}
-	done
+	pacman -Qi | awk -F': ' '\
+        /^Name .*/ {printf "%s", $2} \
+        /^Version .*/ {printf "-%s", $2} \
+        /^Architecture .*/ {print "-"$2} \
+        ' | while read -r line; do
+			line=$line.pkg.tar.xz
+			pkgname=${line%-*-*-*}
+			mkdir -p "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}"
+			touch "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}/${line}"{,.sig}
+		done
 
 	svnadmin create "${TMP}/svn-packages-repo"
 	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"

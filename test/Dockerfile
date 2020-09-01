@@ -16,5 +16,4 @@ Expire-Date: 0\n\
 | gpg --quiet --batch --no-tty --no-permission-warning --gen-key
 RUN gpg --export | sudo pacman-key -a -
 RUN sudo pacman-key --lsign-key tester@localhost
-ENV BUILDDIR=/build
 ENV PACKAGER="Bob Tester <tester@localhost>"

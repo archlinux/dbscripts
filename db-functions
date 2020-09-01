@@ -109,7 +109,14 @@ trap cleanup EXIT
 
 
 #repo_lock <repo-name> <arch> [timeout]
-repo_lock () {
+repo_lock() {
+	local repo base=${1}; shift
+	for repo in ${base} ${base}-debug; do
+		_repo_lock ${repo} "${@}"
+	done
+}
+
+_repo_lock () {
 	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	local DBLOCKFILE="${FTP_BASE}/${1}/os/${2}/${1}${DBEXT}.lck"
 	local _count

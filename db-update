@@ -79,6 +79,7 @@ done
 
 for repo in "${repos[@]}"; do
 	msg "Updating [%s]..." "$repo"
+	tree "${STAGING}/${repo}"
 	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXTS} 2>/dev/null))
 	for pkgarch in "${ARCHES[@]}"; do
 		add_pkgs=()
@@ -115,6 +116,7 @@ for repo in "${repos[@]}"; do
 				ln -s "../../../${currentpool}/${pkgfile}.sig" "$FTP_BASE/${currentrepo}/os/${pkgarch}"
 			fi
 		done
+		declare -p add_pkgs debug_pkgs
 		if (( ${#add_pkgs[@]} >= 1 )); then
 			arch_repo_modify add "${repo}" "${pkgarch}" "${add_pkgs[@]}"
 		fi

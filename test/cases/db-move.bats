@@ -7,15 +7,21 @@ load ../lib/common
 	local arch
 
 	for pkgbase in ${pkgs[@]}; do
+		echo "releasing to testing: $pkgbase"
 		releasePackage testing ${pkgbase}
 	done
 
+    echo "db-updating..."
 	db-update
 
+    echo "db-move testing -> extra pkg-simple-a"
 	db-move testing extra pkg-simple-a
 
+	echo checkRemovedPackage testing pkg-simple-a
 	checkRemovedPackage testing pkg-simple-a
+	echo checkPackage extra pkg-simple-a 1-1
 	checkPackage extra pkg-simple-a 1-1
+	echo checkPackage testing pkg-simple-b 1-1
 	checkPackage testing pkg-simple-b 1-1
 }
 

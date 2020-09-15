@@ -551,7 +551,7 @@ check_reproducible() {
 # TODO: Needs to verify the keyid is in the keyring
 check_signed_tag(){
 	local pkgbase="$(getpkgbase ${1})"
-	local pkgver="$(getpkgver ${1})"
+	local pkgver="$(conv_tag $(getpkgver ${1}))"
 	if ! GNUPGHOME=/etc/pacman.d/gnupg git -C "${WORKDIR}/${pkgbase}" verify-tag "${pkgver}" 1>/dev/null ; then
 		return 1
 	fi

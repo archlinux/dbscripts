@@ -6,6 +6,16 @@ if [[ -n ${GITUSER} ]]; then
 	setfacl -m d:u:"${GITUSER}":rwx "${WORKDIR}"
 fi
 
+# Converts from the PKGBUILD tag to the git repository tag
+# Input     1:1.0~0-1
+# Output    1-1.0.0-1
+conv_tag() {
+	local git_tag="$1"
+	git_tag="${git_tag/:/-}"
+	git_tag="${git_tag//\~/.}"
+	printf "%s" "${git_tag}"
+}
+
 arch_git() {
 	if [[ -z ${GITUSER} ]]; then
 		/usr/bin/git "${@}"
@@ -18,25 +28,23 @@ arch_git() {
 # The SVN version should just check the path is present....
 fetch_pkgbuild() {
 	local pkgbase="${1}"
-	local tag="${2}"
+	local tag=$(conv_tag "${2}")
 	git clone --branch "$tag" --depth 1 "${GITREPOS}${pkgbase}.git" "$WORKDIR/${pkgbase}"
 	git -C "${WORKDIR}/${pkgbase}" verify-tag "$tag"
 }
 
 
 # Source the PKGBUILD from the package's git/svn/whatever repo.
-# Depending on how the VCS is used the tag might be "trunk" or "repos/$repo-$arch"
-# or the full package version (epoch:pkgver-pkgrel) or any other recognized tag.
 source_pkgbuild() {
 	local pkgbase="$1"
-	local tag="$2"
+	local tag=$(conv_tag ${2})
 	. <(cat "${WORKDIR}/${pkgbase}/PKGBUILD" 2>/dev/null || echo false)
 }
 
 # Export PKGBUILD resource following the same rules as source_pkgbuild()
 export_from_pkgrepo() {
 	local pkgbase="$1"
-	local tag="$2"
+	local tag=$(conv_tag ${2})
 	local src="$3"
 	local dest="$4"
 	
@@ -71,12 +79,13 @@ vcs_commit() {
 
 vcs_update_package() {
 	local pkgbase="$1"
-	local tag="$2"
+	local tag="${2}"
+	local gittag="$(conv_tag ${2})"
 	local dest="$3"
 	if [[ ! -e "$GITREPO/${dest}" ]]; then
 		die "Repository %s doesn't exist!" "${dest}"
 	fi
-	echo "$pkgbase $tag $(git -C "${WORKDIR}/${pkgbase}" rev-list -n 1 "$tag")" > "$GITREPO/$dest/$pkgbase"
+	echo "$pkgbase $gittag $(git -C "${WORKDIR}/${pkgbase}" rev-list -n 1 "$gittag")" > "$GITREPO/$dest/$pkgbase"
 	arch_git -C "${GITREPO}" add "$GITREPO/$dest/$pkgbase" || true
 	vcs_commit "updated ${pkgbase}-${tag} in [${dest}]" || true
 }

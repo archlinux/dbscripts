@@ -86,7 +86,7 @@ vcs_commit() {
 
 vcs_update_package(){
 	local pkgbase="$1"
-	local tag=$(conv_tag ${2})
+	local tag="$2"
 	local dest="$3"
 	if [[ ! -e "$GITREPO/${dest}" ]]; then
 		die "Repository %s doesn't exist!" "${dest}"

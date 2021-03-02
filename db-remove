@@ -45,6 +45,16 @@ for pkgbase in "${pkgbases[@]}"; do
 done
 
 for tarch in "${tarches[@]}"; do
-	arch_repo_modify remove "${repo}" "${tarch}" "${remove_pkgs[@]}"
+	if (( ${#remove_pkgs[@]} >= 1 )); then
+		arch_repo_modify remove "${repo}" "${tarch}" "${remove_pkgs[@]}"
+		for pkg in "${remove_pkgs[@]}"; do
+			if is_globfile "${FTP_BASE}/${repo}-debug/os/${tarch}/${pkg}-debug"*; then
+				msg "Found debug package. Removing %s from [%s]..." "$pkg" "$repo"
+				remove_debug_pkgs+=("${pkg}-debug")
+				arch_repo_modify remove "${repo}-debug" "${tarch}" "${pkg}-debug"
+			fi
+		done
+	fi
+
 	repo_unlock "$repo" "$tarch"
 done

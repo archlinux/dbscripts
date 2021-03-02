@@ -159,7 +159,14 @@ _repo_lock () {
 	return 1
 }
 
-repo_unlock () { #repo_unlock <repo-name> <arch>
+repo_unlock(){
+	local repo base=${1}; shift
+	for repo in ${base} ${base}-debug; do
+			_repo_unlock ${repo} "${@}"
+	done
+}
+
+_repo_unlock () { #repo_unlock <repo-name> <arch>
 	local LOCKDIR="$TMPDIR/.repolock.$1.$2"
 	if [[ ! -d $LOCKDIR ]]; then
 		warning "Repo lock [%s] (%s) was not locked!" "$1" "$2"

@@ -199,7 +199,13 @@ checkPackageDB() {
 	local pkgname
 
 	local pkgarches=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${arch[@]}))
-	local pkgnames=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${pkgname[@]}))
+	# TODO: We need a better way to figure out when we are dealing with
+	#       debug packages
+	if [[ "${repo}" = *-debug ]]; then
+		local pkgnames=($(. "fixtures/$pkgbase/PKGBUILD"; echo "${pkgname[@]}-debug"))
+	else
+		local pkgnames=($(. "fixtures/$pkgbase/PKGBUILD";  echo "${pkgname[@]}"))
+	fi
 
 	if [[ ${pkgarches[@]} == any ]]; then
 		repoarches=(${ARCHES[@]})
@@ -210,9 +216,8 @@ checkPackageDB() {
 	for pkgarch in ${pkgarches[@]}; do
 		for pkgname in ${pkgnames[@]}; do
 			pkgfile="${pkgname}-${pkgver}-${pkgarch}${PKGEXT}"
-
-			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile} ]
-			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]
+			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile} ] || [ -r ${FTP_BASE}/${PKGPOOL}-debug/${pkgfile} ]
+			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ] || [ -r ${FTP_BASE}/${PKGPOOL}-debug/${pkgfile}.sig ]
 			[ ! -r ${STAGING}/${repo}/${pkgfile} ]
 			[ ! -r ${STAGING}/${repo}/${pkgfile}.sig ]
 
@@ -223,12 +228,14 @@ checkPackageDB() {
 						continue
 					fi
 				fi
-
+				debug echo "${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}"
 				[ -L ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile} ]
-				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile})" == ${FTP_BASE}/${PKGPOOL}/${pkgfile} ]
+				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile})" == ${FTP_BASE}/${PKGPOOL}/${pkgfile} ] || \
+					[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile})" == ${FTP_BASE}/${PKGPOOL}-debug/${pkgfile} ]
 
 				[ -L ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig ]
-				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig)" == ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]
+				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig)" == ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ] || \
+					[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig)" == ${FTP_BASE}/${PKGPOOL}-debug/${pkgfile}.sig ]
 
 				for db in ${DBEXT} ${FILESEXT}; do
 					[ -r "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" ]
@@ -248,7 +255,7 @@ checkPackage() {
 
 	local dirarches=() pkgbuildarches=()
 	local pkgbuild dirarch pkgbuildver
-	for pkgbuild in "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-"+([^-])"/PKGBUILD"; do
+	for pkgbuild in "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo%-debug}-"+([^-])"/PKGBUILD"; do
 		[[ -e $pkgbuild ]] || continue
 		dirarch=${pkgbuild%/PKGBUILD}
 		dirarch=${dirarch##*-}

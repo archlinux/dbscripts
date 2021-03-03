@@ -128,6 +128,8 @@ eot
 	done
 	mkdir -p "${TMP}/ftp/${PKGPOOL}"
 	mkdir -p "${TMP}/ftp/${SRCPOOL}"
+	mkdir -p "${TMP}/ftp/${PKGPOOL}-debug"
+	mkdir -p "${TMP}/ftp/${SRCPOOL}-debug"
 
 	# make dummy packages for "reproducibility"
 	pacman -Qi | awk -F': ' '\

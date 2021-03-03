@@ -1,5 +1,5 @@
 FROM docker.io/archlinux/base
-RUN pacman -Syu --noconfirm --needed sudo fakeroot awk subversion make kcov bash-bats gettext grep tree
+RUN pacman -Syu --noconfirm --needed sudo fakeroot awk subversion make kcov bash-bats gettext grep tree binutils
 RUN pacman-key --init
 RUN echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel
 RUN useradd -N -g users -G wheel -d /tester -m tester

@@ -147,6 +147,12 @@ eot
 	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
 }
 
+debug(){
+	local -; set -x
+	$@
+	set +x
+}
+
 teardown() {
 	rm -rf "${TMP}"
 }

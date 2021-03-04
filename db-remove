@@ -12,7 +12,6 @@ repo="$1"
 arch="$2"
 pkgbases=("${@:3}")
 
-ftppath="$FTP_BASE/$repo/os"
 vcsrepo="$repo-$arch"
 
 if ! check_repo_permission "$repo"; then

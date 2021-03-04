@@ -42,8 +42,14 @@ load ../lib/common
 	echo "db-move testing -> extra pkg-debuginfo"
 	db-move testing extra pkg-debuginfo
 
+	echo checkRemovedPackage testing pkg-debuginfo
+	checkRemovedPackage testing pkg-debuginfo
+
 	echo checkRemovedPackage testing-debug pkg-debuginfo-debug
 	checkRemovedPackage testing-debug pkg-debuginfo
+
+	echo checkPackage extra pkg-debuginfo 1-1
+	checkPackage extra pkg-debuginfo 1-1
 
 	echo checkPackage extra-debug pkg-debuginfo 1-1
 	checkPackage extra-debug pkg-debuginfo 1-1

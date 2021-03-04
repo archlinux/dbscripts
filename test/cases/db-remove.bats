@@ -25,7 +25,8 @@ load ../lib/common
 
 @test "remove debug package" {
 	local arches=('i686' 'x86_64')
-	local pkgs=('pkg-debuginfo')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b' 'pkg-simple-epoch' 'pkg-debuginfo')
+	local debug_pkgs=('pkg-debuginfo')
 	local pkgbase
 	local arch
 
@@ -42,7 +43,9 @@ load ../lib/common
 	done
 
     checkRemovedPackage extra pkg-debuginfo
-    checkRemovedPackage extra-debug pkg-debuginfo
+	for pkgbase in ${debug_pkgs[@]}; do
+		checkRemovedPackage extra-debug ${pkgbase}
+	done
 }
 
 @test "remove multiple packages" {

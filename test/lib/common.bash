@@ -288,8 +288,7 @@ checkRemovedPackage() {
 	local pkgbase=$2
 
 	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-
-	if __isGlobfile "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-"+([^-])"/PKGBUILD"; then
+	if __isGlobfile "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo%-debug}-"+([^-])"/PKGBUILD"; then
 		return 1
 	fi
 
@@ -308,7 +307,14 @@ checkRemovedPackageDB() {
 	local pkgname
 
 	pkgarches=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${arch[@]}))
-	pkgnames=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${pkgname[@]}))
+
+	# TODO: We need a better way to figure out when we are dealing with
+	#       debug packages
+	if [[ "${repo}" = *-debug ]]; then
+		pkgnames=($(. "fixtures/$pkgbase/PKGBUILD"; echo "${pkgname[@]}-debug"))
+	else
+		pkgnames=($(. "fixtures/$pkgbase/PKGBUILD";  echo "${pkgname[@]}"))
+	fi
 
 	if [[ ${pkgarches[@]} == any ]]; then
 		tarches=(${ARCHES[@]})

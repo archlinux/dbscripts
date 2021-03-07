@@ -103,7 +103,9 @@ setup() {
 	ARCHIVEUSER=""
 	SVNREPO="file://${TMP}/svn-packages-repo"
 	PKGREPOS=('core' 'extra' 'testing' 'staging')
+	DEBUGREPOS=('core-debug' 'extra-debug' 'testing-debug' 'staging-debug')
 	PKGPOOL='pool/packages'
+	DEBUGPKGPOOL='pool/packages-debug'
 	SRCPOOL='sources/packages'
 	STAGING_REPOS=('staging')
 	TESTING_REPOS=('testing')

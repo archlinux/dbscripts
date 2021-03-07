@@ -433,7 +433,7 @@ check_repo_permission() {
 	(( ${#PKGREPOS[@]} == 0 )) && return 1
 	[[ -z "${PKGPOOL}" ]] && return 1
 
-	in_array "${repo}" "${PKGREPOS[@]}" || return 1
+	in_array "${repo}" "${PKGREPOS[@]}" "${DEBUGREPOS[@]}" || return 1
 
 	[[ -w $FTP_BASE/${PKGPOOL} ]] || return 1
 

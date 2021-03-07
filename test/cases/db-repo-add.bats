@@ -1,9 +1,5 @@
 load ../lib/common
 
-is_globfile() {
-	[[ -f $1 ]]
-}
-
 __movePackageToRepo() {
 	local repo=$1
 	local pkgbase=$2
@@ -19,7 +15,7 @@ __movePackageToRepo() {
 	fi
 
 	# FIXME: pkgbase might not be part of the package filename
-	if is_globfile "${STAGING}"/${repo}/${pkgbase}-debug-*-*-${arch}${PKGEXT}; then
+	if __isGlobfile "${STAGING}"/${repo}/${pkgbase}-debug-*-*-${arch}${PKGEXT}; then
 		mv -v "${STAGING}"/${repo}/${pkgbase}-debug-*-*-${arch}${PKGEXT}{,.sig} "${FTP_BASE}/${PKGPOOL}-debug/"
 		is_debug=1
 	fi

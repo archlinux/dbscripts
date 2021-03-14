@@ -71,7 +71,9 @@ msg "Moving packages from [%s] to [%s]..." "$repo_from" "$repo_to"
 
 for arch in "${ARCHES[@]}"; do
 	declare -a add_pkgs_$arch
+	declare -a add_debug_pkgs_$arch
 	declare -a remove_pkgs_$arch
+	declare -a remove_debug_pkgs_$arch
 done
 for pkgbase in "${args[@]:2}"; do
 	tag_list=""
@@ -94,7 +96,9 @@ for pkgbase in "${args[@]:2}"; do
 
 			for tarch in "${tarches[@]}"; do
 				declare -n add_pkgs="add_pkgs_${tarch}"
+				declare -n add_debug_pkgs="add_debug_pkgs_${tarch}"
 				declare -n remove_pkgs="remove_pkgs_${tarch}"
+				declare -n remove_debug_pkgs="remove_debug_pkgs_${tarch}"
 				for pkgname in "${pkgnames[@]}"; do
 					pkgpath=$(getpkgfile "${ftppath_from}/${tarch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS})
 					pkgfile="${pkgpath##*/}"

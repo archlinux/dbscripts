@@ -12,7 +12,9 @@ args=("${@}")
 repo_from="${args[0]}"
 repo_to="${args[1]}"
 ftppath_from="${FTP_BASE}/${repo_from}/os/"
+ftppath_debug_from="${FTP_BASE}/${repo_from}-debug/os/"
 ftppath_to="${FTP_BASE}/${repo_to}/os/"
+ftppath_debug_to="${FTP_BASE}/${repo_to}-debug/os/"
 
 check_leapfrog=false
 if in_array "${repo_from}" "${STAGING_REPOS[@]}" && in_array "${repo_to}" "${STABLE_REPOS[@]}"; then
@@ -110,6 +112,18 @@ for pkgbase in "${args[@]:2}"; do
 					add_pkgs+=("${FTP_BASE}/${PKGPOOL}/${pkgfile}")
 					remove_pkgs+=("${pkgname}")
 				done
+
+				debug_pkgpath=$(getpkgfile "${ftppath_debug_from}/${tarch}/${pkgbase}-debug-${pkgver}-${pkgarch}"${PKGEXTS})
+				debug_pkgfile="${debug_pkgpath##*/}"
+				if [[ -f ${debug_pkgpath} ]]; then
+					msg2 "Found debug package %s" "${pkgbase}-debug"
+					ln -s "../../../${DEBUGPKGPOOL}/${debug_pkgfile}" "${ftppath_debug_to}/${tarch}/"
+					if [[ -f ${FTP_BASE}/${DEBUGPKGPOOL}/${debug_pkgfile}.sig ]]; then
+						ln -s "../../../${DEBUGPKGPOOL}/${debug_pkgfile}.sig" "${ftppath_debug_to}/${tarch}/"
+					fi
+					add_debug_pkgs+=("${FTP_BASE}/${DEBUGPKGPOOL}/${debug_pkgfile}")
+					remove_debug_pkgs+=("${pkgbase}-debug")
+				fi
 			done
 		fi
 	done
@@ -119,10 +133,16 @@ done
 
 for tarch in "${ARCHES[@]}"; do
 	declare -n add_pkgs="add_pkgs_${tarch}"
+	declare -n add_debug_pkgs="add_debug_pkgs_${tarch}"
 	declare -n remove_pkgs="remove_pkgs_${tarch}"
+	declare -n remove_debug_pkgs="remove_debug_pkgs_${tarch}"
 	if [[ -n ${add_pkgs[*]} ]]; then
 		arch_repo_modify add "${repo_to}" "${tarch}" "${add_pkgs[@]}"
 		arch_repo_modify remove "${repo_from}" "${tarch}" "${remove_pkgs[@]}"
+	fi
+	if [[ -n ${add_debug_pkgs[@]} ]]; then
+		arch_repo_modify add "${repo_to}-debug" "${tarch}" "${add_debug_pkgs[@]}"
+		arch_repo_modify remove "${repo_from}-debug" "${tarch}" "${remove_debug_pkgs[@]}"
 	fi
 done
 

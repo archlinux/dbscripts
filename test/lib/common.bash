@@ -256,7 +256,7 @@ checkPackage() {
 
 	local dirarches=() pkgbuildarches=()
 	local pkgbuild dirarch pkgbuildver
-	for pkgbuild in "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-"+([^-])"/PKGBUILD"; do
+	for pkgbuild in "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo%-debug}-"+([^-])"/PKGBUILD"; do
 		[[ -e $pkgbuild ]] || continue
 		dirarch=${pkgbuild%/PKGBUILD}
 		dirarch=${dirarch##*-}

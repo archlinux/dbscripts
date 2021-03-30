@@ -23,6 +23,13 @@ load ../lib/common
 	checkPackage extra 'pkg-single-arch' 1-1
 }
 
+@test "add debug package" {
+	releasePackage extra 'pkg-debuginfo'
+	db-update
+	checkPackage extra 'pkg-debuginfo' 1-1
+	checkPackage extra-debug 'pkg-debuginfo' 1-1
+}
+
 @test "add single epoch package" {
 	releasePackage extra 'pkg-single-epoch'
 	db-update

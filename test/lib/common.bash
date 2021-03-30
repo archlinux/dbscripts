@@ -103,7 +103,9 @@ setup() {
 	ARCHIVEUSER=""
 	SVNREPO="file://${TMP}/svn-packages-repo"
 	PKGREPOS=('core' 'extra' 'testing' 'staging')
+	DEBUGREPOS=('core-debug' 'extra-debug' 'testing-debug' 'staging-debug')
 	PKGPOOL='pool/packages'
+	DEBUGPKGPOOL='pool/packages-debug'
 	SRCPOOL='sources/packages'
 	STAGING_REPOS=('staging')
 	TESTING_REPOS=('testing')
@@ -128,6 +130,7 @@ eot
 	done
 	mkdir -p "${TMP}/ftp/${PKGPOOL}"
 	mkdir -p "${TMP}/ftp/${SRCPOOL}"
+	mkdir -p "${TMP}/ftp/${DEBUGPKGPOOL}"
 
 	# make dummy packages for "reproducibility"
 	pacman -Qi | awk -F': ' '\

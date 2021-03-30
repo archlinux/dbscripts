@@ -200,7 +200,13 @@ checkPackageDB() {
 	local pkgname
 
 	local pkgarches=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${arch[@]}))
-	local pkgnames=($(. "fixtures/$pkgbase/PKGBUILD"; echo ${pkgname[@]}))
+	# TODO: We need a better way to figure out when we are dealing with
+	#       debug packages
+	if [[ "${repo}" = *-debug ]]; then
+		local pkgnames=("${pkgbase}-debug")
+	else
+		local pkgnames=($(. "fixtures/$pkgbase/PKGBUILD";  echo "${pkgname[@]}"))
+	fi
 
 	if [[ ${pkgarches[@]} == any ]]; then
 		repoarches=(${ARCHES[@]})
@@ -211,9 +217,8 @@ checkPackageDB() {
 	for pkgarch in ${pkgarches[@]}; do
 		for pkgname in ${pkgnames[@]}; do
 			pkgfile="${pkgname}-${pkgver}-${pkgarch}${PKGEXT}"
-
-			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile} ]
-			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]
+			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile} ] || [ -r ${FTP_BASE}/${DEBUGPKGPOOL}/${pkgfile} ]
+			[ -r ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ] || [ -r ${FTP_BASE}/${DEBUGPKGPOOL}/${pkgfile}.sig ]
 			[ ! -r ${STAGING}/${repo}/${pkgfile} ]
 			[ ! -r ${STAGING}/${repo}/${pkgfile}.sig ]
 
@@ -226,10 +231,12 @@ checkPackageDB() {
 				fi
 
 				[ -L ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile} ]
-				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile})" == ${FTP_BASE}/${PKGPOOL}/${pkgfile} ]
+				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile})" == ${FTP_BASE}/${PKGPOOL}/${pkgfile} ] || \
+					[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile})" == ${FTP_BASE}/${DEBUGPKGPOOL}/${pkgfile} ]
 
 				[ -L ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig ]
-				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig)" == ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]
+				[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig)" == ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ] || \
+					[ "$(readlink -e ${FTP_BASE}/${repo}/os/${repoarch}/${pkgfile}.sig)" == ${FTP_BASE}/${DEBUGPKGPOOL}/${pkgfile}.sig ]
 
 				for db in ${DBEXT} ${FILESEXT}; do
 					[ -r "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" ]

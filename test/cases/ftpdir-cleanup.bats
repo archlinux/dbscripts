@@ -16,7 +16,13 @@ __checkRepoRemovedPackage() {
 		if __isGlobfile "${FTP_BASE}/${PKGPOOL}/${pkgname}"-*"${PKGEXT}"; then
 			return 1
 		fi
+		if __isGlobfile "${FTP_BASE}/${DEBUGPKGPOOL}/${pkgname}"-debug-*"${PKGEXT}"; then
+			return 1
+		fi
 		if __isGlobfile "${FTP_BASE}/${repo}/os/${repoarch}/${pkgname}"-*"${PKGEXT}"; then
+			return 1
+		fi
+		if __isGlobfile "${FTP_BASE}/${repo}-debug/os/${repoarch}/${pkgname}"-debug-*"${PKGEXT}"; then
 			return 1
 		fi
 	done
@@ -46,6 +52,33 @@ __checkRepoRemovedPackage() {
 	done
 
 	checkPackage extra pkg-simple-b 1-1
+}
+
+@test "cleanup debug packages" {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-debuginfo-a' 'pkg-debuginfo-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
+	done
+	db-update
+
+	for arch in ${arches[@]}; do
+		db-remove extra ${arch} "${pkgs[0]}"
+	done
+
+	ftpdir-cleanup
+
+	checkRemovedPackage extra "${pkgs[0]}"
+	checkRemovedPackage extra-debug "${pkgs[0]}"
+	for arch in ${arches[@]}; do
+		__checkRepoRemovedPackage extra "${pkgs[0]}" ${arch}
+	done
+
+	checkPackage extra "${pkgs[1]}" 1-1
+	checkPackage extra-debug "${pkgs[1]}" 1-1
 }
 
 @test "cleanup epoch packages" {

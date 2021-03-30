@@ -6,6 +6,7 @@ __movePackageToRepo() {
 	local arch=$3
 	local tarch
 	local tarches
+	local is_debug=0
 
 	if [[ $arch == any ]]; then
 		tarches=(${ARCHES[@]})
@@ -14,10 +15,18 @@ __movePackageToRepo() {
 	fi
 
 	# FIXME: pkgbase might not be part of the package filename
+	if __isGlobfile "${STAGING}"/${repo}/${pkgbase}-debug-*-*-${arch}${PKGEXT}; then
+		mv -v "${STAGING}"/${repo}/${pkgbase}-debug-*-*-${arch}${PKGEXT}{,.sig} "${FTP_BASE}/${DEBUGPKGPOOL}/"
+		is_debug=1
+	fi
 	mv -v "${STAGING}"/${repo}/${pkgbase}-*-*-${arch}${PKGEXT}{,.sig} "${FTP_BASE}/${PKGPOOL}/"
 	for tarch in ${tarches[@]}; do
 		ln -sv ${FTP_BASE}/${PKGPOOL}/${pkgbase}-*-*-${arch}${PKGEXT} "${FTP_BASE}/${repo}/os/${tarch}/"
 		ln -sv ${FTP_BASE}/${PKGPOOL}/${pkgbase}-*-*-${arch}${PKGEXT}.sig "${FTP_BASE}/${repo}/os/${tarch}/"
+		if ((is_debug)); then
+			ln -sv ${FTP_BASE}/${DEBUGPKGPOOL}/${pkgbase}-*-*-${arch}${PKGEXT} "${FTP_BASE}/${repo}-debug/os/${tarch}/"
+			ln -sv ${FTP_BASE}/${DEBUGPKGPOOL}/${pkgbase}-*-*-${arch}${PKGEXT}.sig "${FTP_BASE}/${repo}-debug/os/${tarch}/"
+		fi
 	done
 }
 
@@ -38,6 +47,25 @@ __movePackageToRepo() {
 	for pkgbase in ${pkgs[@]}; do
 		checkPackageDB extra ${pkgbase} 1-1
 	done
+}
+
+@test "add debug packages" {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-debuginfo')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
+		for arch in ${arches[@]}; do
+			__movePackageToRepo extra ${pkgbase} ${arch}
+			db-repo-add extra ${arch} ${pkgbase}-1-1-${arch}${PKGEXT}
+			db-repo-add extra-debug ${arch} ${pkgbase}-debug-1-1-${arch}${PKGEXT}
+		done
+	done
+
+	checkPackageDB extra ${pkgbase} 1-1
+	checkPackageDB extra-debug ${pkgbase} 1-1
 }
 
 @test "add multiple packages" {

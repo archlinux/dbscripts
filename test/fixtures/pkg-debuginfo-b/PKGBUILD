@@ -1,0 +1,13 @@
+pkgname=pkg-debuginfo-b
+pkgver=1
+pkgrel=1
+pkgdesc="A package named ${pkgname}"
+arch=('i686' 'x86_64')
+
+# guarantee that split debug packages are turned on
+options=('strip' 'debug')
+
+package() {
+	install -D /dev/null "${pkgdir}"/usr/bin/hello-2
+	install -D /dev/null "${pkgdir}"/../${pkgname}-debug/usr/lib/debug/usr/bin/hello-2.debug
+}

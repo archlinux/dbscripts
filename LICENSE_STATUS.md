@@ -19,6 +19,7 @@ GPL-2.0-or-later. This covers the following contributions:
 The following additional contributors have been contacted and agreed to the
 licensing update:
 
+-   23	Luke Shumaker
 -   16	Francois Charette
 -   16	Thomas Bächler
 -   13	Xavier Chantry
@@ -40,7 +41,6 @@ licensing update:
 We still need to contact these people and acquire a license grant or otherwise
 resolve the status of their contributions.
 
--   23	Luke Shumaker
 -   15	Eric Bélanger
 -    7	Abhishek Dasgupta
 -    3	Daniel J Griffiths

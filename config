@@ -39,7 +39,7 @@ SRCEXT=".src.tar.gz"
 PKGEXTS=".pkg.tar.@(gz|bz2|xz|zst|lrz|lzo|Z|lz4|lz)"
 
 # Allowed licenses: get sourceballs only for licenses in this array
-ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'GPL3' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1' 'LGPL3')
+ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'GPL3' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1' 'LGPL3' 'AGPL3')
 
 # Where to send error emails, and who they are from
 LIST="arch-dev-public@lists.archlinux.org"

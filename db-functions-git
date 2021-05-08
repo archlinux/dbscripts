@@ -77,9 +77,12 @@ find_repo_for_package() {
 	local pkgbase=${1}
 	local pkgarch=${2}
 	local candidates=("${@:3}")
-
+	
+	# TODO: A pkgarch of "-any" makes the great look for x2 "stagining-any"
+	# Since the state repository is explicitly following repos there is no any repo.
+	# Needs better way to solve it
 	local repos=($(arch_git -C "${GITREPO}" ls-files "*/$pkgbase" | awk -F/ '{print $1}' | \
-		grep -xFf <(printf "%s\n" "${candidates[@]/%/-${pkgarch}}" "${candidates[@]/%/-any}")))
+		grep -xFf <(printf "%s\n" "${candidates[@]/%/-x86_64}" "${candidates[@]/%/-${pkgarch}}" "${candidates[@]/%/-any}")))
 
 	if (( ${#repos[@]} > 1 )); then
 		die "%s is present in multiple repos (%s)" "${pkgbase}" "${repos[*]}"

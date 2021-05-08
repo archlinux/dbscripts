@@ -104,6 +104,7 @@ for repo in "${repos[@]}"; do
 	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXTS} 2>/dev/null))
 	for pkgarch in "${ARCHES[@]}"; do
 		add_pkgs=()
+		declare -A add_vcspkgs
 		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*"-${pkgarch}"${PKGEXTS} 2>/dev/null))
 		for pkg in "${arch_pkgs[@]}" "${any_pkgs[@]}"; do
 			pkgbase="$(getpkgbase ${pkg})"
@@ -124,12 +125,18 @@ for repo in "${repos[@]}"; do
 				ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "$FTP_BASE/$repo/os/${pkgarch}"
 			fi
 			add_pkgs+=("${pkgfile}")
+			add_vcspkgs["${pkgfile}::pkgbase"]="${pkgbase}"
+			add_vcspkgs["${pkgfile}::pkgver"]="${pkgver}"
 		done
 		if (( ${#add_pkgs[@]} >= 1 )); then
 			arch_repo_modify add "${repo}" "${pkgarch}" ${add_pkgs[@]}
 		fi
 		if ((REPO_MODIFIED)); then
-			vcs_update_package "$pkgbase" "$pkgver" "${repo}-${pkgarch}"
+			for pkg in ${add_pkgs[@]}; do
+				pkgbase="${add_vcspkgs[$pkg::pkgbase]}"
+				pkgver="${add_vcspkgs[$pkg::pkgver]}"
+				vcs_update_package "$pkgbase" "$pkgver" "${repo}-${pkgarch}"
+			done
 		fi
 	done
 done

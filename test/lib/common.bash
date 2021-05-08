@@ -95,22 +95,11 @@ __archrelease() {
 	local tarch
 	local tag
 
-	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
-	pushd ..
-	for tarch in ${pkgarches[@]}; do
-		tag=${repo}-${tarch}
-
-		if [[ -d repos/$tag ]]; then
-			svn rm repos/$tag/PKGBUILD
-		else
-			mkdir -p repos/$tag
-			svn add repos/$tag
-		fi
-
-		svn copy -r HEAD trunk/PKGBUILD repos/$tag/
-	done
-	svn commit -m "__archrelease"
-	popd
+	pkgver=$(. PKGBUILD; get_full_version)
+	tag_pkgver=release-${pkgver/:/-}
+	git tag -s -m "released $pkgbase-$pkgver"  "$tag_pkgver"
+	git push --tags
+	git push
 }
 
 setup() {

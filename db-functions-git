@@ -29,7 +29,7 @@ arch_git() {
 fetch_pkgbuild() {
 	local pkgbase="${1}"
 	local tag=$(conv_tag "${2}")
-	git clone --branch "$tag" --depth 1 "${GITREPOS}${pkgbase}.git" "$WORKDIR/${pkgbase}"
+	[ -d "$WORKDIR/${pkgbase}" ] || git clone --branch "$tag" --depth 1 "${GITREPOS}/${pkgbase}.git" "$WORKDIR/${pkgbase}"
 	git -C "${WORKDIR}/${pkgbase}" verify-tag "$tag"
 }
 

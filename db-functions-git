@@ -97,12 +97,13 @@ vcs_commit() {
 
 vcs_update_package(){
 	local pkgbase="$1"
-	local tag="$2"
+	local tag="${2}"
+	local gittag="$(conv_tag ${2})"
 	local dest="$3"
 	if [[ ! -e "$GITREPO/${dest}" ]]; then
 		die "Repository %s doesn't exist!" "${dest}"
 	fi
-	echo "$pkgbase $tag $(git -C "${WORKDIR}/${pkgbase}" rev-list -n 1 "$tag")" > "$GITREPO/$dest/$pkgbase"
+	echo "$pkgbase $gittag $(git -C "${WORKDIR}/${pkgbase}" rev-list -n 1 "$gittag")" > "$GITREPO/$dest/$pkgbase"
 	arch_git -C "${GITREPO}" add "$GITREPO/$dest/$pkgbase" || true
 	vcs_commit "updated ${pkgbase}-${tag} in [${dest}]" || true
 }

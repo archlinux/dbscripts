@@ -15,6 +15,20 @@ __getCheckSum() {
 	echo "${result%% *}"
 }
 
+# Converts from the PKGBUILD tag to the git repository tag
+# Input		release-1-1.0.0-1
+# Output	1:1.0.0-1
+__parseGitTag(){
+	tag="${1}"
+	[[ $tag == release-* ]] || exit 1
+	tag="${tag#release-}"
+	while IFS=- read -r pkgrel pkgver epoch; do
+		test -n "${epoch}" && printf "%s:" "$epoch"
+		printf "%s" "$(echo "$pkgver" | rev)"
+		printf "%s" "$(echo "$pkgrel-" | rev)"
+	done < <(echo "${tag}" | rev)
+}
+
 # Proxy function to check if a file exists. Using [[ -f ... ]] directly is not
 # always wanted because we might want to expand bash globs first. This way we
 # can pass unquoted globs to __isGlobfile() and have them expanded as function

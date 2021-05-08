@@ -39,6 +39,9 @@ mv_acl() {
 
 # set up general environment
 WORKDIR=$(mktemp -dt "${0##*/}.XXXXXXXXXX")
+# TODO: Solve group permissions between user and 
+# git user
+chmod -R 770 "${WORKDIR}"
 LOCKS=()
 REPO_MODIFIED=0
 

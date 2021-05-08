@@ -1,12 +1,24 @@
 . /usr/share/makepkg/util.sh
 shopt -s extglob
 
+
+# Copy of db-functions-git
+arch_git() {
+	if [[ -z ${GITUSER} ]]; then
+		/usr/bin/git "${@}"
+	else
+		sudo -u "${GITUSER}" -- /usr/bin/git "${@}"
+	fi
+}
+
 __updatePKGBUILD() {
 	local pkgrel
 
 	pkgrel=$(. PKGBUILD; expr ${pkgrel} + 1)
 	sed "s/pkgrel=.*/pkgrel=${pkgrel}/" -i PKGBUILD
-	svn commit -q -m"update pkg to pkgrel=${pkgrel}"
+	git add .
+	git commit -m "update pkg to pkgrel=${pkgrel}"
+	git push
 }
 
 __getCheckSum() {
@@ -109,6 +121,7 @@ setup() {
 	PKGEXT=".pkg.tar.xz"
 
 	TMP="$(mktemp -d)"
+	chmod 770 "$TMP"
 
 	export DBSCRIPTS_CONFIG=${TMP}/config.local
 	cat <<eot > "${DBSCRIPTS_CONFIG}"
@@ -119,6 +132,7 @@ setup() {
 	PKGREPOS=('core' 'extra' 'testing' 'staging')
 	PKGPOOL='pool/packages'
 	SRCPOOL='sources/packages'
+	UPSTREAM_REPOS=('packages')
 	STAGING_REPOS=('staging')
 	TESTING_REPOS=('testing')
 	STABLE_REPOS=('core' 'extra')
@@ -129,10 +143,29 @@ setup() {
 	ARCHES=(x86_64 i686)
 	CLEANUP_DRYRUN=false
 	SOURCE_CLEANUP_DRYRUN=false
+	VCS=git
+	GNUPGHOME="/etc/pacman.d/gnupg"
+	GITREPOS="${TMP}/git-packages"
+	GITREPO="${TMP}/repository"
+	GITUSER="git-packages"
 eot
+
+
 	. config
 
-	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-packages-{copy,repo}}
+	git config --global user.email "tester@localhost"
+	git config --global user.name "Bob Tester"
+	git config --global init.defaultBranch master
+	git config --global advice.detachedHead false
+	#git config --global core.sharedRepository group
+
+	
+	# This is for our git clones when initializing bare repos
+	TMP_WORKDIR_GIT=${TMP}/git-clones
+
+	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup}
+	mkdir -p "${GITREPOS}/packages"
+	mkdir -p "${TMP_WORKDIR_GIT}"
 
 	for r in ${PKGREPOS[@]}; do
 		mkdir -p "${TMP}/staging/${r}"
@@ -155,8 +188,20 @@ eot
 			touch "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}/${line}"{,.sig}
 		done
 
-	svnadmin create "${TMP}/svn-packages-repo"
-	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
+	git init --bare --shared=group "${TMPDIR}/git-packages-bare.git" 
+	mkdir "${GITREPO}"
+	chmod 777 "${GITREPO}"
+	arch_git -c "core.sharedRepository=group" clone "${TMPDIR}/git-packages-bare.git" "${GITREPO}"
+	for r in ${PKGREPOS[@]}; do
+		for a in ${ARCHES[@]}; do
+			# This is ugly but we need 770 in the test env
+			(umask 002;
+			mkdir -p "${GITREPO}/${r}-${a}";
+			touch "${GITREPO}/${r}-${a}"/.gitkeep;
+			arch_git -C "${GITREPO}" add "${GITREPO}/${r}-${a}"/.gitkeep)
+		done
+	done
+	arch_git -C "${GITREPO}" commit -m "init repos"
 }
 
 teardown() {
@@ -167,23 +212,33 @@ releasePackage() {
 	local repo=$1
 	local pkgbase=$2
 
-	if [ ! -d "${TMP}/svn-packages-copy/${pkgbase}/trunk" ]; then
-		mkdir -p "${TMP}/svn-packages-copy/${pkgbase}"/{trunk,repos}
-		cp -r "fixtures/${pkgbase}"/* "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
-		svn add -q "${TMP}/svn-packages-copy"/${pkgbase}
-		svn commit -q -m"initial commit of ${pkgbase}" "${TMP}/svn-packages-copy"
+	if [ ! -d "${GITREPOS}/packages/${pkgbase}.git" ]; then
+		git init --bare --shared=all "${GITREPOS}/packages/${pkgbase}".git
+		git -c "core.sharedRepository=group" clone "${GITREPOS}/packages/${pkgbase}".git "${TMP_WORKDIR_GIT}/${pkgbase}"
+		cp -r "fixtures/${pkgbase}"/* "${TMP_WORKDIR_GIT}/${pkgbase}"
+		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" add "${TMP_WORKDIR_GIT}/${pkgbase}"/*
+		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" commit -m "initial commit of ${pkgbase}"
+		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" push 
+
 	fi
 
-	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
+	if [ ! -d "${TMP_WORKDIR_GIT}/${pkgbase}" ]; then
+		git clone "${GITREPOS}/packages/${pkgbase}.git" "${TMP_WORKDIR_GIT}/${pkgbase}"
+	fi
+
+	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
+	git pull origin master
 	__buildPackage "${STAGING}"/${repo}
 	__archrelease ${repo}
+	chmod -R 777 "${GITREPOS}/packages/"
 	popd
 }
 
 updatePackage() {
 	local pkgbase=$1
 
-	pushd "${TMP}/svn-packages-copy/${pkgbase}/trunk/"
+	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
+	git pull origin master
 	__updatePKGBUILD
 	__buildPackage
 	popd

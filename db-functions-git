@@ -13,6 +13,17 @@ conv_tag(){
 	printf "release-%s" "${1/:/-}"
 }
 
+parse_pkgver_from_tag(){
+	tag="${1}"
+    [[ $tag == release-* ]] || exit 1
+	tag="${tag#release-}"
+	while IFS=- read -r pkgrel pkgver epoch; do
+		test -n "${epoch}" && printf "%s:" "$epoch"
+		printf "%s" "$(echo "$pkgver" | rev)"
+		printf "%s" "$(echo "$pkgrel-" | rev)"
+	done < <(echo "${tag}" | rev)
+}
+
 arch_git() {
 	if [[ -z ${GITUSER} ]]; then
 		/usr/bin/git "${@}"

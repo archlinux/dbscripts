@@ -309,20 +309,22 @@ checkPackage() {
 	local repo=$1
 	local pkgbase=$2
 	local pkgver=$3
-
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
+	arch_git -C "${GITREPO}" pull origin master &>/dev/null
+	tree "${TMP}"
 
 	local dirarches=() pkgbuildarches=()
 	local pkgbuild dirarch pkgbuildver
-	for pkgbuild in "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo%-debug}-"+([^-])"/PKGBUILD"; do
+	for pkgbuild in "${GITREPO}/${repo%-debug}-"+([^-])"/${pkgbase}"; do
 		[[ -e $pkgbuild ]] || continue
-		dirarch=${pkgbuild%/PKGBUILD}
+		dirarch=${pkgbuild%/${pkgbase}}
 		dirarch=${dirarch##*-}
 
 		dirarches+=("$dirarch")
-		pkgbuildarches+=($(. "$pkgbuild"; echo ${arch[@]}))
-		pkgbuildver=$(. "$pkgbuild"; get_full_version)
-		[[ $pkgver = "$pkgbuildver" ]]
+		pkgbuildarches+=($(. "${TMP_WORKDIR_GIT}/${pkgbase}/PKGBUILD"; echo ${arch[@]}))
+		while read -r _ tag _; do
+			pkgbuildver=$(__parseGitTag "$tag")
+			[[ $pkgver = "$pkgbuildver" ]]
+		done < "$pkgbuild"
 	done
 	# Verify that the arches-from-dirnames and
 	# arches-from-PKGBUILDs agree (that a PKGBUILD existed for

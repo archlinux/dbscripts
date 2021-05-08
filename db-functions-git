@@ -39,7 +39,7 @@ fetch_pkgbuild(){
 	local tag=$(conv_tag "${2}")
 	local found=0
 	for repo in "${UPSTREAM_REPOS[@]}"; do
-		if arch_git clone --branch "$tag" --depth 1 "${GITREPOS}/${repo}/${pkgbase}.git" "$WORKDIR/${pkgbase}"; then
+		if [ -d "$WORKDIR/${pkgbase}" ] || arch_git clone --branch "$tag" --depth 1 "${GITREPOS}/${repo}/${pkgbase}.git" "$WORKDIR/${pkgbase}"; then
 			found=1
 			break
 		fi

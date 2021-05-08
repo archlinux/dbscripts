@@ -135,7 +135,9 @@ vcs_push(){
 
 vcs_tag(){
 	if [[ ! $(arch_git -C "$GITREPO" tag --points-at HEAD) ]]; then
-		tag=$(arch_git -C "$GITREPO" describe --tags --abbrev=0)
+		if ! tag=$(arch_git -C "$GITREPO" describe --tags --abbrev=0 2>/dev/null); then
+			tag=0
+		fi
 		((tag++))
 		arch_git -C "$GITREPO" tag "$tag"
 	fi

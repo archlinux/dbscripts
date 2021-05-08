@@ -1,18 +1,42 @@
 . /usr/share/makepkg/util.sh
 shopt -s extglob
 
+
+# Copy of db-functions-git
+arch_git() {
+	if [[ -z ${GITUSER} ]]; then
+		/usr/bin/git "${@}"
+	else
+		sudo -u "${GITUSER}" -- /usr/bin/git "${@}"
+	fi
+}
+
 __updatePKGBUILD() {
 	local pkgrel
 
 	pkgrel=$(. PKGBUILD; expr ${pkgrel} + 1)
 	sed "s/pkgrel=.*/pkgrel=${pkgrel}/" -i PKGBUILD
-	svn commit -q -m"update pkg to pkgrel=${pkgrel}"
+	git add .
+	git commit -m "update pkg to pkgrel=${pkgrel}"
+	git push
 }
 
 __getCheckSum() {
 	local result
 	result="$(sha1sum "$1")"
 	echo "${result%% *}"
+}
+
+# Converts from the git repository tag to the PKGBUILD tag
+# Input     1-1.0.0-1
+# Output    1:1.0.0-1
+__parseGitTag(){
+	tag="${1}"
+	while IFS=- read -r pkgrel pkgver epoch; do
+		test -n "${epoch}" && printf "%s:" "$epoch"
+		printf "%s" "$(echo "$pkgver" | rev)"
+		printf "%s" "$(echo "$pkgrel-" | rev)"
+	done < <(echo "${tag}" | rev)
 }
 
 # Proxy function to check if a file exists. Using [[ -f ... ]] directly is not
@@ -69,22 +93,10 @@ __archrelease() {
 	local tarch
 	local tag
 
-	pkgarches=($(. PKGBUILD; echo ${arch[@]}))
-	pushd ..
-	for tarch in ${pkgarches[@]}; do
-		tag=${repo}-${tarch}
-
-		if [[ -d repos/$tag ]]; then
-			svn rm repos/$tag/PKGBUILD
-		else
-			mkdir -p repos/$tag
-			svn add repos/$tag
-		fi
-
-		svn copy -r HEAD trunk/PKGBUILD repos/$tag/
-	done
-	svn commit -m "__archrelease"
-	popd
+	pkgver=$(. PKGBUILD; get_full_version)
+	gittag=${pkgver/:/-}
+	git tag -s -m "released $pkgbase-$pkgver"  "$gittag"
+	git push --tags origin main
 }
 
 setup() {
@@ -95,13 +107,13 @@ setup() {
 	PKGEXT=".pkg.tar.xz"
 
 	TMP="$(mktemp -d)"
+	chmod 770 "$TMP"
 
 	export DBSCRIPTS_CONFIG=${TMP}/config.local
 	cat <<eot > "${DBSCRIPTS_CONFIG}"
 	FTP_BASE="${TMP}/ftp"
 	ARCHIVE_BASE="${TMP}/archive"
 	ARCHIVEUSER=""
-	SVNREPO="file://${TMP}/svn-packages-repo"
 	PKGREPOS=('core' 'extra' 'testing' 'staging')
 	DEBUGREPOS=('core-debug' 'extra-debug' 'testing-debug' 'staging-debug')
 	PKGPOOL='pool/packages'
@@ -117,10 +129,28 @@ setup() {
 	ARCHES=(x86_64 i686)
 	CLEANUP_DRYRUN=false
 	SOURCE_CLEANUP_DRYRUN=false
+	VCS=git
+	GNUPGHOME="/etc/pacman.d/gnupg"
+	GITREPOS="${TMP}/git-packages"
+	GITREPO="${TMP}/repository"
+	GITUSER="git-packages"
 eot
+
+
 	. config
 
-	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup,svn-packages-{copy,repo}}
+	git config --global user.email "tester@localhost"
+	git config --global user.name "Bob Tester"
+	git config --global init.defaultBranch main
+	git config --global advice.detachedHead false
+
+	
+	# This is for our git clones when initializing bare repos
+	TMP_WORKDIR_GIT=${TMP}/git-clones
+
+	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup}
+	mkdir -p "${GITREPOS}/packages"
+	mkdir -p "${TMP_WORKDIR_GIT}"
 
 	for r in ${PKGREPOS[@]}; do
 		mkdir -p "${TMP}"/staging/${r}{,-debug}
@@ -144,8 +174,20 @@ eot
 			touch "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}/${line}"{,.sig}
 		done
 
-	svnadmin create "${TMP}/svn-packages-repo"
-	svn checkout -q "file://${TMP}/svn-packages-repo" "${TMP}/svn-packages-copy"
+	git init --bare --shared=group "${TMPDIR}/git-packages-bare.git" 
+	mkdir "${GITREPO}"
+	chmod 777 "${GITREPO}"
+	arch_git -c "core.sharedRepository=group" clone "${TMPDIR}/git-packages-bare.git" "${GITREPO}"
+	for r in ${PKGREPOS[@]}; do
+		for a in ${ARCHES[@]}; do
+			# This is ugly but we need 770 in the test env
+			(umask 002;
+			mkdir -p "${GITREPO}/${r}-${a}";
+			touch "${GITREPO}/${r}-${a}"/.gitkeep;
+			arch_git -C "${GITREPO}" add "${GITREPO}/${r}-${a}"/.gitkeep)
+		done
+	done
+	arch_git -C "${GITREPO}" commit -m "init repos"
 }
 
 teardown() {
@@ -156,23 +198,33 @@ releasePackage() {
 	local repo=$1
 	local pkgbase=$2
 
-	if [ ! -d "${TMP}/svn-packages-copy/${pkgbase}/trunk" ]; then
-		mkdir -p "${TMP}/svn-packages-copy/${pkgbase}"/{trunk,repos}
-		cp -r "fixtures/${pkgbase}"/* "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
-		svn add -q "${TMP}/svn-packages-copy"/${pkgbase}
-		svn commit -q -m"initial commit of ${pkgbase}" "${TMP}/svn-packages-copy"
+	if [ ! -d "${GITREPOS}/packages/${pkgbase}.git" ]; then
+		git init --bare --shared=all "${GITREPOS}/packages/${pkgbase}".git
+		git -c "core.sharedRepository=group" clone "${GITREPOS}/packages/${pkgbase}".git "${TMP_WORKDIR_GIT}/${pkgbase}"
+		cp -r "fixtures/${pkgbase}"/* "${TMP_WORKDIR_GIT}/${pkgbase}"
+		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" add "${TMP_WORKDIR_GIT}/${pkgbase}"/*
+		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" commit -m "initial commit of ${pkgbase}"
+		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" push
+
 	fi
 
-	pushd "${TMP}/svn-packages-copy"/${pkgbase}/trunk/
+	if [ ! -d "${TMP_WORKDIR_GIT}/${pkgbase}" ]; then
+		git clone "${GITREPOS}/packages/${pkgbase}.git" "${TMP_WORKDIR_GIT}/${pkgbase}"
+	fi
+
+	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
+	git pull origin main
 	__buildPackage "${STAGING}"/${repo}
 	__archrelease ${repo}
+	chmod -R 777 "${GITREPOS}/packages/"
 	popd
 }
 
 updatePackage() {
 	local pkgbase=$1
 
-	pushd "${TMP}/svn-packages-copy/${pkgbase}/trunk/"
+	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
+	git pull origin main
 	__updatePKGBUILD
 	__buildPackage
 	popd
@@ -252,19 +304,20 @@ checkPackage() {
 	local pkgbase=$2
 	local pkgver=$3
 
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-
 	local dirarches=() pkgbuildarches=()
 	local pkgbuild dirarch pkgbuildver
-	for pkgbuild in "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo%-debug}-"+([^-])"/PKGBUILD"; do
+	for pkgbuild in "${GITREPO}/${repo%-debug}-"+([^-])"/${pkgbase}"; do
 		[[ -e $pkgbuild ]] || continue
-		dirarch=${pkgbuild%/PKGBUILD}
+		dirarch=${pkgbuild%/${pkgbase}}
 		dirarch=${dirarch##*-}
 
 		dirarches+=("$dirarch")
-		pkgbuildarches+=($(. "$pkgbuild"; echo ${arch[@]}))
-		pkgbuildver=$(. "$pkgbuild"; get_full_version)
-		[[ $pkgver = "$pkgbuildver" ]]
+		pkgbuildarches+=($(. "${TMP_WORKDIR_GIT}/${pkgbase}/PKGBUILD"; echo ${arch[@]}))
+
+		while read -r _ tag _; do
+			pkgbuildver=$(__parseGitTag "$tag")
+			[[ $pkgver = "$pkgbuildver" ]]
+		done < "$pkgbuild"
 	done
 	# Verify that the arches-from-dirnames and
 	# arches-from-PKGBUILDs agree (that a PKGBUILD existed for

@@ -42,7 +42,7 @@ PKGEXTS=".pkg.tar.@(gz|bz2|xz|zst|lrz|lzo|Z|lz4|lz)"
 ALLOWED_LICENSES=('GPL' 'GPL1' 'GPL2' 'GPL3' 'LGPL' 'LGPL1' 'LGPL2' 'LGPL2.1' 'LGPL3')
 
 # Where to send error emails, and who they are from
-LIST="arch-dev-public@archlinux.org"
+LIST="arch-dev-public@lists.archlinux.org"
 #LIST="aaronmgriffin@gmail.com"
 FROM="repomaint@archlinux.org"
 

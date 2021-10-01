@@ -19,6 +19,12 @@ if in_array "${repo_from}" "${STAGING_REPOS[@]}" && in_array "${repo_to}" "${STA
 	check_leapfrog=true
 fi
 
+if ! check_repo_configured "$repo_from"; then
+	die "%s is not a configured repository" "$repo_from"
+elif ! check_repo_configured "$repo_to"; then
+	die "%s is not a configured repository" "$repo_to"
+fi
+
 if ! check_repo_permission "$repo_to" || ! check_repo_permission "$repo_from"; then
 	die "You don't have permission to move packages from %s to %s" "$repo_from" "$repo_to"
 fi

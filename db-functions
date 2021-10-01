@@ -404,6 +404,15 @@ chk_license() {
 	return 1
 }
 
+check_repo_configured() {
+	local repo=$1
+
+	local count=$(printf '%s\n' "${PKGREPOS[@]}" | grep --count --line-regexp "$repo")
+	[[ $count -gt 0 ]] && return 0
+
+	return 1
+}
+
 check_repo_permission() {
 	local repo=$1
 

@@ -1,0 +1,10 @@
+image: "archlinux:latest"
+
+
+test:
+  script:
+    - pacman -Syu --needed --noconfirm docker make
+    - systemctl start docker
+    - make test-coverage
+  tags:
+    - vm

@@ -55,7 +55,10 @@ Things that haven't been mentioned yet:
  - `cron-jobs/devlist-mailer`
  - `cron-jobs/sourceballs`
 ## Testing
-* Install the `make` and `docker` packages. Start the docker daemon by issuing `systemctl start docker`.
+* Install the `make` and `podman` or `docker` packages depending on your
+preferrence. The default expects docker but pomdan can be used if
+`DOCKER=podman` is specified. When using docker, start the docker daemon by
+issuing `systemctl start docker`.
 * The test suite can now be run with `make test`.
 * A coverage report can be generated with `make test-coverage`. Open `coverage/index.html` in your web browser to inspect the results.
 

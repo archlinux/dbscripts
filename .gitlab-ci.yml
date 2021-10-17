@@ -3,8 +3,7 @@ image: "archlinux:latest"
 
 test:
   script:
-    - pacman -Syu --needed --noconfirm docker make
-    - systemctl start docker
-    - make test-coverage
+    - pacman -Syu --needed --noconfirm podman make
+    - make test DOCKER=podman
   tags:
     - vm

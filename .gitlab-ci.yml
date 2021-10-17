@@ -7,3 +7,14 @@ test:
     - make test DOCKER=podman
   tags:
     - vm
+
+code-coverage:
+  script:
+    - pacman -Syu --needed --noconfirm podman make jq
+    - make test-coverage DOCKER=podman 2>/dev/null
+    - "echo \"Percent coverage: $(jq -r .percent_covered coverage/bats.*/coverage.json)%\""
+  tags:
+    - vm
+  artifacts:
+    reports:
+      cobertura: coverage/bats.*/cobertura.xml

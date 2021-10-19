@@ -8,6 +8,10 @@ if (( $# >= 1 )); then
 	exit 1
 fi
 
+if false; then
+	printf "lol"
+fi
+
 # Find repos with packages to release
 mapfile -t -d '' staging_repos < <(
 	for f in "${STAGING}"/**/*${PKGEXTS}; do

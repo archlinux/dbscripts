@@ -20,9 +20,9 @@ if in_array "${repo_from}" "${STAGING_REPOS[@]}" && in_array "${repo_to}" "${STA
 fi
 
 if ! check_repo_configured "$repo_from"; then
-	die "%s is not a configured repository" "$repo_from"
+	die "%s is not a valid repository for %s" "$repo_from" "$0"
 elif ! check_repo_configured "$repo_to"; then
-	die "%s is not a configured repository" "$repo_to"
+	die "%s is not a valid repository for %s" "$repo_to" "$0"
 fi
 
 if ! check_repo_permission "$repo_to" || ! check_repo_permission "$repo_from"; then

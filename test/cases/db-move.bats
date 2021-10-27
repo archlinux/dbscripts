@@ -124,15 +124,15 @@ load ../lib/common
 	checkPackage testing pkg-split-b 1-1
 }
 
-@test "move not configured repo" {
+@test "move not valid repo" {
 	releasePackage extra pkg-any-a
 	db-update
 
 	run db-move extra community pkg-any-a
 	[ "$status" -ne 0 ]
-	[[ $output == *'community is not a configured'* ]]
+	[[ $output == *'community is not a valid'* ]]
 
 	run db-move notconfigured community pkg-any-a
 	[ "$status" -ne 0 ]
-	[[ $output == *'notconfigured is not a configured'* ]]
+	[[ $output == *'notconfigured is not a valid'* ]]
 }

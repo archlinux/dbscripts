@@ -14,4 +14,7 @@ test-coverage: test-image
 	mkdir -m 777 ${PWD}/coverage
 	$(DOCKER) run  $(RUN_OPTIONS) -v ${PWD}/coverage:/coverage -e COVERAGE_DIR=/coverage $(IMAGE) make test-coverage
 
-.PHONY: test-image test test-coverage
+check:
+	shellcheck -S error db-* testing2x
+
+.PHONY: test-image test test-coverage check

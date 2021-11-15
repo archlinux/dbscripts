@@ -33,7 +33,7 @@ remove_pkgs=()
 for pkgbase in "${pkgbases[@]}"; do
 	msg "Removing %s from [%s]..." "$pkgbase" "$repo"
 
-	if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "repos/${vcsrepo}" && echo ${pkgname[@]})); then
+	if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "repos/${vcsrepo}" && echo "${pkgname[@]}")); then
 		vcs_remove_package "${pkgbase}" "${vcsrepo}"
 		vcs_commit "${0##*/}: $pkgbase removed by $(id -un)"
 	else

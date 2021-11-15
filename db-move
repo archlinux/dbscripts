@@ -116,7 +116,7 @@ done
 for tarch in "${ARCHES[@]}"; do
 	declare -n add_pkgs="add_pkgs_${tarch}"
 	declare -n remove_pkgs="remove_pkgs_${tarch}"
-	if [[ -n ${add_pkgs[@]} ]]; then
+	if [[ -n ${add_pkgs[*]} ]]; then
 		arch_repo_modify add "${repo_to}" "${tarch}" "${add_pkgs[@]}"
 		arch_repo_modify remove "${repo_from}" "${tarch}" "${remove_pkgs[@]}"
 	fi

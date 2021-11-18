@@ -175,3 +175,21 @@ load ../lib/common
 	[ "$status" -ne 0 ]
 	[[ $output == *'notconfigured is not a valid'* ]]
 }
+
+@test "move split packages with debug" {
+	local arches=('x86_64')
+	local pkgs=('pkg-split-debuginfo')
+	local pkg
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage testing ${pkgbase}
+	done
+
+	db-update
+	db-move testing extra pkg-split-debuginfo
+
+	checkPackage extra pkg-split-debuginfo 1-1
+	checkPackage extra-debug pkg-split-debuginfo 1-1
+}

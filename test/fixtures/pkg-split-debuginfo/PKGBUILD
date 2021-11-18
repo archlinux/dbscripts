@@ -1,0 +1,21 @@
+pkgbase=pkg-split-debuginfo
+pkgname=('pkg-split-debuginfo1' 'pkg-split-debuginfo2')
+pkgver=1
+pkgrel=1
+pkgdesc="A split package called ${pkgbase} with debuginfo"
+arch=('i686' 'x86_64')
+url='http://www.archlinux.org/'
+license=('GPL')
+options=('strip' 'debug')
+
+package_pkg-split-debuginfo1() {
+	install -D -m755 /bin/true ${pkgdir}/usr/bin/${pkgname}
+	install -D /dev/null "${pkgdir}"/usr/bin/hello1
+	install -D /dev/null "${pkgdir}"/../${pkgname}-debug/usr/lib/debug/usr/bin/hello1.debug
+}
+
+package_pkg-split-debuginfo2() {
+	install -D -m755 /bin/true ${pkgdir}/usr/bin/${pkgname}
+	install -D /dev/null "${pkgdir}"/usr/bin/hello2
+	install -D /dev/null "${pkgdir}"/../${pkgname}-debug/usr/lib/debug/usr/bin/hello2.debug
+}

@@ -25,8 +25,8 @@ load ../lib/common
 
 @test "remove debug package" {
 	local arches=('i686' 'x86_64')
-	local pkgs=('pkg-debuginfo')
-	local debug_pkgs=('pkg-debuginfo')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b' 'pkg-split-a' 'pkg-split-b' 'pkg-simple-epoch' 'pkg-debuginfo' 'pkg-split-debuginfo')
+	local debug_pkgs=('pkg-debuginfo' 'pkg-split-debuginfo')
 	local pkgbase
 	local arch
 
@@ -45,6 +45,32 @@ load ../lib/common
     checkRemovedPackage extra pkg-debuginfo
 	for pkgbase in ${debug_pkgs[@]}; do
 		checkRemovedPackage extra-debug ${pkgbase}
+	done
+}
+
+@test "remove specific debug package" {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-split-debuginfo')
+	local debug_pkgs=('pkg-split-debuginfo')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
+	done
+
+	db-update
+
+    # We might want to remove the specific debug package
+    # without removing the repo packages
+	for pkgbase in ${debug_pkgs[@]}; do
+		for arch in ${arches[@]}; do
+			db-remove extra-debug ${arch} ${pkgbase}-debug
+		done
+	done
+
+	for pkgbase in ${debug_pkgs[@]}; do
+		checkRemovedPackageDB extra-debug ${pkgbase}
 	done
 }
 

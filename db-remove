@@ -52,10 +52,8 @@ for tarch in "${tarches[@]}"; do
 	if (( ${#remove_pkgs[@]} >= 1 )); then
 		arch_repo_modify remove "${repo}" "${tarch}" "${remove_pkgs[@]}"
 	fi
-
 	if (( ${#remove_debug_pkgs[@]} >= 1 )); then
 		arch_repo_modify remove "${repo}-debug" "${tarch}" "${remove_debug_pkgs[@]}"
 	fi
-
 	repo_unlock "$repo" "$tarch"
 done

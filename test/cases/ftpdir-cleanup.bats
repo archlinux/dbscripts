@@ -186,3 +186,29 @@ __checkRepoRemovedPackage() {
 	[ ! -f ${CLEANUP_DESTDIR}/${pkgfilea} ]
 	[ -f ${CLEANUP_DESTDIR}/${pkgfileb} ]
 }
+
+@test "cleanup debug packages" {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-debuginfo' 'pkg-split-debuginfo')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
+	done
+
+	db-update
+
+	for arch in ${arches[@]}; do
+		db-remove extra ${arch} pkg-debuginfo
+	done
+
+	ftpdir-cleanup
+
+	checkRemovedPackage extra 'pkg-debuginfo'
+	for arch in ${arches[@]}; do
+		__checkRepoRemovedPackage extra 'pkg-debuginfo' ${arch}
+	done
+
+	checkPackage extra pkg-split-debuginfo 1-1
+}

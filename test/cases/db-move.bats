@@ -46,7 +46,7 @@ load ../lib/common
 	checkRemovedPackage testing pkg-debuginfo
 
 	echo checkRemovedPackage testing-debug pkg-debuginfo-debug
-	checkRemovedPackage testing-debug pkg-debuginfo
+	checkRemovedPackage testing-debug pkg-debuginfo-debug
 
 	echo checkPackage extra pkg-debuginfo 1-1
 	checkPackage extra pkg-debuginfo 1-1

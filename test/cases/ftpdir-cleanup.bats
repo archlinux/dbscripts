@@ -81,6 +81,33 @@ __checkRepoRemovedPackage() {
 	checkPackage extra-debug "${pkgs[1]}" 1-1
 }
 
+@test "cleanup split debug packages" {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-split-debuginfo' 'pkg-debuginfo-a')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
+	done
+	db-update
+
+	for arch in ${arches[@]}; do
+		db-remove extra ${arch} "${pkgs[0]}"
+	done
+
+	ftpdir-cleanup
+
+	checkRemovedPackage extra "${pkgs[0]}"
+	checkRemovedPackage extra-debug "${pkgs[0]}"
+	for arch in ${arches[@]}; do
+		__checkRepoRemovedPackage extra "${pkgs[0]}" ${arch}
+	done
+
+	checkPackage extra "${pkgs[1]}" 1-1
+	checkPackage extra-debug "${pkgs[1]}" 1-1
+}
+
 @test "cleanup epoch packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-simple-epoch')
@@ -185,30 +212,4 @@ __checkRepoRemovedPackage() {
 
 	[ ! -f ${CLEANUP_DESTDIR}/${pkgfilea} ]
 	[ -f ${CLEANUP_DESTDIR}/${pkgfileb} ]
-}
-
-@test "cleanup debug packages" {
-	local arches=('i686' 'x86_64')
-	local pkgs=('pkg-debuginfo' 'pkg-split-debuginfo')
-	local pkgbase
-	local arch
-
-	for pkgbase in ${pkgs[@]}; do
-		releasePackage extra ${pkgbase}
-	done
-
-	db-update
-
-	for arch in ${arches[@]}; do
-		db-remove extra ${arch} pkg-debuginfo
-	done
-
-	ftpdir-cleanup
-
-	checkRemovedPackage extra 'pkg-debuginfo'
-	for arch in ${arches[@]}; do
-		__checkRepoRemovedPackage extra 'pkg-debuginfo' ${arch}
-	done
-
-	checkPackage extra pkg-split-debuginfo 1-1
 }

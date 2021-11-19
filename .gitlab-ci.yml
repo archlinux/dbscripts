@@ -1,5 +1,9 @@
 image: "archlinux:latest"
 
+lint:
+  script:
+    - pacman -Syu --needed --noconfirm make shellcheck
+    - make check
 
 test:
   script:

@@ -1,13 +1,14 @@
 IMAGE:=dbscripts/test
 RUN_OPTIONS:=--rm --network=none -v $(PWD):/dbscripts:ro --tmpfs=/tmp:exec -w /dbscripts/test
 CASES ?= cases
+BATS_ARGS ?=
 DOCKER ?= docker
 
 test-image:
 	$(DOCKER) build --pull -t $(IMAGE) test
 
 test: test-image
-	$(DOCKER) run $(RUN_OPTIONS) $(IMAGE) make CASES=$(CASES) test
+	$(DOCKER) run $(RUN_OPTIONS) $(IMAGE) make CASES=$(CASES) BATS_ARGS="$(BATS_ARGS)" test
 
 test-coverage: test-image
 	rm -rf ${PWD}/coverage

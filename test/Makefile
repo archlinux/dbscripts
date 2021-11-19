@@ -1,7 +1,8 @@
 CASES ?= cases
+BATS_ARGS ?=
 
 test:
-	BUILDDIR=/build PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) bats $(CASES)
+	BUILDDIR=/build PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) bats $(BATS_ARGS) $(CASES)
 
 test-coverage:
 	BUILDDIR=/build PATH=$(CURDIR)/../:$(CURDIR)/../cron-jobs/:$(PATH) kcov \

@@ -62,6 +62,12 @@ issuing `systemctl start docker`.
 * The test suite can now be run with `make test`.
 * A coverage report can be generated with `make test-coverage`. Open `coverage/index.html` in your web browser to inspect the results.
 
+Bats arguments or specific test can be run by providing `CASES` and `BATS_ARGS`:
+
+```
+make test DOCKER=podman CASES=cases/db-update.bats BATS_ARGS='-f Wrong'
+```
+
 ## License
 For a long time, dbscripts didn't have an explicit license. Currently it is
 primarily licensed under the GPL-2.0-or-later, but some code is of unknown

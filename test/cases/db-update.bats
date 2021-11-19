@@ -277,3 +277,11 @@ load ../lib/common
 	[ "$status" -ne 0 ]
 	checkRemovedPackageDB extra "pkg-simple-a"
 }
+
+@test "Wrong BUILDDIR" {
+	local target=$(mktemp -d)
+	BUILDDIR=$target releasePackage extra 'pkg-single-arch'
+	run db-update
+	(( $status == 1 ))
+	[[ $output == *'was not built in a chroot'* ]]
+}

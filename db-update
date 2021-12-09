@@ -79,7 +79,6 @@ done
 
 for repo in "${repos[@]}"; do
 	msg "Updating [%s]..." "$repo"
-	tree "${STAGING}/${repo}"
 	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXTS} 2>/dev/null))
 	for pkgarch in "${ARCHES[@]}"; do
 		add_pkgs=()

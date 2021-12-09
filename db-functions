@@ -459,7 +459,6 @@ check_repo_permission() {
 }
 
 set_repo_permission() {
-	local -; set -x
 	local repo=$1
 	local arch=$2
 	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}"
@@ -477,13 +476,11 @@ set_repo_permission() {
 }
 
 arch_repo_modify() {
-	echo "call: arch_repo_modify ${@@Q}"
 	local action=$1
 	local repo=$2
 	local arch=$3
 	local pkgs=("${@:4}")
 	local dbfile="${FTP_BASE}/${repo}/os/${arch}/${repo}${DBEXT}"
-	tree "${FTP_BASE}"
 
 	if [[ ${action} = remove && ! -f ${dbfile} ]]; then
 		error "No database found at '%s'" "$dbfile"
@@ -492,7 +489,6 @@ arch_repo_modify() {
 
 	# package files for repo-add might be relative to repo dir
 	pushd "${dbfile%/*}" >/dev/null
-	ls
 	/usr/bin/"repo-${action}" -q "${dbfile}" "${pkgs[@]}" \
 		|| error '%s' "repo-${action} ${dbfile@Q} ${pkgs[*]@Q}"
 	set_repo_permission "${repo}" "${arch}"

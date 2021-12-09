@@ -120,7 +120,7 @@ for repo in "${repos[@]}"; do
 			arch_repo_modify add "${repo}" "${pkgarch}" "${add_pkgs[@]}"
 		fi
 		if (( ${#debug_pkgs[@]} >= 1 )); then
-			arch_repo_modify add "${repo}-debug" "${pkgarch}" ${debug_pkgs[@]}
+			arch_repo_modify add "${repo}-debug" "${pkgarch}" "${debug_pkgs[@]}"
 		fi
 	done
 done

@@ -139,7 +139,7 @@ for tarch in "${ARCHES[@]}"; do
 		arch_repo_modify add "${repo_to}" "${tarch}" "${add_pkgs[@]}"
 		arch_repo_modify remove "${repo_from}" "${tarch}" "${remove_pkgs[@]}"
 	fi
-	if [[ -n ${add_debug_pkgs[@]} ]]; then
+	if [[ -n ${add_debug_pkgs[*]} ]]; then
 		arch_repo_modify add "${repo_to}-debug" "${tarch}" "${add_debug_pkgs[@]}"
 		arch_repo_modify remove "${repo_from}-debug" "${tarch}" "${remove_debug_pkgs[@]}"
 	fi

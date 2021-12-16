@@ -24,7 +24,7 @@ clean_pkg() {
 
 script_lock
 
-for repo in "${PKGREPOS[@]}" "${DEBUGREPOS[@]}"; do
+for repo in "${PKGREPOS[@]}"; do
 	for arch in "${ARCHES[@]}"; do
 		repo_lock "${repo}" "${arch}" || exit 1
 	done
@@ -118,7 +118,7 @@ if (( ${#old_pkgs[@]} >= 1 )); then
 	done
 fi
 
-for repo in "${PKGREPOS[@]}" "${DEBUGREPOS[@]}"; do
+for repo in "${PKGREPOS[@]}"; do
 	for arch in "${ARCHES[@]}"; do
 		repo_unlock "${repo}" "${arch}"
 	done

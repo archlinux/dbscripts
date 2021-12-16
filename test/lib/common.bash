@@ -240,7 +240,7 @@ checkPackageDB() {
 
 				for db in ${DBEXT} ${FILESEXT}; do
 					[ -r "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" ]
-					bsdtar -xf "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" -O | grep "${pkgfile%${PKGEXT}}" &>/dev/null
+					bsdtar -xf "${FTP_BASE}/${repo}/os/${repoarch}/${repo}${db%.tar.*}" -O | grep -qFx "${pkgfile}"
 				done
 			done
 		done

@@ -1,7 +1,9 @@
 #!/hint/bash
 
 PKGREPOS=('core' 'extra' 'testing' 'staging' 'kde-unstable' 'gnome-unstable')
+DEBUGREPOS=('core-debug' 'extra-debug' 'testing-debug' 'staging-debug' 'kde-unstable-debug' 'gnome-unstable-debug')
 PKGPOOL='pool/packages'
+DEBUGPKGPOOL='pool/packages-debug'
 SRCPOOL='sources/packages'
 SVNREPO='file:///srv/repos/svn-packages/svn'
 SVNUSER='svn-packages'

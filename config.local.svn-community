@@ -1,7 +1,9 @@
 #!/hint/bash
 
 PKGREPOS=('community' 'community-testing' 'community-staging' 'multilib' 'multilib-testing' 'multilib-staging')
+DEBUGREPOS=('community-debug' 'community-testing-debug' 'community-staging-debug' 'multilib-debug' 'multilib-testing-debug' 'multilib-staging-debug')
 PKGPOOL='pool/community'
+DEBUGPKGPOOL='pool/packages-debug'
 SRCPOOL='sources/community'
 SVNREPO='file:///srv/repos/svn-community/svn'
 SVNUSER='svn-community'

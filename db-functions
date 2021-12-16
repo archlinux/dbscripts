@@ -275,6 +275,20 @@ check_builddir() {
 	[[ -n $_builddir && $_builddir = '/build' ]]
 }
 
+# Non fatal getpkgfile expanding globs
+maybe_getpkgfile() {
+	if  (( $# != 1 )); then
+		exit 1
+	elif [[ ! -f ${1} ]]; then
+		exit 1
+	elif [[ ! -f ${1}.sig ]]; then
+		error "Package signature %s not found!" "$1.sig"
+		exit 1
+	fi
+
+	echo "${1}"
+}
+
 getpkgfile() {
 	if  (( $# != 1 )); then
 		error 'No canonical package found!'

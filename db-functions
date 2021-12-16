@@ -249,12 +249,27 @@ getpkgarch() {
 	echo "$_ver"
 }
 
+getpkgdesc() {
+	local _desc
+
+	_desc="$(_grep_pkginfo "$1" "pkgdesc")"
+	if [[ -z $_desc ]]; then
+		error "Package '%s' has no pkgdesc in the PKGINFO. Fail!" "$1"
+		exit 1
+	fi
+
+	echo "$_desc"
+}
+
+# TODO: We need to not depend on pkgdesc
+#       here be dragons
 is_debug_package() {
 	local pkgfile=${1}
 	local pkgbase="$(getpkgbase "${pkgfile}")"
 	local pkgname="$(getpkgname "${pkgfile}")"
+	local pkgdesc="$(getpkgdesc "${pkgfile}")"
 
-	[[ ${pkgbase}-debug = ${pkgname} ]]
+	[[ ${pkgdesc} == "Detached debugging symbols for "* && ${pkgbase}-debug = ${pkgname} ]]
 }
 
 check_packager() {

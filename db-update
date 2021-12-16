@@ -102,7 +102,7 @@ for repo in "${repos[@]}"; do
 			if [[ -f ${pkg} ]]; then
 				mv "${pkg}" "$FTP_BASE/${currentpool}"
 			fi
-			ln -s "../../../${currentpool}/${pkgfile}" "$FTP_BASE/${currentrepo}/os/${pkgarch}"
+			ln -sf "../../../${currentpool}/${pkgfile}" "$FTP_BASE/${currentrepo}/os/${pkgarch}"
 			# also move signatures
 			if [[ -f ${pkg}.sig ]]; then
 				mv "${pkg}.sig" "$FTP_BASE/${currentpool}"
@@ -112,7 +112,7 @@ for repo in "${repos[@]}"; do
 				"$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-archive" "${FTP_BASE}/${PKGPOOL}/${pkg##*/}"
 			fi
 			if [[ -f $FTP_BASE/${currentpool}/${pkgfile}.sig ]]; then
-				ln -s "../../../${currentpool}/${pkgfile}.sig" "$FTP_BASE/${currentrepo}/os/${pkgarch}"
+				ln -sf "../../../${currentpool}/${pkgfile}.sig" "$FTP_BASE/${currentrepo}/os/${pkgarch}"
 			fi
 		done
 		if (( ${#add_pkgs[@]} >= 1 )); then

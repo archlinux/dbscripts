@@ -105,9 +105,9 @@ for pkgbase in "${args[@]:2}"; do
 					pkgpath=$(getpkgfile "${ftppath_from}/${tarch}/${pkgname}-${pkgver}-${pkgarch}"${PKGEXTS})
 					pkgfile="${pkgpath##*/}"
 
-					ln -s "../../../${PKGPOOL}/${pkgfile}" "${ftppath_to}/${tarch}/"
+					ln -sf "../../../${PKGPOOL}/${pkgfile}" "${ftppath_to}/${tarch}/"
 					if [[ -f ${FTP_BASE}/${PKGPOOL}/${pkgfile}.sig ]]; then
-						ln -s "../../../${PKGPOOL}/${pkgfile}.sig" "${ftppath_to}/${tarch}/"
+						ln -sf "../../../${PKGPOOL}/${pkgfile}.sig" "${ftppath_to}/${tarch}/"
 					fi
 					add_pkgs+=("${FTP_BASE}/${PKGPOOL}/${pkgfile}")
 					remove_pkgs+=("${pkgname}")
@@ -118,9 +118,9 @@ for pkgbase in "${args[@]:2}"; do
 				fi
 				debug_pkgfile="${debug_pkgpath##*/}"
 				msg2 "Found debug package %s (%s)" "${pkgbase}-debug" "${tarch}"
-				ln -s "../../../${DEBUGPKGPOOL}/${debug_pkgfile}" "${ftppath_debug_to}/${tarch}/"
+				ln -sf "../../../${DEBUGPKGPOOL}/${debug_pkgfile}" "${ftppath_debug_to}/${tarch}/"
 				if [[ -f ${FTP_BASE}/${DEBUGPKGPOOL}/${debug_pkgfile}.sig ]]; then
-					ln -s "../../../${DEBUGPKGPOOL}/${debug_pkgfile}.sig" "${ftppath_debug_to}/${tarch}/"
+					ln -sf "../../../${DEBUGPKGPOOL}/${debug_pkgfile}.sig" "${ftppath_debug_to}/${tarch}/"
 				fi
 				add_debug_pkgs+=("${FTP_BASE}/${DEBUGPKGPOOL}/${debug_pkgfile}")
 				remove_debug_pkgs+=("${pkgbase}-debug")

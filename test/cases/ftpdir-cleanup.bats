@@ -81,6 +81,36 @@ __checkRepoRemovedPackage() {
 	checkPackage extra-debug "${pkgs[1]}" 1-1
 }
 
+@test "cleanup leaf debug" {
+	local arches=('x86_64')
+	local pkgs=('pkg-debuginfo-a' 'pkg-debuginfo-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
+	done
+	db-update
+
+	# Remove debug package from the package update
+	# to simulate the removal of the debug option
+	updatePackage pkg-debuginfo-a
+	releasePackage extra pkg-debuginfo-a
+	rm "${STAGING}"/extra/pkg-debuginfo-a-debug-*
+	db-update
+	ftpdir-cleanup
+
+	# Ensure the debug package has been removed
+	checkRemovedPackageDB extra-debug "${pkgs[0]}-debug"
+
+	checkPackage extra "${pkgs[0]}" 1-2
+	checkPackage extra "${pkgs[1]}" 1-1
+
+	# The second debug package should still be there
+	checkPackage extra-debug "${pkgs[1]}" 1-1
+}
+
+
 @test "cleanup split debug packages" {
 	local arches=('i686' 'x86_64')
 	local pkgs=('pkg-split-debuginfo' 'pkg-debuginfo-a')

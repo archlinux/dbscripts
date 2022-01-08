@@ -60,6 +60,18 @@ for repo in "${PKGREPOS[@]}" "${DEBUGREPOS[@]}"; do
 			for old_pkg in "${old_pkgs[@]}"; do
 				msg2 '%s' "${old_pkg}"
 				clean_pkg "${FTP_BASE}/${repo}/os/${arch}/${old_pkg}"
+
+				# We might have a case where a packager has removed the debug
+				# options from a package and ran db-remove.  We need to remove
+				# these packages, so we look for it then just run repo-remove
+				# for it to be cleaned up during this iteration
+				[[ ! -f "${FTP_BASE}/${PKGPOOL}/${old_pkg}" ]] && continue
+				pkgbase="$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${old_pkg}")"
+				pkgver="$(getpkgver "${FTP_BASE}/${PKGPOOL}/${old_pkg}")"
+				if debug_pkgfile=$(maybe_getpkgfile "${FTP_BASE}/${repo}-debug/os/${arch}/${pkgbase}-debug-${pkgver}-${arch}"${PKGEXTS}); then
+					msg2 'Found debug package, running repo-remove on %s...' "${debug_pkgfile##*/}"
+					arch_repo_modify remove "${repo}-debug" "${arch}" "${pkgbase}-debug"
+				fi
 			done
 		fi
 	done

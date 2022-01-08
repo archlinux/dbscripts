@@ -71,7 +71,9 @@ for f in "$FTP_BASE/${PKGPOOL}"/*${PKGEXTS}; do
 done | sort > "${WORKDIR}/pool"
 
 # create a list of packages in our db
-cat "${WORKDIR}"/db-!(*-debug-*) 2>/dev/null | sort -u > "${WORKDIR}/db"
+if [[ -s ${WORKDIR}/pool ]]; then
+	cat "${WORKDIR}"/db-!(*-debug-*) 2>/dev/null | sort -u > "${WORKDIR}/db"
+fi
 
 # seperate list for debug packages
 for f in "$FTP_BASE/${DEBUGPKGPOOL}"/*${PKGEXTS}; do
@@ -79,7 +81,9 @@ for f in "$FTP_BASE/${DEBUGPKGPOOL}"/*${PKGEXTS}; do
 done | sort > "${WORKDIR}/debugpool"
 
 # seperate list for packages in our debug db
-cat "${WORKDIR}"/db-*-debug-* 2>/dev/null | sort -u > "${WORKDIR}/debug-db"
+if [[ -s ${WORKDIR}/debugpool ]]; then
+	cat "${WORKDIR}"/db-*-debug-* 2>/dev/null | sort -u > "${WORKDIR}/debug-db"
+fi
 
 old_pkgs=($(comm -23 "${WORKDIR}/pool" "${WORKDIR}/db"))
 if (( ${#old_pkgs[@]} >= 1 )); then

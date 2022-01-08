@@ -112,7 +112,7 @@ trap cleanup EXIT
 repo_lock() {
 	local repo base=${1}; shift
 	for repo in ${base} ${base}-debug; do
-		_repo_lock ${repo} "${@}"
+		_repo_lock ${repo} "${@}" || exit 1
 	done
 }
 

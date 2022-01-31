@@ -81,6 +81,29 @@ __checkRepoRemovedPackage() {
 	checkPackage extra-debug "${pkgs[1]}" 1-1
 }
 
+@test "cleanup debug packages with update" {
+	local arches=('x86_64')
+	local pkgs=('pkg-debuginfo-a' 'pkg-debuginfo-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage extra ${pkgbase}
+	done
+	db-update
+
+	updatePackage pkg-debuginfo-a
+	releasePackage extra pkg-debuginfo-a
+	db-update
+	ftpdir-cleanup
+
+	checkPackage extra "${pkgs[0]}" 1-2
+	checkPackage extra "${pkgs[1]}" 1-1
+
+	checkPackage extra-debug "${pkgs[1]}" 1-1
+	checkPackage extra-debug "${pkgs[0]}" 1-2
+}
+
 @test "cleanup leaf debug" {
 	local arches=('x86_64')
 	local pkgs=('pkg-debuginfo-a' 'pkg-debuginfo-b')

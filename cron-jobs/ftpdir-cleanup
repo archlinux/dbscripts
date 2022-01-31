@@ -69,8 +69,10 @@ for repo in "${PKGREPOS[@]}" "${DEBUGREPOS[@]}"; do
 				pkgbase="$(getpkgbase "${FTP_BASE}/${PKGPOOL}/${old_pkg}")"
 				pkgver="$(getpkgver "${FTP_BASE}/${PKGPOOL}/${old_pkg}")"
 				if debug_pkgfile=$(maybe_getpkgfile "${FTP_BASE}/${repo}-debug/os/${arch}/${pkgbase}-debug-${pkgver}-${arch}"${PKGEXTS}); then
-					msg2 'Found debug package, running repo-remove on %s...' "${debug_pkgfile##*/}"
-					arch_repo_modify remove "${repo}-debug" "${arch}" "${pkgbase}-debug"
+					if bsdtar -xOf "${FTP_BASE}/${repo}-debug/os/${arch}/${repo}-debug${DBEXT}" | awk '/^%FILENAME%/{getline;print}' | grep "${debug_pkgfile##*/}"; then
+						msg2 'Found debug package, running repo-remove on %s...' "${debug_pkgfile##*/}"
+						arch_repo_modify remove "${repo}-debug" "${arch}" "${pkgbase}-debug"
+					fi
 				fi
 			done
 		fi

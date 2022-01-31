@@ -101,7 +101,7 @@ __checkRepoRemovedPackage() {
 	ftpdir-cleanup
 
 	# Ensure the debug package has been removed
-	checkRemovedPackageDB extra-debug "${pkgs[0]}-debug"
+	checkRemovedPackageDB extra-debug "${pkgs[0]}"
 
 	checkPackage extra "${pkgs[0]}" 1-2
 	checkPackage extra "${pkgs[1]}" 1-1

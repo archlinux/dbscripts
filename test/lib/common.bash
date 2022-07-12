@@ -235,7 +235,7 @@ updateRepoPKGBUILD() {
 	local repo=$2
 	local arch=$3
 
-	pushd "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo}-${arch}/"
+	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
 	__updatePKGBUILD
 	popd
 }

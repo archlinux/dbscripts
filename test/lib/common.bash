@@ -335,8 +335,7 @@ checkRemovedPackage() {
 	local repo=$1
 	local pkgbase=$2
 
-	svn up -q "${TMP}/svn-packages-copy/${pkgbase}"
-	if __isGlobfile "${TMP}/svn-packages-copy/${pkgbase}/repos/${repo%-debug}-"+([^-])"/PKGBUILD"; then
+	if __isGlobfile "${GITREPO}/${repo%-debug}-"+([^-])"/${pkgbase}"; then
 		return 1
 	fi
 

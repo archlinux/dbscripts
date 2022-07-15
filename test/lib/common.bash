@@ -92,9 +92,22 @@ __archrelease() {
 	local pkgarches
 	local tarch
 	local tag
+	local rev
+	local head
 
 	pkgver=$(. PKGBUILD; get_full_version)
 	gittag=${pkgver/:/-}
+
+	# avoid trying to tag the same commit twice
+	if rev=$(git rev-list -n1 "$gittag" 2>/dev/null); then
+		head=$(git rev-parse HEAD)
+		if [[ "$rev" != "$head" ]]; then
+			error "failed to tag revision %s" "${head}"
+			error "tag '%s' already exists for revision %s" "${gittag}" "${rev}"
+			exit 1
+		fi
+		return 0
+	fi
 	git tag -s -m "released $pkgbase-$pkgver"  "$gittag"
 	git push --tags origin main
 }

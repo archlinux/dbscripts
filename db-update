@@ -101,16 +101,22 @@ done
 
 for repo in "${repos[@]}"; do
 	msg "Updating [%s]..." "$repo"
+	declare -A add_vcspkgs
 	any_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*-any${PKGEXTS} 2>/dev/null))
 	for pkgarch in "${ARCHES[@]}"; do
 		add_pkgs=()
 		debug_pkgs=()
-		declare -A add_vcspkgs
 		arch_pkgs=($(getpkgfiles "${STAGING}/${repo}/"*"-${pkgarch}"${PKGEXTS} 2>/dev/null))
 		for pkg in "${arch_pkgs[@]}" "${any_pkgs[@]}"; do
-			pkgbase="$(getpkgbase ${pkg})"
-			pkgver="$(getpkgver ${pkg})"
 			pkgfile="${pkg##*/}"
+			if [[ ! "${add_vcspkgs["${pkgfile}::pkgbase"]+exists}" ]]; then
+				if ! pkgbase="$(getpkgbase "${pkg}")" || \
+						! pkgver="$(getpkgver "${pkg}")"; then
+					die "Failed to get metadata from '%s'" "${pkg}"
+				fi
+				add_vcspkgs["${pkgfile}::pkgbase"]="${pkgbase}"
+				add_vcspkgs["${pkgfile}::pkgver"]="${pkgver}"
+			fi
 
 			if is_debug_package "${pkg}"; then
 				debug_pkgs+=("${pkgfile}")
@@ -139,9 +145,6 @@ for repo in "${repos[@]}"; do
 			if [[ -f $FTP_BASE/${currentpool}/${pkgfile}.sig ]]; then
 				ln -sf "../../../${currentpool}/${pkgfile}.sig" "$FTP_BASE/${currentrepo}/os/${pkgarch}"
 			fi
-			add_pkgs+=("${pkgfile}")
-			add_vcspkgs["${pkgfile}::pkgbase"]="${pkgbase}"
-			add_vcspkgs["${pkgfile}::pkgver"]="${pkgver}"
 		done
 		if (( ${#add_pkgs[@]} >= 1 )); then
 			arch_repo_modify add "${repo}" "${pkgarch}" "${add_pkgs[@]}"

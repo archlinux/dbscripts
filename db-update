@@ -116,9 +116,12 @@ for repo in "${repos[@]}"; do
 				fi
 				add_vcspkgs["${pkgfile}::pkgbase"]="${pkgbase}"
 				add_vcspkgs["${pkgfile}::pkgver"]="${pkgver}"
+
+				is_debug_package "${pkg}"
+				add_vcspkgs["${pkgfile}::debug"]=$(( $? == 0 ))
 			fi
 
-			if is_debug_package "${pkg}"; then
+			if (( ${add_vcspkgs["${pkgfile}::debug"]} )); then
 				debug_pkgs+=("${pkgfile}")
 				currentpool=${PKGPOOL}-debug
 				currentrepo=${repo}-debug

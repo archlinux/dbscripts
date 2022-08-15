@@ -265,11 +265,16 @@ getpkgdesc() {
 #       here be dragons
 is_debug_package() {
 	local pkgfile=${1}
-	local pkgbase="$(getpkgbase "${pkgfile}")"
-	local pkgname="$(getpkgname "${pkgfile}")"
-	local pkgdesc="$(getpkgdesc "${pkgfile}")"
+	local pkgbase pkgname pkgdesc
 
-	[[ ${pkgdesc} == "Detached debugging symbols for "* && ${pkgbase}-debug = ${pkgname} ]]
+	if ! pkgbase="$(getpkgbase "${pkgfile}")" || \
+			! pkgname="$(getpkgname "${pkgfile}")" || \
+			! pkgdesc="$(getpkgdesc "${pkgfile}")"; then
+		error "Failed to get PKGINFO metadata from package '%s'" "${pkgfile}"
+		exit 1
+	fi
+
+	[[ ${pkgdesc} == "Detached debugging symbols for "* && ${pkgbase}-debug = "${pkgname}" ]]
 }
 
 check_packager() {

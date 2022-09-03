@@ -157,12 +157,12 @@ eot
 	git config --global init.defaultBranch main
 	git config --global advice.detachedHead false
 
-	
+
 	# This is for our git clones when initializing bare repos
 	TMP_WORKDIR_GIT=${TMP}/git-clones
 
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup}
-	mkdir -p "${GITREPOS}/packages"
+	mkdir -p "${GITREPOS}"
 	mkdir -p "${TMP_WORKDIR_GIT}"
 
 	for r in ${PKGREPOS[@]}; do
@@ -211,9 +211,9 @@ releasePackage() {
 	local repo=$1
 	local pkgbase=$2
 
-	if [ ! -d "${GITREPOS}/packages/${pkgbase}.git" ]; then
-		git init --bare --shared=all "${GITREPOS}/packages/${pkgbase}".git
-		git -c "core.sharedRepository=group" clone "${GITREPOS}/packages/${pkgbase}".git "${TMP_WORKDIR_GIT}/${pkgbase}"
+	if [ ! -d "${GITREPOS}/${pkgbase}.git" ]; then
+		git init --bare --shared=all "${GITREPOS}/${pkgbase}".git
+		git -c "core.sharedRepository=group" clone "${GITREPOS}/${pkgbase}".git "${TMP_WORKDIR_GIT}/${pkgbase}"
 		cp -r "fixtures/${pkgbase}"/* "${TMP_WORKDIR_GIT}/${pkgbase}"
 		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" add "${TMP_WORKDIR_GIT}/${pkgbase}"/*
 		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" commit -m "initial commit of ${pkgbase}"
@@ -222,14 +222,14 @@ releasePackage() {
 	fi
 
 	if [ ! -d "${TMP_WORKDIR_GIT}/${pkgbase}" ]; then
-		git clone "${GITREPOS}/packages/${pkgbase}.git" "${TMP_WORKDIR_GIT}/${pkgbase}"
+		git clone "${GITREPOS}/${pkgbase}.git" "${TMP_WORKDIR_GIT}/${pkgbase}"
 	fi
 
 	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
 	git pull origin main
 	__buildPackage "${STAGING}"/${repo}
 	__archrelease ${repo}
-	chmod -R 777 "${GITREPOS}/packages/"
+	chmod -R 777 "${GITREPOS}/"
 	popd
 }
 

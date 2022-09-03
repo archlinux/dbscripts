@@ -132,3 +132,18 @@ load ../lib/common
 		checkRemovedPackage extra ${pkgbase}
 	done
 }
+
+@test "remove package with insufficient repo permissions fails" {
+	local pkgbase='pkg-any-a'
+
+	releasePackage noperm ${pkgbase}
+
+	enablePermission noperm
+	db-update
+	disablePermissionOverride
+
+	run db-remove noperm any ${pkgbase}
+	[ "$status" -ne 0 ]
+
+	checkPackage noperm ${pkgbase} 1-1
+}

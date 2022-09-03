@@ -255,7 +255,7 @@ load ../lib/common
 	checkRemovedPackageDB extra 'pkg-any-a'
 }
 
-@test "add package with insufficient permissions fails" {
+@test "add package with insufficient directory permissions fails" {
 	releasePackage core 'pkg-any-a'
 	releasePackage extra 'pkg-any-b'
 
@@ -265,6 +265,17 @@ load ../lib/common
 	chmod +xwr ${FTP_BASE}/core/os/i686
 
 	checkRemovedPackageDB core 'pkg-any-a'
+	checkRemovedPackageDB extra 'pkg-any-b'
+}
+
+@test "add package with insufficient repo permissions fails" {
+	releasePackage noperm 'pkg-any-a'
+	releasePackage extra 'pkg-any-b'
+
+	run db-update
+	[ "$status" -ne 0 ]
+
+	checkRemovedPackageDB noperm 'pkg-any-a'
 	checkRemovedPackageDB extra 'pkg-any-b'
 }
 

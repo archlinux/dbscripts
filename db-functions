@@ -491,7 +491,15 @@ check_repo_permission() {
 		[[ -f ${dir}${repo}${FILESEXT} && ! -w ${dir}${repo}${FILESEXT} ]] && return 1
 	done
 
-	return 0
+	# Check unix group against ACL
+	for group in $(/usr/bin/groups); do
+		[ "${ACL[${group}]+exists}" ] || continue
+		read -r -a acl_repos <<< "${ACL[${group}]}"
+		in_array "${repo}" "${acl_repos[@]}" || continue
+		return 0
+	done
+
+	return 1
 }
 
 set_repo_permission() {

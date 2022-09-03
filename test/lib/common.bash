@@ -127,8 +127,10 @@ setup() {
 	FTP_BASE="${TMP}/ftp"
 	ARCHIVE_BASE="${TMP}/archive"
 	ARCHIVEUSER=""
-	PKGREPOS=('core' 'extra' 'testing' 'staging')
+	PKGREPOS=('core' 'extra' 'testing' 'staging' 'noperm')
 	DEBUGREPOS=('core-debug' 'extra-debug' 'testing-debug' 'staging-debug')
+	ACL=([users]="extra core staging testing core-debug extra-debug testing-debug staging-debug")
+
 	PKGPOOL='pool/packages'
 	DEBUGPKGPOOL='pool/packages-debug'
 	SRCPOOL='sources/packages'
@@ -146,9 +148,13 @@ setup() {
 	GNUPGHOME="/etc/pacman.d/gnupg"
 	GITREPOS="${TMP}/git-packages"
 	GITREPO="${TMP}/repository"
-	GITUSER="git-packages"
-eot
+	GITPKGREPOS="${TMP}/git-pkg-repos"
+	GITUSER=""
 
+	if [[ -f "${TMP}/config.override" ]]; then
+		. "${TMP}/config.override"
+	fi
+eot
 
 	. config
 
@@ -205,6 +211,15 @@ eot
 
 teardown() {
 	rm -rf "${TMP}"
+}
+
+enablePermission() {
+	local repo=$1
+	grep ACL "${TMP}/config.local" | sed 's/")/ '"$repo"'")/' > "${TMP}/config.override"
+}
+
+disablePermissionOverride() {
+	rm -f "${TMP}/config.override"
 }
 
 releasePackage() {

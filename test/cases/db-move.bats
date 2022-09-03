@@ -193,3 +193,47 @@ load ../lib/common
 	checkPackage extra pkg-split-debuginfo 1-1
 	checkPackage extra-debug pkg-split-debuginfo 1-1
 }
+
+@test "move package with insufficient target repo permissions fails" {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage testing ${pkgbase}
+	done
+
+	db-update
+
+	run db-move testing noperm pkg-simple-a pkg-simple-b
+	[ "$status" -ne 0 ]
+
+	for pkgbase in ${pkgs[@]}; do
+		checkRemovedPackage noperm ${pkgbase}
+		checkPackage testing ${pkgbase} 1-1
+	done
+}
+
+@test "move package with insufficient source repo permissions fails" {
+	local arches=('i686' 'x86_64')
+	local pkgs=('pkg-simple-a' 'pkg-simple-b')
+	local pkgbase
+	local arch
+
+	for pkgbase in ${pkgs[@]}; do
+		releasePackage noperm ${pkgbase}
+	done
+
+	enablePermission noperm
+	db-update
+	disablePermissionOverride
+
+	run db-move noperm testing pkg-simple-a pkg-simple-b
+	[ "$status" -ne 0 ]
+
+	for pkgbase in ${pkgs[@]}; do
+		checkRemovedPackage testing ${pkgbase}
+		checkPackage noperm ${pkgbase} 1-1
+	done
+}

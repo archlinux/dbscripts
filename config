@@ -11,6 +11,7 @@ DEBUGPKGPOOL=''
 STAGING_REPOS=()
 TESTING_REPOS=()
 STABLE_REPOS=()
+declare -A ACL=()
 
 # VCS backend
 VCS=svn

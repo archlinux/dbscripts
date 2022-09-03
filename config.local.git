@@ -17,6 +17,39 @@ DEBUGREPOS=(
 TESTING_REPOS=(core-testing extra-testing multilib-testing)
 STABLE_REPOS=(core extra)
 
+ACL_CORE_LIMITED=(
+	core-staging core-staging-debug
+	core-testing core-testing-debug
+)
+ACL_CORE_ALL=(
+	core core-debug
+	"${ACL_CORE_LIMITED[@]}"
+)
+ACL_EXTRA_LIMITED=(
+	extra-staging extra-staging-debug
+	extra-testing extra-testing-debug
+)
+ACL_EXTRA_ALL=(
+	extra extra-debug
+	"${ACL_EXTRA_LIMITED[@]}"
+)
+ACL_DESKTOP=(
+	kde-unstable kde-unstable-debug
+	gnome-unstable gnome-unstable-debug
+)
+ACL_MULTILIB=(
+	multilib multilib-debug
+	multilib-staging multilib-staging-debug
+	multilib-testing multilib-testing-debug
+)
+ACL=(
+	[packager]="${ACL_EXTRA_ALL[@]}"
+	[junior-packager]="${ACL_EXTRA_LIMITED[@]}"
+	[dev]="${ACL_CORE_ALL[@]} ${ACL_EXTRA_ALL[@]} ${ACL_DESKTOP[@]}"
+	[junior-dev]="${ACL_CORE_LIMITED[@]} ${ACL_EXTRA_ALL[@]} ${ACL_DESKTOP[@]}"
+	[multilib]="${ACL_MULTILIB[@]}"
+)
+
 PKGPOOL='pool/packages'
 DEBUGPKGPOOL='pool/packages-debug'
 SRCPOOL='sources/packages'

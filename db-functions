@@ -565,7 +565,7 @@ check_reproducible() {
 check_signed_tag(){
 	local pkgbase="$(getpkgbase ${1})"
 	local pkgver="$(conv_tag $(getpkgver ${1}))"
-	if ! GNUPGHOME=/etc/pacman.d/gnupg git -C "${WORKDIR}/${pkgbase}" verify-tag "${pkgver}" 1>/dev/null ; then
+	if ! GNUPGHOME=/etc/pacman.d/gnupg git -C "${GITPKGREPOS}/${pkgbase}" verify-tag "${pkgver}" >/dev/null; then
 		return 1
 	fi
 }
@@ -576,7 +576,9 @@ check_pkgbuild_checksum(){
 	local pkgver="$(getpkgver ${1})"
 	local pkgfile_checksum="$(_grep_buildinfo "${1}" "pkgbuild_sha256sum")"
 
-	local sum="$(sha256sum "${WORKDIR}/${pkgbase}/PKGBUILD")"
+	local gittag="$(conv_tag $(getpkgver ${1}))"
+
+	local sum="$(sha256sum <(git -C "${GITPKGREPOS}/${pkgbase}" show "${gittag}":PKGBUILD))"
 	if [[ "$pkgfile_checksum" != "${sum%% *}" ]]; then
 		return 1
 	fi

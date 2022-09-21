@@ -43,7 +43,7 @@ for pkgbase in "${args[@]:2}"; do
 	for pkgarch in "${ARCHES[@]}"; do
 		if vcsrepo_from=$(find_repo_for_package "${pkgbase}" "${pkgarch}" "${repo_from}"); then
 			_pkgver=$(awk '{print $2}' "${GITREPO}/${vcsrepo_from}/${pkgbase}")
-			if ! fetch_pkgbuild "${pkgbase}" "${_pkgver}"; then
+			if ! fetch_pkgbuild "${pkgbase}"; then
 				die "Couldn't find package %s in git!" "${pkgbase}"
 			fi
 			read -rd'\n' pkgver pkgnames < <(source_pkgbuild "${pkgbase}" ""; \

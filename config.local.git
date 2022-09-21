@@ -62,3 +62,5 @@ export GNUPGHOME="/etc/pacman.d/gnupg"
 GITREPOS="https://gitlab.archlinux.org/archlinux/packaging/packages"
 GITREPO="/repository"
 GITUSER="git"
+
+GITPKGREPOS="/git-repos"

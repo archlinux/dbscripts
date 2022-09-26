@@ -81,6 +81,13 @@ find_repo_for_package() {
 	printf '%s\n' "${repos[@]%/}"
 }
 
+# Get the current pkgver from a given repo
+pkgver_from_state_repo() {
+	local pkgbase=${1}
+	local repo=${2}
+	awk '{print $2}' "${GITREPO}/${repo}/${pkgbase}" 2>/dev/null || return 1
+}
+
 # Commit changes staged by (successive?) vcs_(re)?move_package runs.
 vcs_commit() {
 	arch_git -C "${GITREPO}" commit -m "${1}:" 

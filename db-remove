@@ -33,15 +33,15 @@ remove_debug_pkgs=()
 for pkgbase in "${pkgbases[@]}"; do
 	msg "Removing %s from [%s]..." "$pkgbase" "$repo"
 
-	_pkgver=$(cat "${GITREPO}/${vcsrepo}/${pkgbase}"| awk '{print $2}')
-	fetch_pkgbuild "${pkgbase}" "${_pkgver}"
-	if remove_pkgs+=($(source_pkgbuild "${pkgbase}" "" && echo ${pkgname[@]})); then
+	if fetch_pkgbuild "${pkgbase}" && \
+			_pkgver=$(pkgver_from_state_repo "${pkgbase}" "${vcsrepo}") && \
+			remove_pkgs+=($(source_pkgbuild "${pkgbase}" "${_pkgver}" && printf "%s\n" "${pkgname[@]}")); then
 		vcs_remove_package "${pkgbase}" "${vcsrepo}"
 		vcs_commit "${0##*/}: $pkgbase removed by $(id -un)"
 	else
-		warning "%s not found in %s" "$pkgbase" "$vcsrepo"
-		warning "Removing only %s from the repo" "$pkgbase"
-		warning "If it was a split package you have to remove the others yourself!"
+		warning "pkgbase %s not found in %s" "$pkgbase" "$vcsrepo"
+		warning "Removing only pkgname %s from the repo" "$pkgbase"
+		warning "If it was a split package you have to pass its pkgbase to remove it completely!"
 		remove_pkgs+=("$pkgbase")
 	fi
 	if is_globfile "${FTP_BASE}/${repo}-debug/os/${tarch}/${pkgbase}-debug"*; then

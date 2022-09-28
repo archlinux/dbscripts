@@ -157,6 +157,9 @@ for repo in "${repos[@]}"; do
 		fi
 		if ((REPO_MODIFIED)); then
 			for pkg in "${add_pkgs[@]}"; do
+				if [[ $pkg == *-any${PKGEXTS} ]]; then
+					pkgarch=any
+				fi
 				pkgbase="${add_vcspkgs[$pkg::pkgbase]}"
 				pkgver="${add_vcspkgs[$pkg::pkgver]}"
 				vcs_update_package "$pkgbase" "$pkgver" "${repo}-${pkgarch}"

@@ -31,8 +31,7 @@ done
 
 
 for repo in "${repos[@]}"; do
-	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXTS}))
-	if (( $? == 0 )); then
+	if pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXTS})); then
 		for pkg in "${pkgs[@]}"; do
 			if ! fetch_pkgbuild "$(getpkgbase "${pkg}")"; then
 				die "Couldn't find package %s in git!" "${pkg}"
@@ -48,8 +47,7 @@ for repo in "${repos[@]}"; do
 	if ! check_repo_permission "${repo}"; then
 		die "You don't have permission to update packages in %s" "$repo"
 	fi
-	pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXTS}))
-	if (( $? == 0 )); then
+	if pkgs=($(getpkgfiles "${STAGING}/${repo}/"*${PKGEXTS})); then
 		for pkg in "${pkgs[@]}"; do
 			if [[ -h ${pkg} ]]; then
 				die "Package %s is a symbolic link" "$repo/${pkg##*/}"
@@ -136,12 +134,13 @@ for repo in "${repos[@]}"; do
 			if [[ -f ${pkg} ]]; then
 				mv "${pkg}" "$FTP_BASE/${currentpool}"
 			fi
+			mkdir -p "$FTP_BASE/${currentrepo}/os/${pkgarch}"
 			ln -sf "../../../${currentpool}/${pkgfile}" "$FTP_BASE/${currentrepo}/os/${pkgarch}"
 			# also move signatures
 			if [[ -f ${pkg}.sig ]]; then
 				mv "${pkg}.sig" "$FTP_BASE/${currentpool}"
 			fi
-			if [[ ${PKGPOOL} = ${currentpool} ]]; then
+			if [[ ${PKGPOOL} = "${currentpool}" ]]; then
 				# do not archive debug info, this is not of historic interest
 				"$(dirname "$(readlink -e "${BASH_SOURCE[0]}")")/db-archive" "${FTP_BASE}/${PKGPOOL}/${pkg##*/}"
 			fi
@@ -162,7 +161,7 @@ for repo in "${repos[@]}"; do
 				fi
 				pkgbase="${add_vcspkgs[$pkg::pkgbase]}"
 				pkgver="${add_vcspkgs[$pkg::pkgver]}"
-				vcs_update_package "$pkgbase" "$pkgver" "${repo}-${pkgarch}"
+				vcs_update_package "${pkgbase}" "${pkgver}" "${repo}-${pkgarch}"
 			done
 		fi
 	done

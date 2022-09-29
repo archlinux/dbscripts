@@ -49,6 +49,10 @@ LIST="arch-dev-public@lists.archlinux.org"
 #LIST="aaronmgriffin@gmail.com"
 FROM="repomaint@archlinux.org"
 
+# curated PATH to sanitize executables in a portable way
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export PATH
+
 # Override default config with config.local
 LOCAL_CONFIG=${DBSCRIPTS_CONFIG:-"$(dirname "${BASH_SOURCE[0]}")/config.local"}
 [[ -f "${LOCAL_CONFIG}" ]] && . "${LOCAL_CONFIG}"

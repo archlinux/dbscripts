@@ -85,10 +85,10 @@ for repo in "${repos[@]}"; do
 			if ! check_builddir "${pkg}"; then
 				die "Package %s was not built in a chroot" "$repo/${pkg##*/}"
 			fi
-			if ! check_reproducible "${pkg}"; then
-				error "Package %s is not reproducible." "${pkg}"
-				die "Ensure that all dependencies are available in the repositories or are added in the same db-update."
-			fi
+			#if ! check_reproducible "${pkg}"; then
+			#	error "Package %s is not reproducible." "${pkg}"
+			#	die "Ensure that all dependencies are available in the repositories or are added in the same db-update."
+			#fi
 		done
 		if ! check_splitpkgs "${repo}" "${pkgs[@]}"; then
 			die "Missing split packages for %s" "$repo"

@@ -75,6 +75,7 @@ done
 
 msg "Moving packages from [%s] to [%s]..." "$repo_from" "$repo_to"
 
+declare -A pkgbase_arches=()
 for arch in "${ARCHES[@]}"; do
 	declare -a add_pkgs_$arch
 	declare -a add_debug_pkgs_$arch
@@ -101,6 +102,7 @@ for pkgbase in "${args[@]:2}"; do
 			read -ra pkgnames <<<"$pkgnames"
 
 			tag_list+=", $pkgarch"
+			pkgbase_arches[$pkgbase]+="$pkgarch "
 
 			for tarch in "${tarches[@]}"; do
 				declare -n add_pkgs="add_pkgs_${tarch}"
@@ -155,7 +157,8 @@ done
 # We really don't want it to represent a broken state
 if ((REPO_MODIFIED)); then
 	for pkgbase in "${args[@]:2}"; do
-		for tarch in "${ARCHES[@]}"; do
+		read -r -a tarches <<< "${pkgbase_arches[${pkgbase}]}"
+		for tarch in "${tarches[@]}"; do
 			if ! vcs_move_package "${pkgbase}" "${repo_from}-${tarch}" "${repo_to}-${tarch}"; then
 				die "Couldn't move %s from %s to %s" "${pkgbase}" "${repo_from}" "${repo_to}"
 			fi

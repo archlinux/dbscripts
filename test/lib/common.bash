@@ -193,20 +193,10 @@ eot
 			touch "${ARCHIVE_BASE}/packages/${pkgname:0:1}/${pkgname}/${line}"{,.sig}
 		done
 
-	git init --bare --shared=group "${TMPDIR}/git-packages-bare.git" 
+	git init --bare --shared=group "${TMPDIR}/git-packages-bare.git"
 	mkdir "${GITREPO}"
 	chmod 777 "${GITREPO}"
-	arch_git -c "core.sharedRepository=group" clone "${TMPDIR}/git-packages-bare.git" "${GITREPO}"
-	for r in ${PKGREPOS[@]}; do
-		for a in ${ARCHES[@]}; do
-			# This is ugly but we need 770 in the test env
-			(umask 002;
-			mkdir -p "${GITREPO}/${r}-${a}";
-			touch "${GITREPO}/${r}-${a}"/.gitkeep;
-			arch_git -C "${GITREPO}" add "${GITREPO}/${r}-${a}"/.gitkeep)
-		done
-	done
-	arch_git -C "${GITREPO}" commit -m "init repos"
+	arch_git -c "core.sharedRepository=group" clone "${TMPDIR}/git-packages-bare.git" "${GITREPO}" 2>/dev/null
 }
 
 teardown() {

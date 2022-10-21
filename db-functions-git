@@ -110,10 +110,11 @@ vcs_update_package() {
 # repositories.
 vcs_move_package() {
 	local pkgbase=${1}
-	local vcsrepo_from=${GITREPO}/${2}
-	local vcsrepo_to=${GITREPO}/${3}
-	mkdir -p "${vcsrepo_to}"
-	arch_git -C "$GITREPO" mv "$vcsrepo_from/${pkgbase}" "$vcsrepo_to/${pkgbase}"
+	local vcsrepo_from=${2}
+	local vcsrepo_to=${3}
+
+	mkdir -p "${GITREPO}/${vcsrepo_to}"
+	arch_git -C "${GITREPO}" mv "${vcsrepo_from}/${pkgbase}" "${vcsrepo_to}/${pkgbase}"
 }
 
 # Write to the VCS in order to track a package being deleted from a pacman

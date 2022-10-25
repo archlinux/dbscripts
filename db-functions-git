@@ -121,11 +121,8 @@ vcs_move_package() {
 # repository.
 vcs_remove_package() {
 	local pkgbase=${1}
-	local vcsrepo=${GITREPO}/${2}/${pkgbase}
+	local vcsrepo=${2}
 
-	arch_git -C "$GITREPO" rm "$vcsrepo" 
-}
-
-vcs_push(){
-	arch_git -C "$GITREPO" push --tags origin master
+	arch_git -C "${GITREPO}" rm "${vcsrepo}/${pkgbase}"
+	vcs_commit "${0##*/}: remove ${pkgbase} from ${vcsrepo}"
 }

@@ -37,7 +37,6 @@ for pkgbase in "${pkgbases[@]}"; do
 			_pkgver=$(pkgver_from_state_repo "${pkgbase}" "${vcsrepo}") && \
 			remove_pkgs+=($(source_pkgbuild "${pkgbase}" "${_pkgver}" && printf "%s\n" "${pkgname[@]}")); then
 		vcs_remove_package "${pkgbase}" "${vcsrepo}"
-		vcs_commit "${0##*/}: $pkgbase removed by $(id -un)"
 	else
 		warning "pkgbase %s not found in %s" "$pkgbase" "$vcsrepo"
 		warning "Removing only pkgname %s from the repo" "$pkgbase"

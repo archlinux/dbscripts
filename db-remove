@@ -28,6 +28,7 @@ for tarch in "${tarches[@]}"; do
 	repo_lock "$repo" "$tarch" || exit 1
 done
 
+remove_pkgbases=()
 remove_pkgs=()
 remove_debug_pkgs=()
 for pkgbase in "${pkgbases[@]}"; do
@@ -36,7 +37,7 @@ for pkgbase in "${pkgbases[@]}"; do
 	if fetch_pkgbuild "${pkgbase}" && \
 			_pkgver=$(pkgver_from_state_repo "${pkgbase}" "${vcsrepo}") && \
 			remove_pkgs+=($(source_pkgbuild "${pkgbase}" "${_pkgver}" && printf "%s\n" "${pkgname[@]}")); then
-		vcs_remove_package "${pkgbase}" "${vcsrepo}"
+		remove_pkgbases+=("${pkgbase}")
 	else
 		warning "pkgbase %s not found in %s" "$pkgbase" "$vcsrepo"
 		warning "Removing only pkgname %s from the repo" "$pkgbase"
@@ -56,5 +57,15 @@ for tarch in "${tarches[@]}"; do
 	if (( ${#remove_debug_pkgs[@]} >= 1 )); then
 		arch_repo_modify remove "${repo}-debug" "${tarch}" "${remove_debug_pkgs[@]}"
 	fi
+done
+
+if ((REPO_MODIFIED)); then
+	for pkgbase in "${remove_pkgbases[@]}"; do
+		vcs_remove_package "${pkgbase}" "${vcsrepo}"
+	done
+fi
+
+# Remove all the locks we created
+for tarch in "${tarches[@]}"; do
 	repo_unlock "$repo" "$tarch"
 done

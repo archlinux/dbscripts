@@ -6,6 +6,15 @@ if [[ -n ${GITUSER} ]]; then
 	setfacl -m d:u:"${GITUSER}":rwx "${WORKDIR}"
 fi
 
+# unset any behavior influencing environment variables
+# https://git-scm.com/book/en/v2/Git-Internals-Environment-Variables
+while read -r var; do
+	unset "${var}";
+done < <(env | grep -E '^GIT' | awk -F= '{print $1}')
+unset PREFIX
+unset EMAIL
+
+
 # Converts from the PKGBUILD tag to the git repository tag
 # Input     1:1.0~0-1
 # Output    1-1.0.0-1

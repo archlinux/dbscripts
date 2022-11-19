@@ -1,9 +1,9 @@
 FROM docker.io/archlinux/archlinux
-RUN pacman -Syu --noconfirm --needed sudo fakeroot awk subversion make kcov bash-bats gettext grep tree binutils git
-RUN pacman-key --init
-RUN echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel
-RUN useradd -N -g users -G wheel -d /build -m tester
-RUN	ln -sf /dbscripts/db-archive /usr/local/bin/ && \
+RUN pacman -Syu --noconfirm --needed sudo fakeroot awk subversion make kcov bash-bats gettext grep tree binutils git && \
+	pacman-key --init && \
+	echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel && \
+	useradd -N -g users -G wheel -d /build -m tester && \
+	ln -sf /dbscripts/db-archive /usr/local/bin/ && \
 	ln -sf /dbscripts/db-move /usr/local/bin/ && \
 	ln -sf /dbscripts/db-remove /usr/local/bin/ && \
 	ln -sf /dbscripts/db-repo-add /usr/local/bin/ && \
@@ -25,7 +25,7 @@ Name-Email: tester@localhost\n\
 Expire-Date: 0\n\
 %no-protection\n\
 %commit\n"\
-| gpg --quiet --batch --no-tty --no-permission-warning --gen-key
-RUN gpg --export | sudo pacman-key -a -
-RUN sudo pacman-key --lsign-key tester@localhost
+| gpg --quiet --batch --no-tty --no-permission-warning --gen-key && \
+	gpg --export | sudo pacman-key -a - && \
+	sudo pacman-key --lsign-key tester@localhost
 ENV PACKAGER="Bob Tester <tester@localhost>"

@@ -61,11 +61,10 @@ source_pkgbuild() {
 }
 
 # Export PKGBUILD resource following the same rules as source_pkgbuild()
-export_from_pkgrepo() {
+export_from_vcs() {
 	local pkgbase="$1"
 	local tag=$(conv_tag ${2})
-	local src="$3"
-	local dest="$4"
+	local dest="$3"
 	
 	if [[ ! -e ${dest} ]]; then
 		mkdir -p "${dest}"

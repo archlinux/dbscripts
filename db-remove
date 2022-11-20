@@ -17,6 +17,9 @@ vcsrepo="$repo-$arch"
 if ! check_repo_permission "$repo"; then
 	die "You don't have permission to remove packages from %s" "$repo"
 fi
+if ! check_author; then
+	die "You don't have a matching author mapping"
+fi
 
 if [[ $arch = any ]]; then
 	tarches=("${ARCHES[@]}")

@@ -295,6 +295,44 @@ check_builddir() {
 	[[ -n $_builddir && $_builddir = '/build' ]]
 }
 
+check_author() {
+	local author
+	if ! [[ -f "${AUTHORS}" ]]; then
+		die "No such authors file: '%s'" "${AUTHORS}"
+		return 1
+	fi
+	if ! author=$(get_author); then
+		return 1
+	fi
+	return 0
+}
+
+get_author() {
+	if ! username=$(/usr/bin/id -un); then
+		die "Failed to get username from 'id'"
+	fi
+	if ! author=$(grep -E " ${username}\$" "${AUTHORS}"); then
+		die "Missing author information for %s in '%s'" "${username}" "${AUTHORS}"
+	fi
+	echo "${author}"
+}
+
+get_author_name() {
+	local author=$1
+	if ! name=$(echo "${author}"|sed -E 's/(.+) (<.+>) .+/\1/'); then
+		die "Failed to get name from author line"
+	fi
+	echo "${name}"
+}
+
+get_author_email() {
+	local author=$1
+	if ! email=$(echo "${author}"|sed -E 's/(.+) (<.+>) .+/\2/'); then
+		die "Failed to get name from author line"
+	fi
+	echo "${email}"
+}
+
 # Non fatal getpkgfile expanding globs
 maybe_getpkgfile() {
 	if  (( $# != 1 )); then

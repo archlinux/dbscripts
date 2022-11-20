@@ -117,6 +117,7 @@ setup() {
 	local pkg
 	local r
 	local a
+	local username
 	PKGEXT=".pkg.tar.xz"
 
 	TMP="$(mktemp -d)"
@@ -150,10 +151,19 @@ setup() {
 	GITREPO="${TMP}/repository"
 	GITPKGREPOS="${TMP}/git-pkg-repos"
 	GITUSER=""
+	AUTHORS="${TMP}/authors.conf"
 
 	if [[ -f "${TMP}/config.override" ]]; then
 		. "${TMP}/config.override"
 	fi
+eot
+
+	username=$(/usr/bin/id -un)
+	cat <<eot > "${TMP}/authors.conf"
+	qux <a@b.local> dux
+	Cake Foobar <foobar@localhost> ${username}
+	muh <muh@cow> cow
+	${username} <${username}@yay> doo
 eot
 
 	. config
@@ -236,6 +246,10 @@ releasePackage() {
 	__archrelease ${repo}
 	chmod -R 777 "${GITREPOS}/"
 	popd
+}
+
+emptyAuthorsFile() {
+	echo > "${TMP}/authors.conf"
 }
 
 updatePackage() {
@@ -398,4 +412,18 @@ checkRemovedPackageDB() {
 			fi
 		done
 	done
+}
+
+checkStateRepoAutoredBy() {
+	local expected=$1
+	local author
+
+	if ! author=$(git -C "${GITREPO}" show -s --format='%an <%ae>' HEAD); then
+		die 'Failed to query author of state repository'
+	fi
+	if [[ "${expected}" != "${author}" ]]; then
+		error "Author doesn't match, expected: '%s', actual: '%s'" "${expected}" "${author}"
+		return 1
+	fi
+	return 0
 }

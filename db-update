@@ -41,6 +41,9 @@ for repo in "${repos[@]}"; do
 done
 
 
+if ! check_author; then
+	die "You don't have a matching author mapping"
+fi
 
 # check if packages are valid
 for repo in "${repos[@]}"; do

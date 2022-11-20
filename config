@@ -53,6 +53,8 @@ FROM="repomaint@archlinux.org"
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 export PATH
 
+AUTHORS=/notexists
+
 # Override default config with config.local
 LOCAL_CONFIG=${DBSCRIPTS_CONFIG:-"$(dirname "${BASH_SOURCE[0]}")/config.local"}
 [[ -f "${LOCAL_CONFIG}" ]] && . "${LOCAL_CONFIG}"

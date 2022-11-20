@@ -31,6 +31,10 @@ if ! check_repo_permission "$repo_to" || ! check_repo_permission "$repo_from"; t
 	die "You don't have permission to move packages from %s to %s" "$repo_from" "$repo_to"
 fi
 
+if ! check_author; then
+	die "You don't have a matching author mapping"
+fi
+
 # TODO: this might lock too much (architectures)
 for pkgarch in "${ARCHES[@]}"; do
 	repo_lock "${repo_to}" "${pkgarch}" || exit 1

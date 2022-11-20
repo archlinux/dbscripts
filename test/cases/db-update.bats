@@ -321,3 +321,22 @@ load ../lib/common
 		checkPackage extra-debug ${pkgbase} 1-1
 	done
 }
+
+@test "add package with author mapping" {
+	releasePackage extra pkg-any-a
+
+	db-update
+
+	checkPackage extra pkg-any-a 1-1
+	checkStateRepoAutoredBy "Cake Foobar <foobar@localhost>"
+}
+
+@test "add package with missing author mapping fails" {
+	releasePackage extra pkg-any-a
+
+	emptyAuthorsFile
+	run db-update
+	[ "$status" -ne 0 ]
+
+	checkRemovedPackage extra pkg-any-a
+}

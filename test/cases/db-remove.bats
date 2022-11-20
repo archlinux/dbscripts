@@ -147,3 +147,24 @@ load ../lib/common
 
 	checkPackage noperm ${pkgbase} 1-1
 }
+
+@test "remove package with author mapping" {
+	releasePackage testing pkg-any-a
+	db-update
+
+	db-remove testing any pkg-any-a
+
+	checkRemovedPackage testing pkg-any-a
+	checkStateRepoAutoredBy "Cake Foobar <foobar@localhost>"
+}
+
+@test "remove package with missing author mapping fails" {
+	releasePackage testing pkg-any-a
+	db-update
+
+	emptyAuthorsFile
+	run db-remove testing any pkg-any-a
+	[ "$status" -ne 0 ]
+
+	checkPackage testing pkg-any-a 1-1
+}

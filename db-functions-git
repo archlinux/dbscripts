@@ -98,7 +98,23 @@ pkgver_from_state_repo() {
 
 # Commit changes staged by (successive?) vcs_(re)?move_package runs.
 vcs_commit() {
-	arch_git -C "${GITREPO}" commit -m "${1}:" 
+	local commit_message=$1
+	local username author name email
+
+	if ! username=$(/usr/bin/id -un); then
+		die "Failed to get username from 'id'"
+	fi
+	if ! author=$(grep -E " ${username}\$" "${AUTHORS}"); then
+		die "Missing author information for %s in '%s'" "${username}" "${AUTHORS}"
+	fi
+	if ! name=$(echo "${author}"|sed -E 's/(.+) (<.+>) .+/\1/'); then
+		die "Failed to extract name from author line"
+	fi
+	if ! email=$(echo "${author}"|sed -E 's/(.+) (<.+>) .+/\2/'); then
+		die "Failed to extract email from author line"
+	fi
+
+	arch_git -c user.name="${name}" -c user.email="${email}" -C "${GITREPO}" commit -m "${commit_message}"
 }
 
 

@@ -21,6 +21,26 @@ __updatePKGBUILD() {
 	git push
 }
 
+__retagModifiedPKGBUILD() {
+	local pkgver
+	local pkgrel
+	local gittag
+
+	pkgver=$(. PKGBUILD; echo "${pkgrel}")
+	pkgrel=$(. PKGBUILD; echo "${pkgrel}")
+	gittag="${pkgver}-${pkgrel}"
+
+	echo >> PKGBUILD
+	git add PKGBUILD
+	git commit -m "modified PKGBUILD"
+
+	# re-tag
+	git push origin :"${gittag}"
+	git tag -d "${gittag}"
+	git tag -s -m "released ${gittag}"  "${gittag}"
+	git push --tags origin main
+}
+
 __getCheckSum() {
 	local result
 	result="$(sha1sum "$1")"
@@ -269,6 +289,14 @@ updateRepoPKGBUILD() {
 
 	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
 	__updatePKGBUILD
+	popd
+}
+
+retagModifiedPKGBUILD() {
+	local pkgbase=$1
+
+	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
+	__retagModifiedPKGBUILD
 	popd
 }
 

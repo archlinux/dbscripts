@@ -245,10 +245,19 @@ load ../lib/common
 	checkRemovedPackageDB extra 'pkg-any-a'
 }
 
-@test "add package with inconsistent pkgbuild fails" {
+@test "add package with inconsistent pkgbuild in branch succeeds" {
 	releasePackage extra 'pkg-any-a'
 
 	updateRepoPKGBUILD 'pkg-any-a' extra any
+
+	db-update
+	checkPackage extra 'pkg-any-a' 1-1
+}
+
+@test "add package with inconsistent pkgbuild in tag fails" {
+	releasePackage extra 'pkg-any-a'
+
+	retagModifiedPKGBUILD 'pkg-any-a'
 
 	run db-update
 	[ "$status" -ne 0 ]

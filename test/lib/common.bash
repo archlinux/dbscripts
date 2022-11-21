@@ -166,7 +166,7 @@ setup() {
 	CLEANUP_DRYRUN=false
 	SOURCE_CLEANUP_DRYRUN=false
 	VCS=git
-	GNUPGHOME="/etc/pacman.d/gnupg"
+	KEYRING="/etc/pacman.d/gnupg"
 	GITREPOS="${TMP}/git-packages"
 	GITREPO="${TMP}/repository"
 	GITPKGREPOS="${TMP}/git-pkg-repos"

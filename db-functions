@@ -42,6 +42,9 @@ WORKDIR=$(mktemp -dt "${0##*/}.XXXXXXXXXX")
 LOCKS=()
 REPO_MODIFIED=0
 
+# set static gnupg directory for trusted keyring used by GnuPG, Git etc.
+export GNUPGHOME="${KEYRING}"
+
 script_lock() {
 	local LOCKDIR="$TMPDIR/.scriptlock.${0##*/}"
 	if ! mkdir "$LOCKDIR" >/dev/null 2>&1 ; then
@@ -603,7 +606,7 @@ check_reproducible() {
 check_signed_tag(){
 	local pkgbase="$(getpkgbase ${1})"
 	local pkgver="$(conv_tag $(getpkgver ${1}))"
-	if ! GNUPGHOME=/etc/pacman.d/gnupg git -C "${GITPKGREPOS}/${pkgbase}" verify-tag "${pkgver}" >/dev/null; then
+	if ! git -C "${GITPKGREPOS}/${pkgbase}" verify-tag "${pkgver}" >/dev/null 2>&1; then
 		return 1
 	fi
 }

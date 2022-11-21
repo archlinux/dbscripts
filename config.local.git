@@ -58,7 +58,7 @@ CLEANUP_DESTDIR="/srv/repos/svn-packages/package-cleanup"
 SOURCE_CLEANUP_DESTDIR="/srv/repos/svn-packages/source-cleanup"
 TMPDIR="/srv/repos/svn-packages/tmp"
 
-export GNUPGHOME="/etc/pacman.d/gnupg"
+KEYRING="/etc/pacman.d/gnupg"
 GITREPOS="https://gitlab.archlinux.org/archlinux/packaging/packages"
 GITREPO="/repository"
 GITUSER="git"

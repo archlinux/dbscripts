@@ -166,9 +166,6 @@ if ((REPO_MODIFIED)); then
 			if ! vcs_move_package "${pkgbase}" "${repo_from}-${tarch}" "${repo_to}-${tarch}"; then
 				die "Couldn't move %s from %s to %s" "${pkgbase}" "${repo_from}" "${repo_to}"
 			fi
-			if ! vcs_commit "${0##*/}: moved ${pkgbase} from [${repo_from}] to [${repo_to}] (${tag_list})"; then
-				die "Couldn't commit the move %s from %s to %s" "${pkgbase}" "${repo_from}" "${repo_to}"
-			fi
 		done
 	done
 fi

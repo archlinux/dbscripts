@@ -139,6 +139,7 @@ vcs_move_package() {
 
 	mkdir -p "${GITREPO}/${vcsrepo_to}"
 	arch_git -C "${GITREPO}" mv --force "${vcsrepo_from}/${pkgbase}" "${vcsrepo_to}/${pkgbase}"
+	vcs_commit "move ${pkgbase} from ${vcsrepo_from} to ${vcsrepo_to}"
 }
 
 # Write to the VCS in order to track a package being deleted from a pacman

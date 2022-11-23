@@ -38,8 +38,8 @@ arch_git() {
 # Fetch the package sources into a global cache
 fetch_pkgbuild() {
 	local pkgbase="${1}"
-	local src="${GITREPOS}/${pkgbase}.git"
-	local target="${GITPKGREPOS}/${pkgbase}"
+	local src="${GIT_PACKAGING_REPOS_URL}/${pkgbase}.git"
+	local target="${GIT_PACKAGES_CACHE}/${pkgbase}"
 	if [[ ! -d $target ]]; then
 		if ! arch_git -c core.sharedRepository=group clone --origin origin --bare --mirror "${src}" "${target}"; then
 			return 1
@@ -58,7 +58,7 @@ source_pkgbuild() {
 	local pkgbase="$1"
 	local tag=$(gittag_from_pkgver "${2}")
 
-	. <(arch_git -C "${GITPKGREPOS}/${pkgbase}" show "${tag}":PKGBUILD 2>/dev/null || echo false)
+	. <(arch_git -C "${GIT_PACKAGES_CACHE}/${pkgbase}" show "${tag}":PKGBUILD 2>/dev/null || echo false)
 }
 
 # Export PKGBUILD resource following the same rules as source_pkgbuild()
@@ -69,7 +69,7 @@ export_from_vcs() {
 	
 	if [[ ! -e ${dest} ]]; then
 		mkdir -p "${dest}"
-		arch_git -C "${GITPKGREPOS}/${pkgbase}" archive "$tag" | bsdtar -xf - -C "${dest}"
+		arch_git -C "${GIT_PACKAGES_CACHE}/${pkgbase}" archive "$tag" | bsdtar -xf - -C "${dest}"
 	fi
 }
 
@@ -79,7 +79,7 @@ find_repo_for_package() {
 	local pkgarch=${2}
 	local candidates=("${@:3}")
 
-	local repos=($(arch_git -C "${GITREPO}" ls-files "*/$pkgbase" | awk -F/ '{print $1}' | \
+	local repos=($(arch_git -C "${GIT_STATE_REPO}" ls-files "*/$pkgbase" | awk -F/ '{print $1}' | \
 		grep -xFf <(printf "%s\n" "${candidates[@]/%/-${pkgarch}}" "${candidates[@]/%/-any}")))
 
 	if (( ${#repos[@]} > 1 )); then
@@ -109,7 +109,7 @@ property_from_state_repo() {
 	local pkgbase=${1}
 	local repo=${2}
 	local prop=${3}
-	awk '{print $'"${prop}"'}' "${GITREPO}/${repo}/${pkgbase}" 2>/dev/null || return 1
+	awk '{print $'"${prop}"'}' "${GIT_STATE_REPO}/${repo}/${pkgbase}" 2>/dev/null || return 1
 }
 
 # Commit changes staged by (successive?) vcs_(re)?move_package runs.
@@ -130,7 +130,7 @@ vcs_commit() {
 		die "Failed to extract email from author line"
 	fi
 
-	arch_git -c user.name="${name}" -c user.email="${email}" -C "${GITREPO}" commit -m "${commit_message}"
+	arch_git -c user.name="${name}" -c user.email="${email}" -C "${GIT_STATE_REPO}" commit -m "${commit_message}"
 }
 
 
@@ -141,15 +141,15 @@ vcs_update_package() {
 	local gittag
 	gittag="$(gittag_from_pkgver "${pkgver}")"
 
-	mkdir -p "${GITREPO}/${dest}"
+	mkdir -p "${GIT_STATE_REPO}/${dest}"
 	printf '%s %s %s %s\n' \
 		"${pkgbase}" \
 		"${pkgver}" \
 		"${gittag}" \
-		"$(git -C "${GITPKGREPOS}/${pkgbase}" rev-parse "${gittag}")" \
-		> "${GITREPO}/${dest}/${pkgbase}"
+		"$(git -C "${GIT_PACKAGES_CACHE}/${pkgbase}" rev-parse "${gittag}")" \
+		> "${GIT_STATE_REPO}/${dest}/${pkgbase}"
 
-	arch_git -C "${GITREPO}" add "${GITREPO}/${dest}/${pkgbase}"
+	arch_git -C "${GIT_STATE_REPO}" add "${GIT_STATE_REPO}/${dest}/${pkgbase}"
 	vcs_commit "update ${pkgbase} to ${pkgver} in ${dest}"
 }
 
@@ -160,8 +160,8 @@ vcs_move_package() {
 	local vcsrepo_from=${2}
 	local vcsrepo_to=${3}
 
-	mkdir -p "${GITREPO}/${vcsrepo_to}"
-	arch_git -C "${GITREPO}" mv --force "${vcsrepo_from}/${pkgbase}" "${vcsrepo_to}/${pkgbase}"
+	mkdir -p "${GIT_STATE_REPO}/${vcsrepo_to}"
+	arch_git -C "${GIT_STATE_REPO}" mv --force "${vcsrepo_from}/${pkgbase}" "${vcsrepo_to}/${pkgbase}"
 	vcs_commit "move ${pkgbase} from ${vcsrepo_from} to ${vcsrepo_to}"
 }
 
@@ -171,6 +171,6 @@ vcs_remove_package() {
 	local pkgbase=${1}
 	local vcsrepo=${2}
 
-	arch_git -C "${GITREPO}" rm "${vcsrepo}/${pkgbase}"
+	arch_git -C "${GIT_STATE_REPO}" rm "${vcsrepo}/${pkgbase}"
 	vcs_commit "remove ${pkgbase} from ${vcsrepo}"
 }

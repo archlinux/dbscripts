@@ -167,9 +167,9 @@ setup() {
 	SOURCE_CLEANUP_DRYRUN=false
 	VCS=git
 	KEYRING="/etc/pacman.d/gnupg"
-	GITREPOS="${TMP}/git-packages"
-	GITREPO="${TMP}/repository"
-	GITPKGREPOS="${TMP}/git-pkg-repos"
+	GIT_PACKAGING_REPOS_URL="${TMP}/git-packages"
+	GIT_STATE_REPO="${TMP}/repository"
+	GIT_PACKAGES_CACHE="${TMP}/git-pkg-repos"
 	GITUSER=""
 	AUTHORS="${TMP}/authors.conf"
 
@@ -198,7 +198,7 @@ eot
 	TMP_WORKDIR_GIT=${TMP}/git-clones
 
 	mkdir -p "${TMP}/"{ftp,tmp,staging,{package,source}-cleanup}
-	mkdir -p "${GITREPOS}"
+	mkdir -p "${GIT_PACKAGING_REPOS_URL}"
 	mkdir -p "${TMP_WORKDIR_GIT}"
 
 	for r in ${PKGREPOS[@]}; do
@@ -224,9 +224,9 @@ eot
 		done
 
 	git init --bare --shared=group "${TMPDIR}/git-packages-bare.git"
-	mkdir "${GITREPO}"
-	chmod 777 "${GITREPO}"
-	arch_git -c "core.sharedRepository=group" clone "${TMPDIR}/git-packages-bare.git" "${GITREPO}" 2>/dev/null
+	mkdir "${GIT_STATE_REPO}"
+	chmod 777 "${GIT_STATE_REPO}"
+	arch_git -c "core.sharedRepository=group" clone "${TMPDIR}/git-packages-bare.git" "${GIT_STATE_REPO}" 2>/dev/null
 }
 
 teardown() {
@@ -246,9 +246,9 @@ releasePackage() {
 	local repo=$1
 	local pkgbase=$2
 
-	if [ ! -d "${GITREPOS}/${pkgbase}.git" ]; then
-		git init --bare --shared=all "${GITREPOS}/${pkgbase}".git
-		git -c "core.sharedRepository=group" clone "${GITREPOS}/${pkgbase}".git "${TMP_WORKDIR_GIT}/${pkgbase}"
+	if [ ! -d "${GIT_PACKAGING_REPOS_URL}/${pkgbase}.git" ]; then
+		git init --bare --shared=all "${GIT_PACKAGING_REPOS_URL}/${pkgbase}".git
+		git -c "core.sharedRepository=group" clone "${GIT_PACKAGING_REPOS_URL}/${pkgbase}".git "${TMP_WORKDIR_GIT}/${pkgbase}"
 		cp -r "fixtures/${pkgbase}"/* "${TMP_WORKDIR_GIT}/${pkgbase}"
 		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" add "${TMP_WORKDIR_GIT}/${pkgbase}"/*
 		git -C "${TMP_WORKDIR_GIT}/${pkgbase}" commit -m "initial commit of ${pkgbase}"
@@ -257,14 +257,14 @@ releasePackage() {
 	fi
 
 	if [ ! -d "${TMP_WORKDIR_GIT}/${pkgbase}" ]; then
-		git clone "${GITREPOS}/${pkgbase}.git" "${TMP_WORKDIR_GIT}/${pkgbase}"
+		git clone --origin origin "${GIT_PACKAGING_REPOS_URL}/${pkgbase}.git" "${TMP_WORKDIR_GIT}/${pkgbase}"
 	fi
 
 	pushd "${TMP_WORKDIR_GIT}/${pkgbase}"
 	git pull origin main
 	__buildPackage "${STAGING}"/${repo}
 	__archrelease ${repo}
-	chmod -R 777 "${GITREPOS}/"
+	chmod -R 777 "${GIT_PACKAGING_REPOS_URL}/"
 	popd
 }
 
@@ -366,7 +366,7 @@ checkPackage() {
 
 	local dirarches=() pkgbuildarches=()
 	local pkgbuild dirarch pkgbuildver
-	for pkgbuild in "${GITREPO}/${repo%-debug}-"+([^-])"/${pkgbase}"; do
+	for pkgbuild in "${GIT_STATE_REPO}/${repo%-debug}-"+([^-])"/${pkgbase}"; do
 		[[ -e $pkgbuild ]] || continue
 		dirarch=${pkgbuild%/${pkgbase}}
 		dirarch=${dirarch##*-}
@@ -395,7 +395,7 @@ checkRemovedPackage() {
 	local repo=$1
 	local pkgbase=$2
 
-	if __isGlobfile "${GITREPO}/${repo%-debug}-"+([^-])"/${pkgbase}"; then
+	if __isGlobfile "${GIT_STATE_REPO}/${repo%-debug}-"+([^-])"/${pkgbase}"; then
 		return 1
 	fi
 
@@ -446,7 +446,7 @@ checkStateRepoAutoredBy() {
 	local expected=$1
 	local author
 
-	if ! author=$(git -C "${GITREPO}" show -s --format='%an <%ae>' HEAD); then
+	if ! author=$(git -C "${GIT_STATE_REPO}" show -s --format='%an <%ae>' HEAD); then
 		die 'Failed to query author of state repository'
 	fi
 	if [[ "${expected}" != "${author}" ]]; then

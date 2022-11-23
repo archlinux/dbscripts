@@ -59,8 +59,8 @@ SOURCE_CLEANUP_DESTDIR="/srv/repos/svn-packages/source-cleanup"
 TMPDIR="/srv/repos/svn-packages/tmp"
 
 KEYRING="/etc/pacman.d/gnupg"
-GITREPOS="https://gitlab.archlinux.org/archlinux/packaging/packages"
-GITREPO="/repository"
-GITUSER="git"
+GIT_PACKAGING_REPOS_URL="https://gitlab.archlinux.org/archlinux/packaging/packages"
+GIT_STATE_REPO="/srv/repos/state"
+GITUSER=""
 
-GITPKGREPOS="/git-repos"
+GIT_PACKAGES_CACHE="/srv/repos/pkg-cache"

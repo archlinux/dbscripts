@@ -606,7 +606,7 @@ check_reproducible() {
 check_signed_tag(){
 	local pkgbase="$(getpkgbase ${1})"
 	local pkgver="$(gittag_from_pkgver "$(getpkgver "${1}")")"
-	if ! git -C "${GITPKGREPOS}/${pkgbase}" verify-tag "${pkgver}" >/dev/null 2>&1; then
+	if ! git -C "${GIT_PACKAGES_CACHE}/${pkgbase}" verify-tag "${pkgver}" >/dev/null 2>&1; then
 		return 1
 	fi
 }
@@ -619,7 +619,7 @@ check_pkgbuild_checksum(){
 
 	local gittag="$(gittag_from_pkgver "$(getpkgver "${1}")")"
 
-	local sum="$(sha256sum <(git -C "${GITPKGREPOS}/${pkgbase}" show "${gittag}":PKGBUILD))"
+	local sum="$(sha256sum <(git -C "${GIT_PACKAGES_CACHE}/${pkgbase}" show "${gittag}":PKGBUILD))"
 	if [[ "$pkgfile_checksum" != "${sum%% *}" ]]; then
 		return 1
 	fi

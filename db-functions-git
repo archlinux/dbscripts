@@ -93,7 +93,22 @@ find_repo_for_package() {
 pkgver_from_state_repo() {
 	local pkgbase=${1}
 	local repo=${2}
-	awk '{print $2}' "${GITREPO}/${repo}/${pkgbase}" 2>/dev/null || return 1
+	property_from_state_repo "${pkgbase}" "${repo}" 2
+}
+
+# Get the current git tag name from a given repo
+gittag_from_state_repo() {
+	local pkgbase=${1}
+	local repo=${2}
+	property_from_state_repo "${pkgbase}" "${repo}" 3
+}
+
+# Get the given property position from a given repo
+property_from_state_repo() {
+	local pkgbase=${1}
+	local repo=${2}
+	local prop=${3}
+	awk '{print $'"${prop}"'}' "${GITREPO}/${repo}/${pkgbase}" 2>/dev/null || return 1
 }
 
 # Commit changes staged by (successive?) vcs_(re)?move_package runs.
@@ -120,12 +135,19 @@ vcs_commit() {
 
 vcs_update_package() {
 	local pkgbase="$1"
-	local tag="${2}"
-	local gittag="$(conv_tag ${2})"
+	local pkgver="$2"
 	local dest="$3"
+	local gittag
+	gittag="$(conv_tag "${pkgver}")"
 
 	mkdir -p "${GITREPO}/${dest}"
-	echo "${pkgbase} ${gittag} $(git -C "${GITPKGREPOS}/${pkgbase}" rev-parse "${gittag}")" > "${GITREPO}/${dest}/${pkgbase}"
+	printf '%s %s %s %s\n' \
+		"${pkgbase}" \
+		"${pkgver}" \
+		"${gittag}" \
+		"$(git -C "${GITPKGREPOS}/${pkgbase}" rev-parse "${gittag}")" \
+		> "${GITREPO}/${dest}/${pkgbase}"
+
 	arch_git -C "${GITREPO}" add "${GITREPO}/${dest}/${pkgbase}"
 	vcs_commit "update ${pkgbase} to ${pkgver} in ${dest}"
 }

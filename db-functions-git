@@ -18,11 +18,12 @@ unset EMAIL
 # Converts from the PKGBUILD tag to the git repository tag
 # Input     1:1.0~0-1
 # Output    1-1.0.0-1
-conv_tag() {
-	local git_tag="$1"
-	git_tag="${git_tag/:/-}"
-	git_tag="${git_tag//\~/.}"
-	printf "%s" "${git_tag}"
+gittag_from_pkgver() {
+	local pkgver="$1"
+	local gittag
+	gittag="${pkgver/:/-}"
+	gittag="${gittag//\~/.}"
+	printf "%s" "${gittag}"
 }
 
 arch_git() {
@@ -55,7 +56,7 @@ fetch_pkgbuild() {
 # Source the PKGBUILD from the package's git/svn/whatever repo.
 source_pkgbuild() {
 	local pkgbase="$1"
-	local tag=$(conv_tag ${2})
+	local tag=$(gittag_from_pkgver "${2}")
 
 	. <(arch_git -C "${GITPKGREPOS}/${pkgbase}" show "${tag}":PKGBUILD 2>/dev/null || echo false)
 }
@@ -63,7 +64,7 @@ source_pkgbuild() {
 # Export PKGBUILD resource following the same rules as source_pkgbuild()
 export_from_vcs() {
 	local pkgbase="$1"
-	local tag=$(conv_tag ${2})
+	local tag=$(gittag_from_pkgver "${2}")
 	local dest="$3"
 	
 	if [[ ! -e ${dest} ]]; then
@@ -138,7 +139,7 @@ vcs_update_package() {
 	local pkgver="$2"
 	local dest="$3"
 	local gittag
-	gittag="$(conv_tag "${pkgver}")"
+	gittag="$(gittag_from_pkgver "${pkgver}")"
 
 	mkdir -p "${GITREPO}/${dest}"
 	printf '%s %s %s %s\n' \

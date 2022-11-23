@@ -605,7 +605,7 @@ check_reproducible() {
 # TODO: Needs to verify the keyid is in the keyring
 check_signed_tag(){
 	local pkgbase="$(getpkgbase ${1})"
-	local pkgver="$(conv_tag $(getpkgver ${1}))"
+	local pkgver="$(gittag_from_pkgver "$(getpkgver "${1}")")"
 	if ! git -C "${GITPKGREPOS}/${pkgbase}" verify-tag "${pkgver}" >/dev/null 2>&1; then
 		return 1
 	fi
@@ -617,7 +617,7 @@ check_pkgbuild_checksum(){
 	local pkgver="$(getpkgver ${1})"
 	local pkgfile_checksum="$(_grep_buildinfo "${1}" "pkgbuild_sha256sum")"
 
-	local gittag="$(conv_tag $(getpkgver ${1}))"
+	local gittag="$(gittag_from_pkgver "$(getpkgver "${1}")")"
 
 	local sum="$(sha256sum <(git -C "${GITPKGREPOS}/${pkgbase}" show "${gittag}":PKGBUILD))"
 	if [[ "$pkgfile_checksum" != "${sum%% *}" ]]; then

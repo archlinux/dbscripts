@@ -127,7 +127,7 @@ vcs_update_package() {
 	mkdir -p "${GITREPO}/${dest}"
 	echo "${pkgbase} ${gittag} $(git -C "${GITPKGREPOS}/${pkgbase}" rev-parse "${gittag}")" > "${GITREPO}/${dest}/${pkgbase}"
 	arch_git -C "${GITREPO}" add "${GITREPO}/${dest}/${pkgbase}"
-	vcs_commit "updated ${pkgbase}-${tag} in [${dest}]"
+	vcs_commit "update ${pkgbase} to ${pkgver} in ${dest}"
 }
 
 # Write to the VCS in order to track a package moving between different pacman
@@ -149,5 +149,5 @@ vcs_remove_package() {
 	local vcsrepo=${2}
 
 	arch_git -C "${GITREPO}" rm "${vcsrepo}/${pkgbase}"
-	vcs_commit "${0##*/}: remove ${pkgbase} from ${vcsrepo}"
+	vcs_commit "remove ${pkgbase} from ${vcsrepo}"
 }

@@ -34,12 +34,24 @@ arch_git() {
 	fi
 }
 
+# 1. replace single '+' between word boundaries with '-'
+# 2. replace any other '+' with literal 'plus'
+# 3. replace any special chars other than '_', '-' and '.' with '-'
+gitlab_project_name_to_path() {
+	local name=$1
+	printf "%s" "${name}" \
+		| sed -E 's/([a-zA-Z0-9]+)\+([a-zA-Z]+)/\1-\2/g' \
+		| sed -E 's/\+/plus/g' \
+		| sed -E 's/[^a-zA-Z0-9_\-\.]/-/g'
+}
 
 # Fetch the package sources into a global cache
 fetch_pkgbuild() {
 	local pkgbase="${1}"
-	local src="${GIT_PACKAGING_REPOS_URL}/${pkgbase}.git"
-	local target="${GIT_PACKAGES_CACHE}/${pkgbase}"
+	local project_path src target
+	project_path=$(gitlab_project_name_to_path "${pkgbase}")
+	src="${GIT_PACKAGING_REPOS_URL}/${project_path}.git"
+	target="${GIT_PACKAGES_CACHE}/${pkgbase}"
 	if [[ ! -d $target ]]; then
 		if ! arch_git -c core.sharedRepository=group clone --origin origin --bare --mirror "${src}" "${target}"; then
 			return 1
